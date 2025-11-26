@@ -16,6 +16,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { BranchesModule } from './branches/branches.module';
 import { SaleOrdersModule } from './sale-orders/sale-orders.module';
 import { AuthModule } from './auth/auth.module';
+import { SupabaseModule } from './supabase/supabase.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AuthModule } from './auth/auth.module';
 
     TypeOrmModule.forRootAsync(typeormConfig),
     UsersModule,
+    SupabaseModule,
     PetsModule,
     VeterinariansModule,
     AppointmentsModule,

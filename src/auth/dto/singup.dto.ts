@@ -4,37 +4,44 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
+  IsStrongPassword,
 } from 'class-validator';
 
-export class CreateUserDto {
-  @IsUUID()
-  @IsNotEmpty()
-  id: string;
-  //orders: Orders[]
-  //pets: Pets[]
+export class SignUpDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
   @IsEmail()
   @IsString()
   @IsNotEmpty()
   email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsStrongPassword()
+  password: string;
+
   @IsString()
   @IsNotEmpty()
   user: string;
+
   @IsString()
   @IsOptional()
   phone: number;
+
   @IsString()
   @IsOptional()
   country: string;
+
   @IsString()
   @IsOptional()
   address: string;
+
   @IsString()
   @IsOptional()
   city: string;
+
   @IsEmpty()
   isAdmin: boolean;
 }

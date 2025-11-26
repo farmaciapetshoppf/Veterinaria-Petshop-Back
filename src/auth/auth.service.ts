@@ -1,21 +1,90 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { SupabaseService } from 'src/supabase/supabase.service';
+import { UsersService } from 'src/users/users.service';
+import { SignUpDto } from './dto/singup.dto';
+import { SignInDto } from './dto/signin.dto';
 
 @Injectable()
 export class AuthService {
-  getAuth() {
-    return 'Get authentication';
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly usersService: UsersService,
+  ) {}
+
+  async signUp(signUpDto: SignUpDto) {
+    const { name, email, password, user, phone, country, address, city } =
+      signUpDto;
+
+    const { data, error: authError } = await this.supabaseService
+      .getClient()
+      .auth.signUp({
+        email: email,
+        password,
+      });
+
+    if (authError) {
+      throw new Error(`Authentication error: ${authError.message}`);
+    }
+
+    if (data && data.user) {
+      const newUser = await this.usersService.createUser({
+        id: data.user.id,
+        email,
+        name,
+        user,
+        phone,
+        country,
+        address,
+        city,
+        isAdmin: false,
+      });
+
+      return {
+        message:
+          'User registered successfully. Please check your email for verification.',
+        user: newUser,
+      };
+    }
+
+    return {
+      message:
+        'User registration initiated. Please check your email for verification.',
+    };
   }
 
-  signUp() {
-    return 'User signed up';
+  async signIn(signInDto: SignInDto) {
+    const { email, password } = signInDto;
+
+    const { data, error } = await this.supabaseService
+      .getClient()
+      .auth.signInWithPassword({
+        email,
+        password,
+      });
+
+    if (error) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const userProfile = await this.usersService.getUserById(data.user.id);
+
+    return {
+      message: 'Signed in successfully',
+      user: userProfile,
+      session: data.session,
+    };
   }
 
-  signIn() {
-    return 'User signed in';
-  }
+  async signOut() {
+    const { error } = await this.supabaseService.getClient().auth.signOut();
 
-  signOut() {
-    return 'User signed out';
+    if (error) {
+      throw new Error(`Sign out error: ${error.message}`);
+    }
+
+    return {
+      message: 'Signed out successfully',
+    };
   }
 
   requestPasswordReset() {

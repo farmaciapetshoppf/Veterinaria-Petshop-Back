@@ -1,5 +1,6 @@
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+@Entity('users')
 export class Users {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -9,8 +10,6 @@ export class Users {
   mail: string;
   @Column({ type: 'varchar', length: 50, nullable: false })
   user: string;
-  @Column({ type: 'varchar', length: 60, nullable: false })
-  password: string;
   @Column({ type: 'int', nullable: true })
   phone: number;
   @Column({ type: 'varchar', length: 50, nullable: true })
@@ -23,4 +22,5 @@ export class Users {
   isAdmin: boolean;
 
   //orders: Orders[]
+  //pets: Pets[]
 }

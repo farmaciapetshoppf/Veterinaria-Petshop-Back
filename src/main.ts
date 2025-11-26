@@ -28,7 +28,9 @@ async function bootstrap() {
   // Swagger
   const config = new DocumentBuilder()
     .setTitle('Veterinaria & Petshop API')
-    .setDescription('Backend para gestión de mascotas, turnos, productos y ventas.')
+    .setDescription(
+      'Backend para gestión de mascotas, turnos, productos y ventas.',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();
@@ -37,8 +39,10 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
-   console.log('\x1b[36m%s\x1b[0m', '🐶🐱🐰  Servidor de Veterinaria Petshop iniciado con éxito 💖');
+  console.log(
+    '\x1b[36m%s\x1b[0m',
+    '🐶🐱🐰  Servidor de Veterinaria Petshop iniciado con éxito 💖',
+  );
   console.log('\x1b[33m%s\x1b[0m', `🚀 Ejecutándose en: ${await app.getUrl()}`);
-
 }
 bootstrap();
