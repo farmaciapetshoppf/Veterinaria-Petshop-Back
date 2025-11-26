@@ -1,4 +1,11 @@
-import { Body, Controller, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Put,
+  Headers,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/singup.dto';
 import { SignInDto } from './dto/signin.dto';
@@ -18,8 +25,12 @@ export class AuthController {
   }
 
   @Post('signout')
-  signOut() {
-    return this.authService.signOut();
+  signOut(@Headers('authorization') authHeader: string) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Token de autenticación requerido');
+    }
+    const token = authHeader.split(' ')[1];
+    return this.authService.signOut(token);
   }
 
   @Post('password/reset-request')

@@ -1,5 +1,13 @@
-import { Controller, Get, Param, Delete, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Delete,
+  HttpCode,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -12,6 +20,7 @@ export class UsersController {
   }
 
   @HttpCode(200)
+  @UseGuards(AuthGuard)
   @Get(':id')
   getUserById(@Param('id') id: string) {
     return this.usersService.getUserById(id);

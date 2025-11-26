@@ -7,7 +7,7 @@ export class Users {
   @Column({ type: 'varchar', length: 50, nullable: false })
   name: string;
   @Column({ type: 'varchar', length: 50, unique: true, nullable: false })
-  mail: string;
+  email: string;
   @Column({ type: 'varchar', length: 50, nullable: false })
   user: string;
   @Column({ type: 'int', nullable: true })

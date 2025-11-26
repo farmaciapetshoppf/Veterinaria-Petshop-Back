@@ -75,16 +75,20 @@ export class AuthService {
     };
   }
 
-  async signOut() {
-    const { error } = await this.supabaseService.getClient().auth.signOut();
+  async signOut(token: string) {
+    try {
+      const supabaseClient = this.supabaseService.getClient();
 
-    if (error) {
-      throw new Error(`Sign out error: ${error.message}`);
+      const { error } = await supabaseClient.auth.signOut({});
+
+      if (error) {
+        throw new Error(`Error during sign out: ${error.message}`);
+      }
+
+      return { message: 'Successfully signed out' };
+    } catch (error) {
+      throw new Error(`Sign out failed: ${error.message}`);
     }
-
-    return {
-      message: 'Signed out successfully',
-    };
   }
 
   requestPasswordReset() {
