@@ -1,9 +1,15 @@
 import { Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Users } from './entities/user.entity';
+import { UsersRepository } from './users.repository';
+import { SupabaseService } from 'src/supabase/supabase.service';
 
 @Module({
+  imports: [TypeOrmModule.forFeature([Users])],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, UsersRepository, SupabaseService],
+  exports: [UsersService],
 })
 export class UsersModule {}

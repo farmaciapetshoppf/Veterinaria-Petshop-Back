@@ -4,9 +4,7 @@ import { DatabaseLoggerService } from './database-logger.service';
 import { typeormConfig } from 'src/config/typeorm';
 
 @Module({
-  imports: [
-    TypeOrmModule.forRootAsync(typeormConfig)
-  ],
+  imports: [TypeOrmModule.forRootAsync(typeormConfig)],
   providers: [DatabaseLoggerService],
 })
 export class DatabaseModule {}
