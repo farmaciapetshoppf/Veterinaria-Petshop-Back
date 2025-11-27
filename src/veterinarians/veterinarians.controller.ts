@@ -1,34 +1,44 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  ParseUUIDPipe,
+  Get,
+  Query,
+  Patch,
+} from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
-import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
+import { ChangePasswordVeterinarianDto } from './dto/change-password-veterinarian.dto';
 
 @Controller('veterinarians')
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 
-  @Post()
-  create(@Body() createVeterinarianDto: CreateVeterinarianDto) {
-    return this.veterinariansService.create(createVeterinarianDto);
-  }
-
   @Get()
-  findAll() {
-    return this.veterinariansService.findAll();
+  fillAllVeterinarians(@Query('onlyActive') onlyActive?: string) {
+    const active = onlyActive === undefined ? true : onlyActive === 'true';
+    return this.veterinariansService.fillAllVeterinarians(active);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.veterinariansService.findOne(+id);
+  fillByIdVeterinarians(@Param('id', ParseUUIDPipe) id: string) {
+    return this.veterinariansService.fillByIdVeterinarians(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateVeterinarianDto: UpdateVeterinarianDto) {
-    return this.veterinariansService.update(+id, updateVeterinarianDto);
+  @Post()
+  createVeterinarian(@Body() createVeterinarian: CreateVeterinarianDto) {
+    return this.veterinariansService.createVeterinarian(createVeterinarian);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.veterinariansService.remove(+id);
+  @Patch(':id/deactivate')
+  deleteVeterinarian(@Param('id', ParseUUIDPipe) id: string) {
+    return this.veterinariansService.deleteVeterinarian(id);
+  }
+
+  @Patch('change-password')
+  changePassword(@Body() body: ChangePasswordVeterinarianDto) {
+    return this.veterinariansService.changePassword(body);
   }
 }
