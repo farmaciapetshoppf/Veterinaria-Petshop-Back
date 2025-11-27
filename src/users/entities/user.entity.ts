@@ -11,8 +11,8 @@ export class Users {
   email: string;
   @Column({ type: 'varchar', length: 50, nullable: false })
   user: string;
-  @Column({ type: 'int', nullable: true })
-  phone: number;
+  @Column({ type: 'varchar', nullable: true })
+  phone: string;
   @Column({ type: 'varchar', length: 50, nullable: true })
   country: string;
   @Column({ type: 'text', nullable: true })

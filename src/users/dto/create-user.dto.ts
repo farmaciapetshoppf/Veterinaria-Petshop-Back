@@ -1,11 +1,4 @@
-import {
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { Role } from 'src/auth/enum/roles.enum';
 
 export class CreateUserDto {
@@ -25,18 +18,18 @@ export class CreateUserDto {
   @IsNotEmpty()
   user: string;
   @IsString()
-  @IsOptional()
-  phone: number;
+  @IsNotEmpty()
+  phone: string;
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   country: string;
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   address: string;
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   city: string;
-  @IsOptional()
+  @IsNotEmpty()
   @IsEnum(Role)
   role?: Role;
 }
