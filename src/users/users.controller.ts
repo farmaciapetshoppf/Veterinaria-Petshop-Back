@@ -5,9 +5,14 @@ import {
   Delete,
   HttpCode,
   UseGuards,
+  Patch,
+  Body,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
+// import { AuthGuard } from 'src/auth/guards/auth.guard';
+// import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
+// import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('users')
 export class UsersController {
@@ -20,7 +25,6 @@ export class UsersController {
   }
 
   @HttpCode(200)
-  @UseGuards(AuthGuard)
   @Get(':id')
   getUserById(@Param('id') id: string) {
     return this.usersService.getUserById(id);
@@ -31,6 +35,11 @@ export class UsersController {
   // updateUser(@Param('id') id: string) {
   //   return this.usersService.updateUser(id);
   // }
+
+  @Patch(':id/role')
+  updateRole(@Param('id') id: string, @Body() updateRoleDto: { role: Role }) {
+    return this.usersService.updateRole(id, updateRoleDto.role);
+  }
 
   @HttpCode(200)
   @Delete(':id')

@@ -1,3 +1,4 @@
+import { Role } from 'src/auth/enum/roles.enum';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('users')
@@ -18,9 +19,17 @@ export class Users {
   address: string;
   @Column({ type: 'varchar', length: 50, nullable: true })
   city: string;
-  @Column({ default: false })
-  isAdmin: boolean;
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.User,
+  })
+  role: Role;
 
+  //@OneToMany(() => Orders, orders => orders.user,{
+  //onDelete: 'CASCADE'} )
   //orders: Orders[]
+  //@OneToMany(() => Pets, pets => pets.user,{
+  //onDelete: 'CASCADE'} )
   //pets: Pets[]
 }

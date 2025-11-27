@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Users } from './entities/user.entity';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @Injectable()
 export class UsersService {
@@ -22,6 +23,10 @@ export class UsersService {
   // updateUser(id: string) {
   //   return this.usersRepository.updateUser();
   // }
+
+  updateRole(id: string, role: Role) {
+    return this.usersRepository.updateRole(id, role);
+  }
 
   deleteUser(id: string) {
     return this.usersRepository.deleteUser(id);

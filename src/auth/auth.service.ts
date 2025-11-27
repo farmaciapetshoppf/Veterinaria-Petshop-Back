@@ -3,6 +3,7 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 import { UsersService } from 'src/users/users.service';
 import { SignUpDto } from './dto/singup.dto';
 import { SignInDto } from './dto/signin.dto';
+import { Role } from './enum/roles.enum';
 
 @Injectable()
 export class AuthService {
@@ -12,7 +13,7 @@ export class AuthService {
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
-    const { name, email, password, user, phone, country, address, city } =
+    const { name, email, password, user, phone, country, address, city, role } =
       signUpDto;
 
     const { data, error: authError } = await this.supabaseService
@@ -36,7 +37,7 @@ export class AuthService {
         country,
         address,
         city,
-        isAdmin: false,
+        role: Role.User,
       });
 
       return {
