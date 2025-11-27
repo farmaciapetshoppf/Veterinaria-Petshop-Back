@@ -1,34 +1,76 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Delete,
+  HttpCode,
+  UseGuards,
+  Patch,
+  Body,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+// import { AuthGuard } from 'src/auth/guards/auth.guard';
+// import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
+import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+// import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Obtener lista de usuarios' })
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  getUsers() {
+    return this.usersService.getUsers();
   }
 
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Obtener usuarios por id' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'ID del usuario',
+  })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  getUserById(@Param('id') id: string) {
+    return this.usersService.getUserById(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  // @HttpCode(200)
+  // @Put(':id')
+  // updateUser(@Param('id') id: string) {
+  //   return this.usersService.updateUser(id);
+  // }
+
+  @ApiOperation({ summary: 'Change user role' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'ID del usuario',
+  })
+  @ApiBody({
+    description: 'Objeto con el nuevo rol del usuario',
+    type: 'object',
+    schema: {
+      properties: {
+        role: {
+          type: 'string',
+          example: 'veterinarian',
+          description: 'Rol a asignar al usuario',
+        },
+      },
+    },
+  })
+  @Patch(':id/role')
+  updateRole(@Param('id') id: string, @Body() updateRoleDto: { role: Role }) {
+    return this.usersService.updateRole(id, updateRoleDto.role);
   }
 
+  @HttpCode(200)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(id);
   }
 }

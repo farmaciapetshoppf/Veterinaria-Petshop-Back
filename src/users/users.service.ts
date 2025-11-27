@@ -1,26 +1,34 @@
 import { Injectable } from '@nestjs/common';
+import { Users } from './entities/user.entity';
+import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly usersRepository: UsersRepository) {}
+
+  getUsers(): Promise<Users[]> {
+    return this.usersRepository.getUsers();
   }
 
-  findAll() {
-    return `This action returns all users`;
+  getUserById(id: string): Promise<Users> {
+    return this.usersRepository.getUserById(id);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  createUser(createUserDto: CreateUserDto): Promise<Users> {
+    return this.usersRepository.createUser(createUserDto);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  // updateUser(id: string) {
+  //   return this.usersRepository.updateUser();
+  // }
+
+  updateRole(id: string, role: Role) {
+    return this.usersRepository.updateRole(id, role);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  deleteUser(id: string) {
+    return this.usersRepository.deleteUser(id);
   }
 }
