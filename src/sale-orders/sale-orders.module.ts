@@ -5,10 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SaleOrder } from './entities/sale-order.entity';
 import { ProductsModule } from 'src/products/products.module';
 import { UsersModule } from 'src/users/users.module';
-import { SaleOrderProduct } from './entities/sale-order-product.entity';
+// import { SaleOrderProduct } from './entities/sale-order-product.entity';
 
 @Module({
-  imports:[ TypeOrmModule.forFeature([SaleOrder, SaleOrderProduct ]),
+  imports:[ TypeOrmModule.forFeature([SaleOrder, ]),
   ProductsModule,
   UsersModule],
   controllers: [SaleOrdersController],
