@@ -20,7 +20,7 @@ export class CreateProductDto {
   @IsString()
   imgUrl: string;
 
-  // ✅ relación con categoría
+  
   @IsUUID()
   categoryId: string;
 }
