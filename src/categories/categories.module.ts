@@ -9,6 +9,6 @@ import { CategoriesSeeder } from './seed/categories.seeder';
   imports: [TypeOrmModule.forFeature([Category])],
   controllers: [CategoriesController],
   providers: [CategoriesService, CategoriesSeeder],
-  exports: [TypeOrmModule]
+  exports: [TypeOrmModule],
 })
 export class CategoriesModule {}

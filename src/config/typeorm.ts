@@ -13,6 +13,6 @@ export const typeormConfig: TypeOrmModuleAsyncOptions = {
     entities: ['dist/**/*.entity{.ts,.js}'],
     autoLoadEntities: true,
     synchronize: true,
-    dropSchema: false,
+    dropSchema: true,
   }),
 };

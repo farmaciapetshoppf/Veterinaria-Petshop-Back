@@ -1,45 +1,189 @@
 [
-  { "name": "Dog Chow Adultos",
-   "price": 2500, "stock": 30,
+  {
+    "name": "Dog Chow Adultos",
+    "price": 2500,
+    "stock": 30,
     "category": "Alimentos",
-     "imgUrl": "https://example.com/dogchow.jpg" },
+    "imgUrl": "https://example.com/dogchow.jpg"
+  },
 
-  { "name": "Cat Chow Adultos",
-   "price": 2200, 
-    "stock": 25, "category": "Alimentos",
-     "imgUrl": "https://example.com/catchow.jpg" },
+  {
+    "name": "Cat Chow Adultos",
+    "price": 2200,
+    "stock": 25,
+    "category": "Alimentos",
+    "imgUrl": "https://example.com/catchow.jpg"
+  },
 
-  { "name": "Pedigree Junior", "price": 2300, "stock": 20, "category": "Alimentos", "imgUrl": "https://example.com/pedigree.jpg" },
+  {
+    "name": "Pedigree Junior",
+    "price": 2300,
+    "stock": 20,
+    "category": "Alimentos",
+    "imgUrl": "https://example.com/pedigree.jpg"
+  },
 
-  { "name": "Royal Canin Urinary", "price": 4500, "stock": 15, "category": "Alimentos", "imgUrl": "https://example.com/royalcanin.jpg" },
+  {
+    "name": "Royal Canin Urinary",
+    "price": 4500,
+    "stock": 15,
+    "category": "Alimentos",
+    "imgUrl": "https://example.com/royalcanin.jpg"
+  },
 
-  { "name": "Whiskas Selección Carne", "price": 1800, "stock": 35, "category": "Alimentos", "imgUrl": "https://example.com/whiskas.jpg" },
+  {
+    "name": "Whiskas Selección Carne",
+    "price": 1800,
+    "stock": 35,
+    "category": "Alimentos",
+    "imgUrl": "https://example.com/whiskas.jpg"
+  },
 
-  { "name": "Antiparasitario Perros", "price": 1900, "stock": 20, "category": "Salud", "imgUrl": "https://example.com/parasitario.jpg" },
+  {
+    "name": "Antiparasitario Perros",
+    "price": 1900,
+    "stock": 20,
+    "category": "Salud",
+    "imgUrl": "https://example.com/parasitario.jpg"
+  },
 
-  { "name": "Antipulgas Gatos", "price": 2100, "stock": 18, "category": "Salud", "imgUrl": "https://example.com/pulgas.jpg" },
+  {
+    "name": "Antipulgas Gatos",
+    "price": 2100,
+    "stock": 18,
+    "category": "Salud",
+    "imgUrl": "https://example.com/pulgas.jpg"
+  },
 
-  { "name": "Vitaminas para Cachorros", "price": 1600, "stock": 25, "category": "Salud", "imgUrl": "https://example.com/vitaminas.jpg" },
-  { "name": "Protector Hepático", "price": 2700, "stock": 10, "category": "Salud", "imgUrl": "https://example.com/hepatico.jpg" },
-  { "name": "Calcio para Mascotas", "price": 1500, "stock": 22, "category": "Salud", "imgUrl": "https://example.com/calcio.jpg" },
+  {
+    "name": "Vitaminas para Cachorros",
+    "price": 1600,
+    "stock": 25,
+    "category": "Salud",
+    "imgUrl": "https://example.com/vitaminas.jpg"
+  },
+  {
+    "name": "Protector Hepático",
+    "price": 2700,
+    "stock": 10,
+    "category": "Salud",
+    "imgUrl": "https://example.com/hepatico.jpg"
+  },
+  {
+    "name": "Calcio para Mascotas",
+    "price": 1500,
+    "stock": 22,
+    "category": "Salud",
+    "imgUrl": "https://example.com/calcio.jpg"
+  },
 
-  { "name": "Shampoo Antipulgas", "price": 1400, "stock": 20, "category": "Higiene", "imgUrl": "https://example.com/shampoo.jpg" },
-  { "name": "Cepillo para Perros", "price": 900, "stock": 30, "category": "Higiene", "imgUrl": "https://example.com/cepillo.jpg" },
-  { "name": "Arena Sanitaria", "price": 1200, "stock": 40, "category": "Higiene", "imgUrl": "https://example.com/arena.jpg" },
-  { "name": "Toallitas Húmedas", "price": 800, "stock": 35, "category": "Higiene", "imgUrl": "https://example.com/toallitas.jpg" },
-  { "name": "Desinfectante Veterinario", "price": 1700, "stock": 15, "category": "Higiene", "imgUrl": "https://example.com/desinfectante.jpg" },
+  {
+    "name": "Shampoo Antipulgas",
+    "price": 1400,
+    "stock": 20,
+    "category": "Higiene",
+    "imgUrl": "https://example.com/shampoo.jpg"
+  },
+  {
+    "name": "Cepillo para Perros",
+    "price": 900,
+    "stock": 30,
+    "category": "Higiene",
+    "imgUrl": "https://example.com/cepillo.jpg"
+  },
+  {
+    "name": "Arena Sanitaria",
+    "price": 1200,
+    "stock": 40,
+    "category": "Higiene",
+    "imgUrl": "https://example.com/arena.jpg"
+  },
+  {
+    "name": "Toallitas Húmedas",
+    "price": 800,
+    "stock": 35,
+    "category": "Higiene",
+    "imgUrl": "https://example.com/toallitas.jpg"
+  },
+  {
+    "name": "Desinfectante Veterinario",
+    "price": 1700,
+    "stock": 15,
+    "category": "Higiene",
+    "imgUrl": "https://example.com/desinfectante.jpg"
+  },
 
-  { "name": "Cama Mediana", "price": 5500, "stock": 10, "category": "Accesorios", "imgUrl": "https://example.com/cama.jpg" },
-  { "name": "Transportadora", "price": 8200, "stock": 8, "category": "Accesorios", "imgUrl": "https://example.com/transportadora.jpg" },
-  { "name": "Plato Antideslizante", "price": 650, "stock": 30, "category": "Accesorios", "imgUrl": "https://example.com/plato.jpg" },
-  { "name": "Collar Reflectivo", "price": 950, "stock": 22, "category": "Accesorios", "imgUrl": "https://example.com/collar.jpg" },
-  { "name": "Arnés Ajustable", "price": 1800, "stock": 18, "category": "Accesorios", "imgUrl": "https://example.com/arnes.jpg" },
+  {
+    "name": "Cama Mediana",
+    "price": 5500,
+    "stock": 10,
+    "category": "Accesorios",
+    "imgUrl": "https://example.com/cama.jpg"
+  },
+  {
+    "name": "Transportadora",
+    "price": 8200,
+    "stock": 8,
+    "category": "Accesorios",
+    "imgUrl": "https://example.com/transportadora.jpg"
+  },
+  {
+    "name": "Plato Antideslizante",
+    "price": 650,
+    "stock": 30,
+    "category": "Accesorios",
+    "imgUrl": "https://example.com/plato.jpg"
+  },
+  {
+    "name": "Collar Reflectivo",
+    "price": 950,
+    "stock": 22,
+    "category": "Accesorios",
+    "imgUrl": "https://example.com/collar.jpg"
+  },
+  {
+    "name": "Arnés Ajustable",
+    "price": 1800,
+    "stock": 18,
+    "category": "Accesorios",
+    "imgUrl": "https://example.com/arnes.jpg"
+  },
 
-  { "name": "Pelota de Goma", "price": 500, "stock": 40, "category": "Juguetes", "imgUrl": "https://example.com/pelota.jpg" },
-  { "name": "Hueso de Goma", "price": 700, "stock": 35, "category": "Juguetes", "imgUrl": "https://example.com/hueso.jpg" },
-  { "name": "Ratón de Juguete", "price": 300, "stock": 50, "category": "Juguetes", "imgUrl": "https://example.com/raton.jpg" },
-  { "name": "Rascador Básico", "price": 3200, "stock": 12, "category": "Juguetes", "imgUrl": "https://example.com/rascador.jpg" },
-  { "name": "Cuerda Mordedora", "price": 600, "stock": 28, "category": "Juguetes", "imgUrl": "https://example.com/cuerda.jpg" },
+  {
+    "name": "Pelota de Goma",
+    "price": 500,
+    "stock": 40,
+    "category": "Juguetes",
+    "imgUrl": "https://example.com/pelota.jpg"
+  },
+  {
+    "name": "Hueso de Goma",
+    "price": 700,
+    "stock": 35,
+    "category": "Juguetes",
+    "imgUrl": "https://example.com/hueso.jpg"
+  },
+  {
+    "name": "Ratón de Juguete",
+    "price": 300,
+    "stock": 50,
+    "category": "Juguetes",
+    "imgUrl": "https://example.com/raton.jpg"
+  },
+  {
+    "name": "Rascador Básico",
+    "price": 3200,
+    "stock": 12,
+    "category": "Juguetes",
+    "imgUrl": "https://example.com/rascador.jpg"
+  },
+  {
+    "name": "Cuerda Mordedora",
+    "price": 600,
+    "stock": 28,
+    "category": "Juguetes",
+    "imgUrl": "https://example.com/cuerda.jpg"
+  },
 
   {
     "name": "Balanceado Premium Adulto",
