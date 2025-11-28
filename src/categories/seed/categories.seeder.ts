@@ -17,7 +17,7 @@ export class CategoriesSeeder implements OnModuleInit {
     const count = await this.repo.count();
     if (count > 0) return;
 
-    const filePath = path.join(__dirname, 'categories.json');
+    const filePath = path.join(process.cwd(), 'src', 'categories', 'seed', 'categories.json');
     const file = fs.readFileSync(filePath, 'utf8');
     const categories = JSON.parse(file);
 

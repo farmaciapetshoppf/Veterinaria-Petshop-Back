@@ -1,6 +1,6 @@
-import { Pet } from "src/pets/entities/pet.entity";
-import { User } from "src/users/entities/user.entity";
-import { Veterinarian } from "src/veterinarians/entities/veterinarian.entity";
+// import { Pet } from "src/pets/entities/pet.entity";
+import { Users } from "src/users/entities/user.entity";
+// import { Veterinarian } from "src/veterinarians/entities/veterinarian.entity";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({ name: 'APPOINTMENTS' })
@@ -14,27 +14,27 @@ export class Appointments {
    * Cuando User tenga @OneToMany('appointments'), agregar:
    * user => user.appointments
    */
-  @ManyToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Users, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Users;
 
   /**
    * Relación temporal sin inverseSide
    * Cuando Pet tenga @OneToMany('appointments'), agregar:
    * pet => pet.appointments
    */
-  @ManyToOne(() => Pet, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'pet_id' })
-  pet: Pet;
+  // @ManyToOne(() => Pet, { nullable: true, onDelete: 'CASCADE' })
+  // @JoinColumn({ name: 'pet_id' })
+  // pet: Pet;
 
   /**
    * Relación temporal sin inverseSide
    * Cuando Veterinarian tenga @OneToMany('appointments'), agregar:
    * vet => vet.appointments
    */
-  @ManyToOne(() => Veterinarian, { nullable: true })
-  @JoinColumn({ name: 'veterinarian_id' })
-  veterinarian: Veterinarian;
+  // @ManyToOne(() => Veterinarian, { nullable: true })
+  // @JoinColumn({ name: 'veterinarian_id' })
+  // veterinarian: Veterinarian;
 
   @Column({
     type: 'date',
