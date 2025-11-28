@@ -9,8 +9,8 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: ['http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: ['http://localhost:3000', 'http://localhost:3002'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   });
 
@@ -20,7 +20,7 @@ async function bootstrap() {
   // Validaciones globales
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist:true,
+      whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
     }),
