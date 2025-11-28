@@ -5,10 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Appointments } from './entities/appointment.entity';
 import { UsersModule } from 'src/users/users.module';
 import { PetsModule } from 'src/pets/pets.module';
-import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
+import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([Appointments]), UsersModule, PetsModule, VeterinariansModule],
+  imports:[TypeOrmModule.forFeature([Appointments , Veterinarian]), UsersModule, PetsModule],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],
 })

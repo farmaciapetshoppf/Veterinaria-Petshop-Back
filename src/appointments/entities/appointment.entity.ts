@@ -1,5 +1,5 @@
 import { Pet } from "src/pets/entities/pet.entity";
-import { User } from "src/users/entities/user.entity";
+import { Users } from "src/users/entities/user.entity";
 import { Veterinarian } from "src/veterinarians/entities/veterinarian.entity";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
@@ -14,9 +14,9 @@ export class Appointments {
    * Cuando User tenga @OneToMany('appointments'), agregar:
    * user => user.appointments
    */
-  @ManyToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Users, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Users;
 
   /**
    * Relación temporal sin inverseSide

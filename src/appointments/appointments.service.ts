@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
 
 @Injectable()
 export class AppointmentsService {

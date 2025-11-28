@@ -1,5 +1,6 @@
 import { Role } from 'src/auth/enum/roles.enum';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Pet } from 'src/pets/entities/pet.entity';
 
 @Entity('users')
 export class Users {
@@ -29,7 +30,8 @@ export class Users {
   //@OneToMany(() => Orders, orders => orders.user,{
   //onDelete: 'CASCADE'} )
   //orders: Orders[]
-  //@OneToMany(() => Pets, pets => pets.user,{
-  //onDelete: 'CASCADE'} )
-  //pets: Pets[]
+  
+  @OneToMany(() => Pet, pets => pets.owner,{
+  onDelete: 'CASCADE'} )
+  pets: Pet[]
 }

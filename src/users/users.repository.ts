@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Role } from 'src/auth/enum/roles.enum';
-// import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersRepository {
@@ -67,7 +67,7 @@ export class UsersRepository {
       if (result.affected === 0) {
         throw new NotFoundException(`Error al eliminar usuario de PostgreSQL`);
       }
-    } catch (error) {
+    } catch (error : any) {
       if (error instanceof NotFoundException) {
         throw error;
       }

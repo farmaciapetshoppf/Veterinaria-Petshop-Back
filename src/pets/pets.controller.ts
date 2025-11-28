@@ -1,16 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
+import { Pet } from './entities/pet.entity';
 
 @Controller('pets')
 export class PetsController {
   constructor(private readonly petsService: PetsService) {}
 
-  @Post()
-  create(@Body() createPetDto: CreatePetDto) {
-    return this.petsService.create(createPetDto);
+  @Post('NewPet')
+  async create(@Body() createPetDto: CreatePetDto) {
+    try {
+      const NewPet = await this.petsService.create(createPetDto);
+      return {
+        message: 'Pet created successfully',
+        data: NewPet,
+      };
+    } catch (error :any) {
+      throw new HttpException({
+        message: 'Error creating pet',
+        error: error.message,
+      }, HttpStatus.BAD_REQUEST);
+    }
   }
+  
 
   @Get()
   findAll() {

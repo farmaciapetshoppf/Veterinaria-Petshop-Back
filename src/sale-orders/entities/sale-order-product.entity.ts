@@ -10,7 +10,7 @@ export class SaleOrderProduct {
   id: string;
 
 
-  @ManyToOne(() => SaleOrder, order => order.items, { onDelete: 'CASCADE' })
+ // @ManyToOne(() => SaleOrder, order => order.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: SaleOrder;
 
