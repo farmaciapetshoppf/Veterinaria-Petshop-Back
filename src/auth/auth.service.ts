@@ -5,7 +5,6 @@ import { SignUpDto } from './dto/singup.dto';
 import { SignInDto } from './dto/signin.dto';
 import { Role } from './enum/roles.enum';
 
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -88,7 +87,7 @@ export class AuthService {
       }
 
       return { message: 'Successfully signed out' };
-    } catch (error: any) {
+    } catch (error : any) {
       throw new Error(error.message);
     }
   }
