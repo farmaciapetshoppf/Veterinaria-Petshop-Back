@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { UsersService } from 'src/users/users.service';
 import { SignUpDto } from './dto/singup.dto';
@@ -17,71 +23,110 @@ export class AuthService {
     const { name, email, password, user, phone, country, address, city } =
       signUpDto;
 
-    const { data, error: authError } = await this.supabaseService
-      .getClient()
-      .auth.signUp({
-        email: email,
-        password,
-      });
+    try {
+      const { data, error: authError } = await this.supabaseService
+        .getClient()
+        .auth.signUp({
+          email: email,
+          password,
+        });
 
-    if (authError) {
-      throw new Error(`Error de autenticación: ${authError.message}`);
-    }
+      if (authError) {
+        const errorMessage = authError.message.toLowerCase();
 
-    if (data && data.user) {
-      const newUser = await this.usersService.createUser({
-        id: data.user.id,
-        email,
-        name,
-        user,
-        phone,
-        country,
-        address,
-        city,
-        role: Role.User,
-      });
+        if (
+          errorMessage.includes('user') &&
+          (errorMessage.includes('already') ||
+            errorMessage.includes('exist') ||
+            errorMessage.includes('registered'))
+        ) {
+          return {
+            error: 'Bad Request',
+            message: 'El email ingresado ya está registrado en el sistema.',
+            statusCode: 400,
+          };
+        }
+
+        throw new Error(`Error de autenticación: ${authError.message}`);
+      }
+
+      if (data && data.user) {
+        const newUser = await this.usersService.createUser({
+          id: data.user.id,
+          email,
+          name,
+          user,
+          phone,
+          country,
+          address,
+          city,
+          role: Role.User,
+        });
+
+        return {
+          message:
+            'Usuario registrado correctamente. Revise su email para verificar.',
+          user: newUser,
+        };
+      }
 
       return {
         message:
-          'Usuario registrado correctamente. Revise su email para verificar.',
-        user: newUser,
+          'Registro de usuario iniciado. Revise su email para verificar.',
       };
+    } catch (error) {
+      throw new Error(`Error durante el registro: ${error.message}`);
     }
-
-    return {
-      message: 'Registro de usuario iniciado. Revise su email para verificar.',
-    };
   }
 
   async signIn(signInDto: SignInDto, res: Response): Promise<any> {
-    const { data, error } = await this.supabaseService
-      .getClient()
-      .auth.signInWithPassword({
-        email: signInDto.email,
-        password: signInDto.password,
-      });
+    try {
+      // 1. Autenticar con Supabase Auth
+      const { data, error } = await this.supabaseService
+        .getClient()
+        .auth.signInWithPassword({
+          email: signInDto.email,
+          password: signInDto.password,
+        });
 
-    if (error) throw new UnauthorizedException(error.message);
+      if (error) throw new UnauthorizedException(error.message);
 
-    if (!data.session) {
-      throw new UnauthorizedException('No se devolvieron datos de sesion');
+      if (!data.session) {
+        throw new UnauthorizedException('No se devolvieron datos de sesión');
+      }
+
+      // 2. Intentar obtener el usuario
+      try {
+        const user = await this.usersService.getUserById(data.user.id);
+
+        // 3. Si el usuario existe, proceder normalmente
+        res.cookie('access_token', data.session.access_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax' as const,
+          path: '/',
+          maxAge: 3600 * 1000,
+        });
+
+        return {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        };
+      } catch (userError) {
+        // 4. Si el usuario no existe en tu tabla, mostrar un mensaje claro
+        throw new NotFoundException(
+          'La cuenta existe pero no tiene un perfil completo. Por favor, contacte al administrador o regístrese nuevamente.',
+        );
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Error en el proceso de inicio de sesión',
+      );
     }
-
-    const user = await this.usersService.getUserById(data.user.id);
-
-    res.cookie('access_token', data.session.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
-      path: '/',
-      maxAge: 3600 * 1000,
-    });
-
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    };
   }
 
   async signOut(res: Response): Promise<{ success: boolean; message: string }> {

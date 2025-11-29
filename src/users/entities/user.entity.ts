@@ -5,6 +5,8 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class Users {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+  @Column({ unique: true })
+  uid: string;
   @Column({ type: 'varchar', length: 50, nullable: false })
   name: string;
   @Column({ type: 'varchar', length: 50, unique: true, nullable: false })
@@ -25,6 +27,10 @@ export class Users {
     default: Role.User,
   })
   role: Role;
+  @Column({ default: false })
+  isDeleted: boolean;
+  @Column({ nullable: true })
+  deletedAt: Date;
 
   //@OneToMany(() => Orders, orders => orders.user,{
   //onDelete: 'CASCADE'} )
