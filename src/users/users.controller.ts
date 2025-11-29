@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Delete,
-  HttpCode,
-  UseGuards,
-  Patch,
-  Body,
-} from '@nestjs/common';
+import { Controller, Get, Param, HttpCode, Patch, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 // import { AuthGuard } from 'src/auth/guards/auth.guard';
 // import { Roles } from 'src/decorators/roles.decorator';
@@ -69,7 +60,7 @@ export class UsersController {
   }
 
   @HttpCode(200)
-  @Delete(':id')
+  @Patch(':id/delete')
   deleteUser(@Param('id') id: string) {
     return this.usersService.deleteUser(id);
   }
