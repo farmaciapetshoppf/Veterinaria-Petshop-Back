@@ -61,12 +61,20 @@ export class UsersRepository {
         .auth.admin.deleteUser(id);
 
       if (error) {
+        if (error.message.includes('User not found')) {
+          return { message: `El usuario con id: '${id}' no existe` };
+        }
         throw new Error(`Error al eliminar usuario: ${error.message}`);
       }
 
       return { message: 'Usuario borrado correctamente' };
     } catch (error) {
       console.error('Error en deleteUser:', error);
+
+      if (error.message && error.message.includes('User not found')) {
+        return { message: `El usuario con id: '${id}' no existe` };
+      }
+
       throw new Error(`Error al eliminar usuario: ${error.message}`);
     }
   }
