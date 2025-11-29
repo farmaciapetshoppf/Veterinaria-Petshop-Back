@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from './entities/user.entity';
@@ -6,7 +8,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Role } from 'src/auth/enum/roles.enum';
 import { generateShortUuid } from 'src/utils/uuid.utils';
-import { v4 as uuidv4 } from 'uuid';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()

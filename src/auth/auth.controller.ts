@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Body,
   Controller,
@@ -13,7 +17,7 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/singup.dto';
 import { SignInDto } from './dto/signin.dto';
 import { ApiOperation } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import { AuthGuard } from './guards/auth.guard';
 
 @Controller('auth')
@@ -43,6 +47,27 @@ export class AuthController {
     return this.authService.signOut(res);
   }
 
+  @Get('me')
+  @UseGuards(AuthGuard)
+  getProfile(@Req() req: Request) {
+    return (req as any).user;
+  }
+
+  @ApiOperation({ summary: 'Google OAuth URL' })
+  @Get('google/url')
+  getGoogleAuthURL() {
+    return this.authService.getGoogleAuthURL();
+  }
+
+  @ApiOperation({ summary: 'Handle successful OAuth authentication' })
+  @Post('session')
+  async handleSession(
+    @Body() sessionData: { access_token: string },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.handleSession(sessionData.access_token, res);
+  }
+
   @Post('password/reset-request')
   requestPasswordReset() {
     return this.authService.requestPasswordReset();
@@ -56,11 +81,5 @@ export class AuthController {
   @Put('password')
   updatePassword() {
     return this.authService.updatePassword();
-  }
-
-  @Get('me')
-  @UseGuards(AuthGuard)
-  async getProfile(@Req() req: Request) {
-    return (req as any).user;
   }
 }

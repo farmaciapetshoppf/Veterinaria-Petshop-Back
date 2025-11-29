@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   HttpException,
   Injectable,
@@ -81,7 +84,6 @@ export class AuthService {
 
   async signIn(signInDto: SignInDto, res: Response): Promise<any> {
     try {
-      // 1. Autenticar con Supabase Auth
       const { data, error } = await this.supabaseService
         .getClient()
         .auth.signInWithPassword({
@@ -95,11 +97,9 @@ export class AuthService {
         throw new UnauthorizedException('No se devolvieron datos de sesión');
       }
 
-      // 2. Intentar obtener el usuario
       try {
         const user = await this.usersService.getUserById(data.user.id);
 
-        // 3. Si el usuario existe, proceder normalmente
         res.cookie('access_token', data.session.access_token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
@@ -114,7 +114,6 @@ export class AuthService {
           role: user.role,
         };
       } catch (userError) {
-        // 4. Si el usuario no existe en tu tabla, mostrar un mensaje claro
         throw new NotFoundException(
           'La cuenta existe pero no tiene un perfil completo. Por favor, contacte al administrador o regístrese nuevamente.',
         );
@@ -171,6 +170,90 @@ export class AuthService {
     }
 
     return data.user;
+  }
+
+  async getGoogleAuthURL(): Promise<{ url: string }> {
+    try {
+      const { data, error } = await this.supabaseService
+        .getClient()
+        .auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${process.env.FRONTEND_URL}/auth-callback`,
+          },
+        });
+
+      if (error) throw new Error(error.message);
+
+      if (!data || !data.url) {
+        throw new Error('No se pudo generar la URL de autenticación');
+      }
+
+      return { url: data.url };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Error al generar URL de autenticación de Google: ${error.message}`,
+      );
+    }
+  }
+
+  async handleSession(accessToken: string, res: Response): Promise<any> {
+    try {
+      const { data, error } = await this.supabaseService
+        .getClient()
+        .auth.getUser(accessToken);
+
+      if (error) throw new UnauthorizedException(error.message);
+
+      if (!data.user) {
+        throw new UnauthorizedException(
+          'No se pudo obtener información del usuario',
+        );
+      }
+
+      let user;
+      try {
+        user = await this.usersService.getUserById(data.user.id);
+      } catch (userError) {
+        const userName =
+          data.user.user_metadata?.full_name ||
+          data.user.user_metadata?.name ||
+          (data.user.email ? data.user.email.split('@')[0] : 'user');
+
+        const userUsername =
+          data.user.user_metadata?.name ||
+          (data.user.email ? data.user.email.split('@')[0] : 'user');
+
+        user = await this.usersService.createUser({
+          id: data.user.id,
+          email: data.user.email || 'no-email@example.com',
+          name: userName,
+          user: userUsername,
+          role: Role.User,
+        });
+      }
+
+      res.cookie('access_token', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' as const,
+        path: '/',
+        maxAge: 3600 * 1000,
+      });
+
+      return {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Error al procesar la sesión: ${error.message}`,
+      );
+    }
   }
 
   requestPasswordReset() {
