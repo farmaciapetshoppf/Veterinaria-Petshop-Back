@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Appointments } from 'src/appointments/entities/appointment.entity';
 
 @Entity('veterinarians')
 export class Veterinarian {
@@ -28,4 +29,7 @@ export class Veterinarian {
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   password: string;
+
+  @OneToMany(() => Appointments, (appointment) => appointment.veterinarian)
+  appointments?: Appointments[];
 }

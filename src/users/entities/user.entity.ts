@@ -1,6 +1,9 @@
 import { Role } from 'src/auth/enum/roles.enum';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Pet } from 'src/pets/entities/pet.entity';
+import { Appointments } from 'src/appointments/entities/appointment.entity';
+import { SaleOrder } from 'src/sale-orders/entities/sale-order.entity';
+
 
 @Entity('users')
 export class Users {
@@ -27,11 +30,17 @@ export class Users {
   })
   role: Role;
 
-  //@OneToMany(() => Orders, orders => orders.user,{
-  //onDelete: 'CASCADE'} )
-  //orders: Orders[]
+  // Historial de compras como comprador
+  @OneToMany(() => SaleOrder, saleOrder => saleOrder.buyer, {
+    onDelete: 'CASCADE'
+  })
+  buyerSaleOrders: SaleOrder[]
   
   @OneToMany(() => Pet, pets => pets.owner,{
   onDelete: 'CASCADE'} )
   pets: Pet[]
+
+  @OneToMany(() => Appointments, appointment => appointment.user,{
+    onDelete: 'CASCADE'} )
+    appointments: Appointments[]
 }

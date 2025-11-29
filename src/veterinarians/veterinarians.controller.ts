@@ -11,32 +11,41 @@ import {
 import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import { ChangePasswordVeterinarianDto } from './dto/change-password-veterinarian.dto';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Veterinarians')
 @Controller('veterinarians')
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 
+  @ApiOperation({ summary: 'Get all veterinarians (optionally filter active)' })
   @Get()
-  fillAllVeterinarians(@Query('onlyActive') onlyActive?: string) {
+  async fillAllVeterinarians(@Query('onlyActive') onlyActive?: string) {
     const active = onlyActive === undefined ? true : onlyActive === 'true';
-    return this.veterinariansService.fillAllVeterinarians(active);
+    const data = await this.veterinariansService.fillAllVeterinarians(active);
+    return { message: 'Veterinarians retrieved', data };
   }
 
+  @ApiOperation({ summary: 'Get veterinarian by ID' })
   @Get(':id')
   fillByIdVeterinarians(@Param('id', ParseUUIDPipe) id: string) {
-    return this.veterinariansService.fillByIdVeterinarians(id);
+    // service returns single veterinarian (password already stripped for GET)
+    return this.veterinariansService.fillByIdVeterinarians(id).then(data => ({ message: `Veterinarian ${id} retrieved`, data }));
   }
 
+  @ApiOperation({ summary: 'Create new veterinarian' })
   @Post()
   createVeterinarian(@Body() createVeterinarian: CreateVeterinarianDto) {
     return this.veterinariansService.createVeterinarian(createVeterinarian);
   }
 
+  @ApiOperation({ summary: 'Deactivate veterinarian' })
   @Patch(':id/deactivate')
   deleteVeterinarian(@Param('id', ParseUUIDPipe) id: string) {
     return this.veterinariansService.deleteVeterinarian(id);
   }
 
+  @ApiOperation({ summary: 'Change veterinarian password' })
   @Patch('change-password')
   changePassword(@Body() body: ChangePasswordVeterinarianDto) {
     return this.veterinariansService.changePassword(body);

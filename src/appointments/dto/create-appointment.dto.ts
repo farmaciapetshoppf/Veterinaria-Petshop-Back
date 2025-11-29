@@ -1,22 +1,26 @@
 import {IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsString, IsUUID} from 'class-validator';
+import { DateUtils } from 'typeorm/browser/util/DateUtils.js';
 
 export class CreateAppointmentDto {
 
+  @IsOptional()
   @IsUUID()
-  userId: string;
+  userId?: string;
 
+  @IsOptional()
   @IsUUID()
-  petId: string;
+  petId?: string;
 
+  @IsOptional()
   @IsUUID()
-  veterinarianId: string;
+  veterinarianId?: string;
 
   @IsDateString()
-  date: string;
+  date: Date;
 
   @IsString()
   @IsNotEmpty()
-  time: string;
+  time: Date;
 
   @IsOptional()
   @IsString()

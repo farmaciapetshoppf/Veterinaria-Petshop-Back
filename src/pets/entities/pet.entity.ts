@@ -1,4 +1,5 @@
 import { Users } from "src/users/entities/user.entity";
+import { Appointments } from 'src/appointments/entities/appointment.entity';
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -29,6 +30,7 @@ export enum PetTamano{
 export enum PetEsterilizado{
     SI = "SI",
     NO = "NO",
+    // cambiar a true o false
 }
 
 export enum PetStatus{
@@ -106,4 +108,7 @@ export class Pet {
 
     @OneToMany(() => Pet, (pet) => pet.father)
     childrenAsFather?: Pet[];
+
+    @OneToMany(() => Appointments, (appointment) => appointment.pet)
+    appointments?: Appointments[];
 }

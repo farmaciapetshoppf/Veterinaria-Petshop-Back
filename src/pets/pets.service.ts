@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -53,11 +53,35 @@ export class PetsService {
 
 
   findAll() {
-    return `This action returns all pets`;
+    return this.petRepository.find({
+      relations: ['owner', 'mother', 'father', 'appointments', 'appointments.veterinarian'],
+    }).then(pets => {
+      pets.forEach(p => {
+        if (p.appointments) {
+          p.appointments.forEach(a => {
+            if (a.veterinarian && (a.veterinarian as any).password) {
+              delete (a.veterinarian as any).password;
+            }
+          });
+        }
+      });
+      return pets;
+    });
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} pet`;
+    return this.petRepository.findOne({ where: { id: String(id) }, relations: ['owner', 'mother', 'father', 'appointments', 'appointments.veterinarian'] })
+      .then(p => {
+        if (!p) throw new NotFoundException(`Pet with id ${id} not found`);
+        if (p.appointments) {
+          p.appointments.forEach(a => {
+            if (a.veterinarian && (a.veterinarian as any).password) {
+              delete (a.veterinarian as any).password;
+            }
+          });
+        }
+        return p;
+      });
   }
 
   update(id: number, updatePetDto: UpdatePetDto) {

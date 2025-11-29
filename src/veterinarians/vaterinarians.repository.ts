@@ -27,18 +27,36 @@ export class VeterinariansRepository {
   }
 
   async fillAll(onlyActive?: boolean) {
+    const relations = [
+      'appointments',
+      'appointments.pet',
+      'appointments.pet.owner',
+    ];
+
     if (onlyActive === false) {
-      return this.veterinarianRepository.find();
+      const vets = await this.veterinarianRepository.find({ relations });
+      vets.forEach(v => { if ((v as any).password) delete (v as any).password; });
+      return vets;
     }
 
-    return this.veterinarianRepository.find({
+    const vets = await this.veterinarianRepository.find({
       where: { isActive: true },
+      relations,
     });
+    vets.forEach(v => { if ((v as any).password) delete (v as any).password; });
+    return vets;
   }
 
   async fillById(id: string) {
-    const findById = await this.veterinarianRepository.findOneBy({ id });
+    const relations = [
+      'appointments',
+      'appointments.pet',
+      'appointments.pet.owner',
+    ];
+
+    const findById = await this.veterinarianRepository.findOne({ where: { id }, relations });
     if (!findById) throw new NotFoundException('Veterinario no encontrado');
+    if ((findById as any).password) delete (findById as any).password;
     return findById;
   }
 
@@ -56,9 +74,8 @@ export class VeterinariansRepository {
       const { name: name, email: email } = saved;
       return {
         message:
-          `Vaterinario creado con exito.  ${name} Debe ` +
-          `ingrese con el ${email} ` +
-          `La contrasenia tempora es: ${TempPassword} `,
+          `Veterinario creado con éxito. Ingrese con ${email}. Contraseña temporal: ${TempPassword}`,
+        data: saved,
       };
     } catch (error) {
       if (

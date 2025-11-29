@@ -1,0 +1,26 @@
+### Create Sale Order
+POST http://localhost:3000/sale-orders
+Content-Type: application/json
+
+{
+  "userId": "REPLACE_WITH_USER_UUID",
+  "branchId": "REPLACE_WITH_BRANCH_UUID_OR_OMIT",
+  "items": [
+    {
+      "productId": "REPLACE_WITH_PRODUCT_UUID_1",
+      "quantity": 2
+    },
+    {
+      "productId": "REPLACE_WITH_PRODUCT_UUID_2",
+      "quantity": 1
+    }
+  ],
+  "paymentMethod": "CASH",
+  "notes": "Cliente recoge en sucursal"
+}
+
+### Get All Sale Orders
+GET http://localhost:3000/sale-orders
+
+### Get Sale Order by ID
+GET http://localhost:3000/sale-orders/REPLACE_WITH_ORDER_UUID
