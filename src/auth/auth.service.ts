@@ -4,6 +4,7 @@ import { UsersService } from 'src/users/users.service';
 import { SignUpDto } from './dto/singup.dto';
 import { SignInDto } from './dto/signin.dto';
 import { Role } from './enum/roles.enum';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -13,7 +14,7 @@ export class AuthService {
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
-    const { name, email, password, user, phone, country, address, city, role } =
+    const { name, email, password, user, phone, country, address, city } =
       signUpDto;
 
     const { data, error: authError } = await this.supabaseService
@@ -24,7 +25,7 @@ export class AuthService {
       });
 
     if (authError) {
-      throw new Error(`Authentication error: ${authError.message}`);
+      throw new Error(`Error de autenticación: ${authError.message}`);
     }
 
     if (data && data.user) {
@@ -42,54 +43,89 @@ export class AuthService {
 
       return {
         message:
-          'User registered successfully. Please check your email for verification.',
+          'Usuario registrado correctamente. Revise su email para verificar.',
         user: newUser,
       };
     }
 
     return {
-      message:
-        'User registration initiated. Please check your email for verification.',
+      message: 'Registro de usuario iniciado. Revise su email para verificar.',
     };
   }
 
-  async signIn(signInDto: SignInDto) {
-    const { email, password } = signInDto;
-
+  async signIn(signInDto: SignInDto, res: Response): Promise<any> {
     const { data, error } = await this.supabaseService
       .getClient()
       .auth.signInWithPassword({
-        email,
-        password,
+        email: signInDto.email,
+        password: signInDto.password,
       });
 
-    if (error) {
-      throw new UnauthorizedException('Invalid credentials');
+    if (error) throw new UnauthorizedException(error.message);
+
+    if (!data.session) {
+      throw new UnauthorizedException('No se devolvieron datos de sesion');
     }
 
-    const userProfile = await this.usersService.getUserById(data.user.id);
+    const user = await this.usersService.getUserById(data.user.id);
+
+    res.cookie('access_token', data.session.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      path: '/',
+      maxAge: 3600 * 1000,
+    });
 
     return {
-      message: 'Signed in successfully',
-      user: userProfile,
-      session: data.session,
+      id: user.id,
+      email: user.email,
+      role: user.role,
     };
   }
 
-  async signOut(token: string) {
+  async signOut(res: Response): Promise<{ success: boolean; message: string }> {
     try {
-      const supabaseClient = this.supabaseService.getClient();
-
-      const { error } = await supabaseClient.auth.signOut({});
+      const { error } = await this.supabaseService.getClient().auth.signOut();
 
       if (error) {
-        throw new Error(`Error during sign out: ${error.message}`);
+        console.error('Error cerrando sesion desde supabase:', error);
       }
 
-      return { message: 'Successfully signed out' };
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' as const,
+        path: '/',
+        expires: new Date(0),
+      };
+
+      res.clearCookie('access_token', cookieOptions);
+
+      return {
+        success: true,
+        message: 'Sesion cerrada correctamente.',
+      };
     } catch (error) {
-      throw new Error(`Sign out failed: ${error.message}`);
+      console.error('Error durante el cierre de sesion:', error);
+      throw new Error('Fallo al cerrar sesion: ' + error.message);
     }
+  }
+
+  async verifyToken(token: string): Promise<any> {
+    if (!token) {
+      throw new UnauthorizedException('No se entro el token');
+    }
+
+    const { data, error } = await this.supabaseService
+      .getClient()
+      .auth.getUser(token);
+
+    if (error) {
+      throw new UnauthorizedException('Token invalido o expirado');
+    }
+
+    return data.user;
   }
 
   requestPasswordReset() {

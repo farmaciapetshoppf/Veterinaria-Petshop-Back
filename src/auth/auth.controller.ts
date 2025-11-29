@@ -3,13 +3,18 @@ import {
   Controller,
   Post,
   Put,
-  Headers,
-  UnauthorizedException,
+  HttpCode,
+  Res,
+  Get,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/singup.dto';
 import { SignInDto } from './dto/signin.dto';
 import { ApiOperation } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { AuthGuard } from './guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -23,18 +28,19 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Login user' })
   @Post('signin')
-  signIn(@Body() signInDto: SignInDto) {
-    return this.authService.signIn(signInDto);
+  @HttpCode(200)
+  async signIn(
+    @Body() signInDto: SignInDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.signIn(signInDto, res);
   }
 
   @ApiOperation({ summary: 'Signout user' })
   @Post('signout')
-  signOut(@Headers('authorization') authHeader: string) {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Token de autenticación requerido');
-    }
-    const token = authHeader.split(' ')[1];
-    return this.authService.signOut(token);
+  @HttpCode(200)
+  async signOut(@Res({ passthrough: true }) res: Response) {
+    return this.authService.signOut(res);
   }
 
   @Post('password/reset-request')
@@ -50,5 +56,11 @@ export class AuthController {
   @Put('password')
   updatePassword() {
     return this.authService.updatePassword();
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  async getProfile(@Req() req: Request) {
+    return (req as any).user;
   }
 }

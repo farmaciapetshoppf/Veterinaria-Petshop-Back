@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   CanActivate,
@@ -5,40 +6,36 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { AuthService } from '../auth.service';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private supabaseService: SupabaseService) {}
+  constructor(
+    private supabaseService: SupabaseService,
+    private authService: AuthService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = request.cookies?.['access_token'];
 
     if (!token) {
-      throw new UnauthorizedException('Token de autenticación requerido');
+      throw new UnauthorizedException('No tiene token de autorización');
     }
 
     try {
-      // Verificar el token con Supabase
-      const { data, error } = await this.supabaseService
-        .getClient()
-        .auth.getUser(token);
+      const user = await this.authService.verifyToken(token);
 
-      if (error || !data.user) {
-        throw new UnauthorizedException('Token inválido');
-      }
-
-      // Añadir el usuario al objeto request para uso posterior
-      request['user'] = data.user;
-
+      (request as any).user = user;
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Token inválido o expirado');
+      throw new UnauthorizedException('Token expirado o invalido');
     }
   }
 
-  private extractTokenFromHeader(request: any): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
-  }
+  // private extractTokenFromHeader(request: any): string | undefined {
+  //   const [type, token] = request.headers.authorization?.split(' ') ?? [];
+  //   return type === 'Bearer' ? token : undefined;
+  // }
 }
