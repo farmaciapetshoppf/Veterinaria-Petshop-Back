@@ -9,6 +9,8 @@ import { SaleOrder } from 'src/sale-orders/entities/sale-order.entity';
 export class Users {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+  @Column({ unique: true, nullable: true })
+  uid: string;
   @Column({ type: 'varchar', length: 50, nullable: false })
   name: string;
   @Column({ type: 'varchar', length: 50, unique: true, nullable: false })
@@ -29,6 +31,10 @@ export class Users {
     default: Role.User,
   })
   role: Role;
+  @Column({ default: false })
+  isDeleted: boolean;
+  @Column({ nullable: true })
+  deletedAt: Date;
 
   // Historial de compras como comprador
   @OneToMany(() => SaleOrder, saleOrder => saleOrder.buyer, {

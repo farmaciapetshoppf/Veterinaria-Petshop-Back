@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Users } from './entities/user.entity';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -29,6 +33,13 @@ export class UsersService {
   }
 
   deleteUser(id: string) {
-    return this.usersRepository.deleteUser(id);
+    try {
+      return this.usersRepository.deleteUser(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new InternalServerErrorException(error instanceof Error ? error.message : 'An error occurred');
+    }
   }
 }

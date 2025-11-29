@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeormConfig } from './config/typeorm';
@@ -17,6 +17,7 @@ import { BranchesModule } from './branches/branches.module';
 import { SaleOrdersModule } from './sale-orders/sale-orders.module';
 import { AuthModule } from './auth/auth.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { ProductsService } from './products/products.service';
 
 @Module({
   imports: [
@@ -40,4 +41,11 @@ import { SupabaseModule } from './supabase/supabase.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements OnApplicationBootstrap {
+  constructor(private readonly productsService: ProductsService) {}
+  async onApplicationBootstrap() {
+    console.log('Aplicación inicializada correctamente');
+    await this.productsService.seeder();
+    console.log('Productos cargados');
+  }
+}

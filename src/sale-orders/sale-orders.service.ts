@@ -36,13 +36,14 @@ export class SaleOrdersService {
       if (!buyer) throw new NotFoundException(`User ${dto.userId} not found`);
 
       // Validate branch if provided
-      let branch = null;
+      let branch: Branch | undefined = undefined;
       if (dto.branchId) {
-        branch = await manager.findOne(Branch, {
+        const foundBranch = await manager.findOne(Branch, {
           where: { id: dto.branchId },
         });
-        if (!branch)
+        if (!foundBranch)
           throw new NotFoundException(`Branch ${dto.branchId} not found`);
+        branch = foundBranch;
       }
 
       // Validate products and stock

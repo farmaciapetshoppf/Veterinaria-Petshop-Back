@@ -41,7 +41,7 @@ export class ProductsService {
   }
 
   async findOne(id: string) {
-    const product = this.productsRepository.findOne({
+    const product = await this.productsRepository.findOne({
       where: { id },
       relations: ['category'],
     });

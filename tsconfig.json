@@ -11,8 +11,13 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "outDir": "./dist",
-    "rootDir": "./src",
-    "baseUrl": "./"
-  },
-  "exclude": ["node_modules", "test"]
+    "baseUrl": "./",
+    "incremental": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
+    "typeRoots": ["./node_modules/@types", "./src/types"]
+  }
 }

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from './entities/user.entity';
@@ -5,6 +7,7 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Role } from 'src/auth/enum/roles.enum';
+import { generateShortUuid } from 'src/utils/uuid.utils';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -91,14 +94,17 @@ export class UsersRepository {
       );
     }
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
     return user;
   }
 
   createUser(createUserDto: CreateUserDto): Promise<Users> {
-    const user = this.usersRepository.create(createUserDto);
-    return this.usersRepository.save(user);
+    const newUser = this.usersRepository.create({
+      ...createUserDto,
+      uid: generateShortUuid(12),
+    });
+    return this.usersRepository.save(newUser);
   }
 
   // async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<Users> {
@@ -118,27 +124,25 @@ export class UsersRepository {
     return this.usersRepository.save(user);
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(id: string): Promise<{ message: string }> {
     try {
-      const user = await this.usersRepository.findOne({ where: { id } });
-      if (!user) {
-        throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
-      }
       const { error } = await this.supabaseService
         .getClient()
         .auth.admin.deleteUser(id);
-      if (error && !error.message.includes('User not found')) {
-        throw new Error(
-          `Error al eliminar usuario de Supabase Auth: ${error.message}`,
-        );
+
+      if (error) {
+        if (error.message.includes('User not found')) {
+          return { message: `El usuario con id: '${id}' no existe` };
+        }
+        throw new Error(`Error al eliminar usuario: ${error.message}`);
       }
-      const result = await this.usersRepository.delete(id);
-      if (result.affected === 0) {
-        throw new NotFoundException(`Error al eliminar usuario de PostgreSQL`);
-      }
+
+      return { message: 'Usuario borrado correctamente' };
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
+      console.error('Error en deleteUser:', error);
+
+      if (error instanceof Error && error.message && error.message.includes('User not found')) {
+        return { message: `El usuario con id: '${id}' no existe` };
       }
       throw new Error(
         `Error al eliminar usuario: ${error instanceof Error ? error.message : String(error)}`,
