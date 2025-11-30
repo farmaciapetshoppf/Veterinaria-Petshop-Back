@@ -19,11 +19,80 @@ export class UsersRepository {
   ) {}
 
   async getUsers(): Promise<Users[]> {
-    return this.usersRepository.find({ where: { isDeleted: false } });
+    const users = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.pets', 'pet')
+      .leftJoinAndSelect('pet.mother', 'mother')
+      .leftJoinAndSelect('mother.owner', 'motherOwner')
+      .leftJoinAndSelect('pet.father', 'father')
+      .leftJoinAndSelect('father.owner', 'fatherOwner')
+      .leftJoinAndSelect('pet.appointments', 'appointment')
+      .leftJoinAndSelect('appointment.veterinarian', 'veterinarian')
+      .leftJoinAndSelect('user.buyerSaleOrders', 'orders')
+      .leftJoinAndSelect('orders.items', 'orderItems')
+      .leftJoinAndSelect('orderItems.product', 'orderItemProduct')
+      .getMany();
+
+    // Remove sensitive fields from nested veterinarians
+    users.forEach((u) => {
+      if (u.pets) {
+        u.pets.forEach((p) => {
+          if (p.appointments) {
+            p.appointments.forEach((a) => {
+              if (a.veterinarian && (a.veterinarian as any).password) {
+                delete (a.veterinarian as any).password;
+              }
+            });
+          }
+        });
+      }
+      // Opcional: ordenar órdenes por fecha descendente si están presentes
+      if ((u as any).buyerSaleOrders) {
+        (u as any).buyerSaleOrders = (u as any).buyerSaleOrders.sort(
+          (a: any, b: any) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+      }
+    });
+
+    return users;
   }
 
   async getUserById(id: string): Promise<Users> {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.pets', 'pet')
+      .leftJoinAndSelect('pet.mother', 'mother')
+      .leftJoinAndSelect('mother.owner', 'motherOwner')
+      .leftJoinAndSelect('pet.father', 'father')
+      .leftJoinAndSelect('father.owner', 'fatherOwner')
+      .leftJoinAndSelect('pet.appointments', 'appointment')
+      .leftJoinAndSelect('appointment.veterinarian', 'veterinarian')
+      .leftJoinAndSelect('user.buyerSaleOrders', 'orders')
+      .leftJoinAndSelect('orders.items', 'orderItems')
+      .leftJoinAndSelect('orderItems.product', 'orderItemProduct')
+      .where('user.id = :id', { id })
+      .getOne();
+
+    // Strip password from nested veterinarians
+    if (user && user.pets) {
+      user.pets.forEach((p) => {
+        if (p.appointments) {
+          p.appointments.forEach((a) => {
+            if (a.veterinarian && (a.veterinarian as any).password) {
+              delete (a.veterinarian as any).password;
+            }
+          });
+        }
+      });
+    }
+    // Ordenar órdenes del comprador por fecha descendente si están presentes
+    if (user && (user as any).buyerSaleOrders) {
+      (user as any).buyerSaleOrders = (user as any).buyerSaleOrders.sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    }
     if (!user) {
       throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
@@ -72,11 +141,12 @@ export class UsersRepository {
     } catch (error) {
       console.error('Error en deleteUser:', error);
 
-      if (error.message && error.message.includes('User not found')) {
+      if (error instanceof Error && error.message && error.message.includes('User not found')) {
         return { message: `El usuario con id: '${id}' no existe` };
       }
-
-      throw new Error(`Error al eliminar usuario: ${error.message}`);
+      throw new Error(
+        `Error al eliminar usuario: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

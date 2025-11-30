@@ -1,11 +1,12 @@
 import { Controller, Get, Param, HttpCode, Patch, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
-// import { AuthGuard } from 'src/auth/guards/auth.guard';
-// import { Roles } from 'src/decorators/roles.decorator';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
-import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
-// import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -13,8 +14,9 @@ export class UsersController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Obtener lista de usuarios' })
   @Get()
-  getUsers() {
-    return this.usersService.getUsers();
+  async getUsers() {
+    const data = await this.usersService.getUsers();
+    return { message: 'Users retrieved', data };
   }
 
   @HttpCode(200)
@@ -25,8 +27,9 @@ export class UsersController {
     description: 'ID del usuario',
   })
   @Get(':id')
-  getUserById(@Param('id') id: string) {
-    return this.usersService.getUserById(id);
+  async getUserById(@Param('id') id: string) {
+    const data = await this.usersService.getUserById(id);
+    return { message: `User ${id} retrieved`, data };
   }
 
   // @HttpCode(200)
@@ -59,6 +62,7 @@ export class UsersController {
     return this.usersService.updateRole(id, updateRoleDto.role);
   }
 
+  @ApiOperation({ summary: 'Delete user' })
   @HttpCode(200)
   @Patch(':id/delete')
   deleteUser(@Param('id') id: string) {

@@ -1,11 +1,15 @@
 import { Role } from 'src/auth/enum/roles.enum';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Pet } from 'src/pets/entities/pet.entity';
+import { Appointments } from 'src/appointments/entities/appointment.entity';
+import { SaleOrder } from 'src/sale-orders/entities/sale-order.entity';
+
 
 @Entity('users')
 export class Users {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   uid: string;
   @Column({ type: 'varchar', length: 50, nullable: false })
   name: string;
@@ -32,10 +36,17 @@ export class Users {
   @Column({ nullable: true })
   deletedAt: Date;
 
-  //@OneToMany(() => Orders, orders => orders.user,{
-  //onDelete: 'CASCADE'} )
-  //orders: Orders[]
-  //@OneToMany(() => Pets, pets => pets.user,{
-  //onDelete: 'CASCADE'} )
-  //pets: Pets[]
+  // Historial de compras como comprador
+  @OneToMany(() => SaleOrder, saleOrder => saleOrder.buyer, {
+    onDelete: 'CASCADE'
+  })
+  buyerSaleOrders: SaleOrder[]
+  
+  @OneToMany(() => Pet, pets => pets.owner,{
+  onDelete: 'CASCADE'} )
+  pets: Pet[]
+
+  @OneToMany(() => Appointments, appointment => appointment.user,{
+    onDelete: 'CASCADE'} )
+    appointments: Appointments[]
 }

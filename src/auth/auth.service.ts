@@ -78,7 +78,8 @@ export class AuthService {
           'Registro de usuario iniciado. Revise su email para verificar.',
       };
     } catch (error) {
-      throw new Error(`Error durante el registro: ${error.message}`);
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      throw new Error(`Error durante el registro: ${message}`);
     }
   }
 
@@ -152,7 +153,8 @@ export class AuthService {
       };
     } catch (error) {
       console.error('Error durante el cierre de sesion:', error);
-      throw new Error('Fallo al cerrar sesion: ' + error.message);
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      throw new Error('Fallo al cerrar sesion: ' + message);
     }
   }
 
@@ -191,8 +193,9 @@ export class AuthService {
 
       return { url: data.url };
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
       throw new InternalServerErrorException(
-        `Error al generar URL de autenticación de Google: ${error.message}`,
+        `Error al generar URL de autenticación de Google: ${message}`,
       );
     }
   }
@@ -250,8 +253,9 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
+      const message = error instanceof Error ? error.message : 'Error desconocido';
       throw new InternalServerErrorException(
-        `Error al procesar la sesión: ${error.message}`,
+        `Error al procesar la sesión: ${message}`,
       );
     }
   }

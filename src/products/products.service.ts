@@ -29,24 +29,26 @@ export class ProductsService {
       ...createProductDto,
       category,
     });
-    return this.productsRepository.save(product);
+    const saved = await this.productsRepository.save(product);
+    return { message: 'Product created successfully', data: saved };
   }
 
   async findAll() {
-    return this.productsRepository.find({
+    const products = await this.productsRepository.find({
       relations: ['category'],
     });
+    return { message: 'Products retrieved', data: products };
   }
 
   async findOne(id: string) {
-    const product = this.productsRepository.findOne({
+    const product = await this.productsRepository.findOne({
       where: { id },
       relations: ['category'],
     });
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-    return product;
+    return { message: 'Product retrieved', data: product };
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
@@ -67,7 +69,8 @@ export class ProductsService {
 
     Object.assign(product, updateProductDto);
 
-    return this.productsRepository.save(product);
+    const saved = await this.productsRepository.save(product);
+    return { message: 'Product updated successfully', data: saved };
   }
 
   async remove(id: string) {
@@ -78,7 +81,7 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
     await this.productsRepository.remove(product);
-    return 'Product deleted';
+    return { message: 'Product deleted' };
   }
 
   async seeder(): Promise<string> {
@@ -110,12 +113,10 @@ export class ProductsService {
       const category = categoryMap.get(product.category.toLowerCase());
 
       if (!category) {
-        console.warn(`Categoría no encontrada para: ${product.name}`);
         continue;
       }
 
       if (existingProductNames.has(product.name)) {
-        console.log(`Producto ya existe: ${product.name}`);
         continue;
       }
 
@@ -141,14 +142,10 @@ export class ProductsService {
         await this.productsRepository.save(newProduct);
         inserted++;
       } catch (err) {
-        console.error(
-          `Error insertando producto: ${productData.name}`,
-          err.message,
-        );
+        // Silenciar errores en consola durante seeding
       }
     }
 
-    console.log(`Total de productos insertados: ${inserted}`);
     return `${inserted} productos insertados`;
   }
 }

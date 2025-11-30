@@ -39,7 +39,7 @@ export class UsersService {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
       }
-      throw new InternalServerErrorException(error.message);
+      throw new InternalServerErrorException(error instanceof Error ? error.message : 'An error occurred');
     }
   }
 }
