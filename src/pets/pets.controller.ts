@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
@@ -19,14 +29,16 @@ export class PetsController {
         message: 'Pet created successfully',
         data: NewPet,
       };
-    } catch (error :any) {
-      throw new HttpException({
-        message: 'Error creating pet',
-        error: error.message,
-      }, HttpStatus.BAD_REQUEST);
+    } catch (error: any) {
+      throw new HttpException(
+        {
+          message: 'Error creating pet',
+          error: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
-  
 
   @ApiOperation({ summary: 'Get all pets' })
   @Get('AllPets')
@@ -38,19 +50,19 @@ export class PetsController {
   @ApiOperation({ summary: 'Get pet by ID' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const data = await this.petsService.findOne(+id);
+    const data = await this.petsService.findOne(id);
     return { message: `Pet ${id} retrieved`, data };
   }
 
   @ApiOperation({ summary: 'Update pet' })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePetDto: UpdatePetDto) {
-    return this.petsService.update(+id, updatePetDto);
+    return this.petsService.update(id, updatePetDto);
   }
 
   @ApiOperation({ summary: 'Delete pet' })
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.petsService.remove(+id);
+    return this.petsService.remove(id);
   }
 }

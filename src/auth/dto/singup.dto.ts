@@ -15,6 +15,8 @@ export class SignUpDto {
   @ApiProperty({
     description: 'Debe ser un string, no puede estar vacio',
     example: 'Nombre-Apellido',
+    type: 'string',
+    required: true,
   })
   @IsString({ message: 'El nombre debe ser texto' })
   @IsNotEmpty({ message: 'El nombre es obligatorio' })
@@ -23,6 +25,8 @@ export class SignUpDto {
   @ApiProperty({
     description: 'Debe ser un email valido.',
     example: 'Usuario01@mail.com',
+    type: 'string',
+    required: true,
   })
   @IsEmail({}, { message: 'Debe ser un email válido' })
   @IsString({ message: 'El email debe ser texto' })
@@ -33,6 +37,8 @@ export class SignUpDto {
     description:
       'Debe ser un string de minimo 8 caracteres, debe contener una letra mayúscula, una letra minúscula, un número y un símbolo.',
     example: 'Usuario1!',
+    type: 'string',
+    required: true,
   })
   @IsString({ message: 'La contraseña debe ser texto' })
   @IsNotEmpty({ message: 'La contraseña es obligatoria' })
@@ -54,6 +60,8 @@ export class SignUpDto {
   @ApiProperty({
     description: 'Debe ser un string.',
     example: 'Usuario',
+    type: 'string',
+    required: true,
   })
   @IsString({ message: 'El usuario debe ser texto' })
   @IsNotEmpty({ message: 'El usuario es obligatoria' })
@@ -62,6 +70,8 @@ export class SignUpDto {
   @ApiProperty({
     description: 'Debe ser un numero.',
     example: '+541234567890',
+    type: 'string',
+    required: true,
   })
   @IsString({ message: 'El telefono debe ser texto' })
   @IsNotEmpty({ message: 'El telefono es obligatoria' })
@@ -73,6 +83,8 @@ export class SignUpDto {
   @ApiProperty({
     description: 'Debe ser un string.',
     example: 'Pais Falso',
+    type: 'string',
+    required: true,
   })
   @IsString({ message: 'El pais debe ser texto' })
   @IsNotEmpty({ message: 'El pais es obligatoria' })
@@ -81,6 +93,8 @@ export class SignUpDto {
   @ApiProperty({
     description: 'Debe ser un string.',
     example: 'Calle Falsa',
+    type: 'string',
+    required: true,
   })
   @IsString({ message: 'La direccion debe ser texto' })
   @IsNotEmpty({ message: 'La direccion es obligatoria' })
@@ -89,6 +103,8 @@ export class SignUpDto {
   @ApiProperty({
     description: 'Debe ser un string.',
     example: 'Ciudad Falsa',
+    type: 'string',
+    required: true,
   })
   @IsString({ message: 'La ciudad debe ser texto' })
   @IsNotEmpty({ message: 'La ciudad es obligatoria' })
