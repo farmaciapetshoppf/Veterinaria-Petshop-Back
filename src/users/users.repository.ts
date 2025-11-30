@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -126,22 +127,47 @@ export class UsersRepository {
 
   async deleteUser(id: string): Promise<{ message: string }> {
     try {
+      const userToDelete = await this.usersRepository.findOne({
+        where: { id },
+      });
+
+      if (!userToDelete) {
+        const { error } = await this.supabaseService
+          .getClient()
+          .auth.admin.deleteUser(id);
+
+        if (error && error.message.includes('User not found')) {
+          return { message: `El usuario con id: '${id}' no existe` };
+        }
+      } else {
+        await this.usersRepository.delete(id);
+      }
+
       const { error } = await this.supabaseService
         .getClient()
         .auth.admin.deleteUser(id);
 
       if (error) {
         if (error.message.includes('User not found')) {
-          return { message: `El usuario con id: '${id}' no existe` };
+          return {
+            message:
+              'Usuario borrado correctamente de la base de datos SQL, pero no se encontró en Supabase',
+          };
         }
-        throw new Error(`Error al eliminar usuario: ${error.message}`);
+        throw new Error(
+          `Error al eliminar usuario de Supabase: ${error.message}`,
+        );
       }
 
       return { message: 'Usuario borrado correctamente' };
     } catch (error) {
       console.error('Error en deleteUser:', error);
 
-      if (error instanceof Error && error.message && error.message.includes('User not found')) {
+      if (
+        error instanceof Error &&
+        error.message &&
+        error.message.includes('User not found')
+      ) {
         return { message: `El usuario con id: '${id}' no existe` };
       }
       throw new Error(
