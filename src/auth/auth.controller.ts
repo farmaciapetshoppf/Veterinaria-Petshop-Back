@@ -16,7 +16,7 @@ import {
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/singup.dto';
 import { SignInDto } from './dto/signin.dto';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiOperation } from '@nestjs/swagger';
 import type { Response, Request } from 'express';
 import { AuthGuard } from './guards/auth.guard';
 
@@ -60,6 +60,21 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Handle successful OAuth authentication' })
+  @ApiBody({
+    description: 'OAuth access token data',
+    type: 'object',
+    schema: {
+      properties: {
+        access_token: {
+          type: 'string',
+          description:
+            'OAuth access token obtained from authentication provider',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+      },
+      required: ['access_token'],
+    },
+  })
   @Post('session')
   async handleSession(
     @Body() sessionData: { access_token: string },
@@ -68,16 +83,19 @@ export class AuthController {
     return this.authService.handleSession(sessionData.access_token, res);
   }
 
+  @ApiOperation({ summary: 'On construction' })
   @Post('password/reset-request')
   requestPasswordReset() {
     return this.authService.requestPasswordReset();
   }
 
+  @ApiOperation({ summary: 'On construction' })
   @Post('password/reset')
   resetPassword() {
     return this.authService.resetPassword();
   }
 
+  @ApiOperation({ summary: 'On construction' })
   @Put('password')
   updatePassword() {
     return this.authService.updatePassword();
