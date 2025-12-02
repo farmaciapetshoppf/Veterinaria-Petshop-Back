@@ -1,5 +1,5 @@
 import { Module, OnApplicationBootstrap } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeormConfig } from './config/typeorm';
 
@@ -18,6 +18,7 @@ import { SaleOrdersModule } from './sale-orders/sale-orders.module';
 import { AuthModule } from './auth/auth.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { ProductsService } from './products/products.service';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ProductsService } from './products/products.service';
     UsersModule,
     SupabaseModule,
     PetsModule,
+    UploadModule,
     VeterinariansModule,
     AppointmentsModule,
     ProductsModule,
