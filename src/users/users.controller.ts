@@ -68,4 +68,10 @@ export class UsersController {
   deleteUser(@Param('id') id: string) {
     return this.usersService.deleteUser(id);
   }
+
+  @Get(':id/pets') 
+    getUserPets(@Param('id') id: string){
+      return this.usersService.getUserPets(id)
+    
+  }
 }

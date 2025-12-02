@@ -42,4 +42,13 @@ export class UsersService {
       throw new InternalServerErrorException(error instanceof Error ? error.message : 'An error occurred');
     }
   }
+
+  async getUserPets(id: string){
+  const user = await this.usersRepository.getUserById(id)
+  if(!user){
+    throw new NotFoundException ('No existe el usuario')
+  }
+  return user.pets;
+}
+
 }
