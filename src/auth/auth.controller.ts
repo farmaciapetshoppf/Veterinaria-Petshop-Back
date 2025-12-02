@@ -12,6 +12,8 @@ import {
   Get,
   UseGuards,
   Req,
+  BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/singup.dto';
@@ -59,6 +61,25 @@ export class AuthController {
     return this.authService.getGoogleAuthURL();
   }
 
+  @ApiOperation({ summary: 'Handle OAuth callback' })
+  @Get('callback')
+  async handleCallback(
+    @Query('code') code: string,
+    @Query('hash') hash: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // Determinar si estamos procesando un código o un hash
+    const urlFragment = code || hash || (req.query.fragment as string);
+
+    if (!urlFragment) {
+      throw new BadRequestException('Falta el código o hash de autenticación');
+    }
+
+    return this.authService.handleAuthCallback(urlFragment, res);
+  }
+
+  // Mantener el endpoint anterior para compatibilidad
   @ApiOperation({ summary: 'Handle successful OAuth authentication' })
   @ApiBody({
     description: 'OAuth access token data',
