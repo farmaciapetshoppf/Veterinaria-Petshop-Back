@@ -24,6 +24,8 @@ export class Users {
   address: string;
   @Column({ type: 'varchar', length: 50, nullable: true })
   city: string;
+  @Column({ type: 'text', nullable: true, default: 'No image' })
+  profileImageUrl: string;
   @Column({
     type: 'enum',
     enum: Role,
@@ -35,7 +37,6 @@ export class Users {
   @Column({ nullable: true })
   deletedAt: Date;
 
-  // Historial de compras como comprador
   @OneToMany(() => SaleOrder, (saleOrder) => saleOrder.buyer, {
     onDelete: 'CASCADE',
   })

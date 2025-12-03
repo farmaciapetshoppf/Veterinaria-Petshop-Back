@@ -36,6 +36,13 @@ export class UsersService {
     }
   }
 
+  async updateUserProfileImage(
+    id: string,
+    file: Express.Multer.File,
+  ): Promise<Users> {
+    return this.usersRepository.updateUserProfileImage(id, file);
+  }
+
   updateRole(id: string, role: Role) {
     return this.usersRepository.updateRole(id, role);
   }

@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -11,7 +12,7 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 import { Role } from 'src/auth/enum/roles.enum';
 import { generateShortUuid } from 'src/utils/uuid.utils';
 import { UpdateUserDto } from './dto/update-user.dto';
-// import { UpdateUserDto } from './dto/update-user.dto';
+import { StorageService } from 'src/supabase/storage.service';
 
 @Injectable()
 export class UsersRepository {
@@ -19,6 +20,7 @@ export class UsersRepository {
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
     private supabaseService: SupabaseService,
+    private storageService: StorageService,
   ) {}
 
   async getUsers(): Promise<Users[]> {
@@ -153,6 +155,29 @@ export class UsersRepository {
         );
       }
     }
+
+    return this.usersRepository.save(user);
+  }
+
+  async updateUserProfileImage(
+    id: string,
+    file: Express.Multer.File,
+  ): Promise<Users> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+
+    if (!file.mimetype.includes('image/')) {
+      throw new Error('El archivo debe ser una imagen (.jpg, .png, .webp)');
+    }
+
+    const result = await this.storageService.uploadFile(file, 'users');
+    if (!result) {
+      throw new Error('Error al subir la imagen de perfil');
+    }
+
+    user.profileImageUrl = result.publicUrl;
 
     return this.usersRepository.save(user);
   }

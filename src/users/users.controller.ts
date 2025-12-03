@@ -1,8 +1,19 @@
-import { Controller, Get, Param, HttpCode, Patch, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  HttpCode,
+  Patch,
+  Body,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Role } from 'src/auth/enum/roles.enum';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiResponse,
@@ -43,7 +54,6 @@ export class UsersController {
     name: 'id',
     description: 'ID del usuario',
     type: String,
-    example: '8b8f99f9-7714-4f60-8f97-d8dd360b47ac',
   })
   @ApiBody({
     type: UpdateUserDto,
@@ -54,11 +64,35 @@ export class UsersController {
     status: 200,
     description: 'Usuario actualizado correctamente',
   })
-  async update(
+  async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<Users> {
     return this.usersService.updateUser(id, updateUserDto);
+  }
+
+  @Patch(':id/profile-image')
+  @ApiOperation({ summary: 'Actualizar imagen de perfil del usuario' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagen de perfil del usuario (.jpg, .png, .webp)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  async updateUserProfileImage(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<Users> {
+    return this.usersService.updateUserProfileImage(id, file);
   }
 
   @ApiOperation({ summary: 'Change user role' })
