@@ -6,20 +6,20 @@ export class Category {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-    @Column({
-        type: "varchar",
-        length: 50,
-        nullable: false,
-        unique: true,
-    })
-    name: string;
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: false,
+    unique: true,
+  })
+  name: string;
 
-    @Column({
-            type:'text',
-            default:'No image',
-        })
-        imgUrl: string;
-    
-    @OneToMany(() =>Products,(products) =>products.category)
-products:Products[];
+  @Column({
+    type: 'text',
+    default: 'No image',
+  })
+  imgUrl: string;
+
+  @OneToMany(() => Products, (products) => products.category)
+  products: Products[];
 }
