@@ -29,7 +29,11 @@ export class CategoriesController {
     return this.categoriesService.findAll();
   }
 
-  @ApiOperation({ summary: 'Get one category by ID' })
+  @Get('basic')
+  findAllBasic(){
+    return this.categoriesService.findAllBasic();
+  }
+
   @Get(':id')
   findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.findOne(id);

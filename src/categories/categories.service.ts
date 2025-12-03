@@ -21,6 +21,12 @@ export class CategoriesService {
     return this.categoryRepo.find({ relations: ['products'] });
   }
 
+ async findAllBasic() {
+  return this.categoryRepo.find({
+    select: ['id', 'name', 'imgUrl']
+})
+}
+
   async findOne(id: string) {
     const category = await this.categoryRepo.findOne({ where: { id } });
 
