@@ -47,6 +47,7 @@ export class PetsController {
     return { message: 'Pets retrieved', data };
   }
 
+
   @ApiOperation({ summary: 'Get pet by ID' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
