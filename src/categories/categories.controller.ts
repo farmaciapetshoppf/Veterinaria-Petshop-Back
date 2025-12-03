@@ -17,6 +17,11 @@ export class CategoriesController {
     return this.categoriesService.findAll();
   }
 
+  @Get('basic')
+  findAllBasic(){
+    return this.categoriesService.findAllBasic();
+  }
+
   @Get(':id')
  findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.findOne(id);

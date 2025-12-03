@@ -6,4 +6,7 @@ export class CreateCategoryDto {
   @MinLength(3)
   @IsNotEmpty()
   name: string;
+
+  @IsString()
+  imgUrl: string;
 }
