@@ -16,7 +16,6 @@ import {
   ApiConsumes,
   ApiOperation,
   ApiParam,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -49,50 +48,46 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar usuario por ID' })
+  @ApiOperation({
+    summary: 'Actualizar usuario por ID incluyendo imagen de perfil opcional',
+  })
   @ApiParam({
     name: 'id',
     description: 'ID del usuario',
     type: String,
   })
-  @ApiBody({
-    type: UpdateUserDto,
-    description: 'Campos a actualizar (solo los proporcionados se actualizan)',
-    required: true,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Usuario actualizado correctamente',
-  })
-  async updateUser(
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-  ): Promise<Users> {
-    return this.usersService.updateUser(id, updateUserDto);
-  }
-
-  @Patch(':id/profile-image')
-  @ApiOperation({ summary: 'Actualizar imagen de perfil del usuario' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        file: {
+        name: { type: 'string', example: 'Raymond Weiler' },
+        phone: { type: 'string', example: '+34123456789' },
+        country: { type: 'string', example: 'Luxemburgo' },
+        address: {
+          type: 'string',
+          example: '13 Place De Lhôtel De Ville, L-3590',
+        },
+        city: { type: 'string', example: 'Dudelange' },
+        profileImage: {
           type: 'string',
           format: 'binary',
-          description: 'Imagen de perfil del usuario (.jpg, .png, .webp)',
+          description: 'Imagen de perfil del usuario (opcional)',
         },
       },
-      required: ['file'],
     },
   })
-  @UseInterceptors(FileInterceptor('file'))
-  async updateUserProfileImage(
+  @UseInterceptors(FileInterceptor('profileImage'))
+  async updateUser(
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() profileImage?: Express.Multer.File,
   ): Promise<Users> {
-    return this.usersService.updateUserProfileImage(id, file);
+    return this.usersService.updateUserComplete(
+      id,
+      updateUserDto,
+      profileImage,
+    );
   }
 
   @ApiOperation({ summary: 'Change user role' })
