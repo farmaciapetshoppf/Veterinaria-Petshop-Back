@@ -1,10 +1,15 @@
 import { Controller, Get, Param, HttpCode, Patch, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
-import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { Users } from './entities/user.entity';
 
 @ApiTags('Users')
 @Controller('users')
@@ -32,11 +37,29 @@ export class UsersController {
     return { message: `User ${id} retrieved`, data };
   }
 
-  // @HttpCode(200)
-  // @Put(':id')
-  // updateUser(@Param('id') id: string) {
-  //   return this.usersService.updateUser(id);
-  // }
+  @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar usuario por ID' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del usuario',
+    type: String,
+    example: '8b8f99f9-7714-4f60-8f97-d8dd360b47ac',
+  })
+  @ApiBody({
+    type: UpdateUserDto,
+    description: 'Campos a actualizar (solo los proporcionados se actualizan)',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuario actualizado correctamente',
+  })
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<Users> {
+    return this.usersService.updateUser(id, updateUserDto);
+  }
 
   @ApiOperation({ summary: 'Change user role' })
   @ApiParam({
@@ -69,9 +92,8 @@ export class UsersController {
     return this.usersService.deleteUser(id);
   }
 
-  @Get(':id/pets') 
-    getUserPets(@Param('id') id: string){
-      return this.usersService.getUserPets(id)
-    
+  @Get(':id/pets')
+  getUserPets(@Param('id') id: string) {
+    return this.usersService.getUserPets(id);
   }
 }
