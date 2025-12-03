@@ -78,7 +78,8 @@ export class AuthService {
           'Registro de usuario iniciado. Revise su email para verificar.',
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error desconocido';
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
       throw new Error(`Error durante el registro: ${message}`);
     }
   }
@@ -153,7 +154,8 @@ export class AuthService {
       };
     } catch (error) {
       console.error('Error durante el cierre de sesion:', error);
-      const message = error instanceof Error ? error.message : 'Error desconocido';
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
       throw new Error('Fallo al cerrar sesion: ' + message);
     }
   }
@@ -193,14 +195,71 @@ export class AuthService {
 
       return { url: data.url };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error desconocido';
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
       throw new InternalServerErrorException(
         `Error al generar URL de autenticación de Google: ${message}`,
       );
     }
   }
 
-  async handleSession(accessToken: string, res: Response): Promise<any> {
+  // Nuevo método para manejar el callback con el código o hash de la URL
+  async handleAuthCallback(urlFragment: string, res: Response): Promise<any> {
+    try {
+      // Verificar si es un código o un hash de sesión
+      let session;
+
+      if (urlFragment.startsWith('#')) {
+        // Es un hash de sesión (formato antiguo)
+        const hashParams = new URLSearchParams(urlFragment.substring(1));
+        const accessToken = hashParams.get('access_token');
+
+        if (!accessToken) {
+          throw new UnauthorizedException(
+            'No se encontró el token de acceso en la URL',
+          );
+        }
+
+        // Procesar la sesión directamente con el token
+        return this.processUserSession(accessToken, res);
+      } else {
+        // Intentar procesar como un código de autorización
+        const { data, error } = await this.supabaseService
+          .getClient()
+          .auth.exchangeCodeForSession(urlFragment);
+
+        if (error) {
+          throw new UnauthorizedException(error.message);
+        }
+
+        if (!data || !data.session) {
+          throw new UnauthorizedException('No se pudo obtener la sesión');
+        }
+
+        const accessToken = data.session.access_token;
+        return this.processUserSession(accessToken, res);
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
+      throw new InternalServerErrorException(
+        `Error al procesar el callback de autenticación: ${message}`,
+      );
+    }
+  }
+
+  async getUserProfile(userId: string): Promise<any> {
+    return await this.usersService.getUserById(userId);
+  }
+
+  // Método privado para procesar la sesión del usuario
+  private async processUserSession(
+    accessToken: string,
+    res: Response,
+  ): Promise<any> {
     try {
       const { data, error } = await this.supabaseService
         .getClient()
@@ -214,27 +273,8 @@ export class AuthService {
         );
       }
 
-      let user;
-      try {
-        user = await this.usersService.getUserById(data.user.id);
-      } catch (userError) {
-        const userName =
-          data.user.user_metadata?.full_name ||
-          data.user.user_metadata?.name ||
-          (data.user.email ? data.user.email.split('@')[0] : 'user');
-
-        const userUsername =
-          data.user.user_metadata?.name ||
-          (data.user.email ? data.user.email.split('@')[0] : 'user');
-
-        user = await this.usersService.createUser({
-          id: data.user.id,
-          email: data.user.email || 'no-email@example.com',
-          name: userName,
-          user: userUsername,
-          role: Role.User,
-        });
-      }
+      // Obtener el usuario desde la base de datos SQL
+      const user = await this.usersService.getUserById(data.user.id);
 
       res.cookie('access_token', accessToken, {
         httpOnly: true,
@@ -247,17 +287,25 @@ export class AuthService {
       return {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role,
+        // Puedes incluir más campos del usuario si es necesario
       };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
-      const message = error instanceof Error ? error.message : 'Error desconocido';
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
       throw new InternalServerErrorException(
         `Error al procesar la sesión: ${message}`,
       );
     }
+  }
+
+  // Mantener el método handleSession para compatibilidad, pero ahora delegará al processUserSession
+  async handleSession(accessToken: string, res: Response): Promise<any> {
+    return this.processUserSession(accessToken, res);
   }
 
   requestPasswordReset() {
