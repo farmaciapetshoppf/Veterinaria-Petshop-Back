@@ -25,15 +25,23 @@ export class UsersService {
     return this.usersRepository.createUser(createUserDto);
   }
 
-  async updateUser(id: string, updateUserDto: UpdateUserDto) {
-    try {
-      return await this.usersRepository.updateUser(id, updateUserDto);
-    } catch (error) {
-      if (error instanceof NotFoundException) throw error;
-      throw new InternalServerErrorException(
-        error instanceof Error ? error.message : 'Error updating user',
-      );
+  async updateUserComplete(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    profileImage?: Express.Multer.File,
+  ): Promise<Users> {
+    // Primero actualizamos los datos básicos del usuario
+    const updatedUser = await this.usersRepository.updateUser(
+      id,
+      updateUserDto,
+    );
+
+    // Si se proporcionó una imagen, la actualizamos también
+    if (profileImage) {
+      return this.usersRepository.updateUserProfileImage(id, profileImage);
     }
+
+    return updatedUser;
   }
 
   updateRole(id: string, role: Role) {

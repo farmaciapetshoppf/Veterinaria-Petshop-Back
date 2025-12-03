@@ -1,11 +1,21 @@
-import { Controller, Get, Param, HttpCode, Patch, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  HttpCode,
+  Patch,
+  Body,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Role } from 'src/auth/enum/roles.enum';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiParam,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -38,27 +48,46 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar usuario por ID' })
+  @ApiOperation({
+    summary: 'Actualizar usuario por ID incluyendo imagen de perfil opcional',
+  })
   @ApiParam({
     name: 'id',
     description: 'ID del usuario',
     type: String,
-    example: '8b8f99f9-7714-4f60-8f97-d8dd360b47ac',
   })
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
-    type: UpdateUserDto,
-    description: 'Campos a actualizar (solo los proporcionados se actualizan)',
-    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Raymond Weiler' },
+        phone: { type: 'string', example: '+34123456789' },
+        country: { type: 'string', example: 'Luxemburgo' },
+        address: {
+          type: 'string',
+          example: '13 Place De Lhôtel De Ville, L-3590',
+        },
+        city: { type: 'string', example: 'Dudelange' },
+        profileImage: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagen de perfil del usuario (opcional)',
+        },
+      },
+    },
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Usuario actualizado correctamente',
-  })
-  async update(
+  @UseInterceptors(FileInterceptor('profileImage'))
+  async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() profileImage?: Express.Multer.File,
   ): Promise<Users> {
-    return this.usersService.updateUser(id, updateUserDto);
+    return this.usersService.updateUserComplete(
+      id,
+      updateUserDto,
+      profileImage,
+    );
   }
 
   @ApiOperation({ summary: 'Change user role' })
