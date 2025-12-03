@@ -251,6 +251,10 @@ export class AuthService {
     }
   }
 
+  async getUserProfile(userId: string): Promise<any> {
+    return await this.usersService.getUserById(userId);
+  }
+
   // Método privado para procesar la sesión del usuario
   private async processUserSession(
     accessToken: string,
@@ -269,27 +273,8 @@ export class AuthService {
         );
       }
 
-      let user;
-      try {
-        user = await this.usersService.getUserById(data.user.id);
-      } catch (userError) {
-        const userName =
-          data.user.user_metadata?.full_name ||
-          data.user.user_metadata?.name ||
-          (data.user.email ? data.user.email.split('@')[0] : 'user');
-
-        const userUsername =
-          data.user.user_metadata?.name ||
-          (data.user.email ? data.user.email.split('@')[0] : 'user');
-
-        user = await this.usersService.createUser({
-          id: data.user.id,
-          email: data.user.email || 'no-email@example.com',
-          name: userName,
-          user: userUsername,
-          role: Role.User,
-        });
-      }
+      // Obtener el usuario desde la base de datos SQL
+      const user = await this.usersService.getUserById(data.user.id);
 
       res.cookie('access_token', accessToken, {
         httpOnly: true,
@@ -302,7 +287,9 @@ export class AuthService {
       return {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role,
+        // Puedes incluir más campos del usuario si es necesario
       };
     } catch (error) {
       if (error instanceof HttpException) {

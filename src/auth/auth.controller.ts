@@ -10,10 +10,11 @@ import {
   HttpCode,
   Res,
   Get,
-  UseGuards,
   Req,
   BadRequestException,
   Query,
+  UseGuards,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/singup.dto';
@@ -51,8 +52,16 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  getProfile(@Req() req: Request) {
-    return (req as any).user;
+  async getProfile(@Req() req: Request) {
+    try {
+      const userId = (req as any).user.id; // Asegúrate de que el guardia coloca el usuario en la solicitud
+      const user = await this.authService.getUserProfile(userId); // Obteniendo desde el servicio SQL
+      return user;
+    } catch (error) {
+      throw new UnauthorizedException(
+        'No se pudo obtener el perfil del usuario',
+      );
+    }
   }
 
   @ApiOperation({ summary: 'Google OAuth URL' })
