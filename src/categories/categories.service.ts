@@ -7,16 +7,18 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class CategoriesService {
-  constructor(@InjectRepository(Category)
-  private readonly categoryRepo: Repository<Category>){}
+  constructor(
+    @InjectRepository(Category)
+    private readonly categoryRepo: Repository<Category>,
+  ) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
-    const category = this.categoryRepo.create(createCategoryDto)
+    const category = this.categoryRepo.create(createCategoryDto);
     return await this.categoryRepo.save(category);
   }
 
   async findAll() {
-    return this.categoryRepo.find({relations: ['products'] });
+    return this.categoryRepo.find({ relations: ['products'] });
   }
 
  async findAllBasic() {
@@ -26,26 +28,24 @@ export class CategoriesService {
 }
 
   async findOne(id: string) {
-    const category = await this.categoryRepo.findOne({where: {id}});
+    const category = await this.categoryRepo.findOne({ where: { id } });
 
-    if (!category){
-      throw new NotFoundException ('Categoría no encontrada')
-    };
-      
+    if (!category) {
+      throw new NotFoundException('Categoría no encontrada');
+    }
+
     return category;
   }
 
   async update(id: string, updateCategoryDto: UpdateCategoryDto) {
-    const category= await this.findOne(id);
-    Object.assign(category, updateCategoryDto)
+    const category = await this.findOne(id);
+    Object.assign(category, updateCategoryDto);
     return this.categoryRepo.save(category);
-
   }
 
- async remove(id: string) {
-  const category = await this.findOne(id);
-  await this.categoryRepo.remove(category);
-  return { message: 'Categoría eliminada correctamente' };
-}
-
+  async remove(id: string) {
+    const category = await this.findOne(id);
+    await this.categoryRepo.remove(category);
+    return { message: 'Categoría eliminada correctamente' };
+  }
 }

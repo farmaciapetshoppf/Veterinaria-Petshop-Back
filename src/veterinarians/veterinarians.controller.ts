@@ -1,34 +1,53 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  ParseUUIDPipe,
+  Get,
+  Query,
+  Patch,
+} from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
-import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
+import { ChangePasswordVeterinarianDto } from './dto/change-password-veterinarian.dto';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Veterinarians')
 @Controller('veterinarians')
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 
-  @Post()
-  create(@Body() createVeterinarianDto: CreateVeterinarianDto) {
-    return this.veterinariansService.create(createVeterinarianDto);
-  }
-
+  @ApiOperation({ summary: 'Get all veterinarians (optionally filter active)' })
   @Get()
-  findAll() {
-    return this.veterinariansService.findAll();
+  async fillAllVeterinarians(@Query('onlyActive') onlyActive?: string) {
+    const active = onlyActive === undefined ? true : onlyActive === 'true';
+    const data = await this.veterinariansService.fillAllVeterinarians(active);
+    return { message: 'Veterinarians retrieved', data };
   }
 
+  @ApiOperation({ summary: 'Get veterinarian by ID' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.veterinariansService.findOne(+id);
+  fillByIdVeterinarians(@Param('id', ParseUUIDPipe) id: string) {
+    // service returns single veterinarian (password already stripped for GET)
+    return this.veterinariansService.fillByIdVeterinarians(id).then(data => ({ message: `Veterinarian ${id} retrieved`, data }));
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateVeterinarianDto: UpdateVeterinarianDto) {
-    return this.veterinariansService.update(+id, updateVeterinarianDto);
+  @ApiOperation({ summary: 'Create new veterinarian' })
+  @Post()
+  createVeterinarian(@Body() createVeterinarian: CreateVeterinarianDto) {
+    return this.veterinariansService.createVeterinarian(createVeterinarian);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.veterinariansService.remove(+id);
+  @ApiOperation({ summary: 'Deactivate veterinarian' })
+  @Patch(':id/deactivate')
+  deleteVeterinarian(@Param('id', ParseUUIDPipe) id: string) {
+    return this.veterinariansService.deleteVeterinarian(id);
+  }
+
+  @ApiOperation({ summary: 'Change veterinarian password' })
+  @Patch('change-password')
+  changePassword(@Body() body: ChangePasswordVeterinarianDto) {
+    return this.veterinariansService.changePassword(body);
   }
 }

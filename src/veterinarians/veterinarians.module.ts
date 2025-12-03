@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { VeterinariansController } from './veterinarians.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Veterinarian } from './entities/veterinarian.entity';
+import { VeterinariansRepository } from './vaterinarians.repository';
 
 @Module({
+  imports: [TypeOrmModule.forFeature([Veterinarian])],
   controllers: [VeterinariansController],
-  providers: [VeterinariansService],
+  providers: [VeterinariansService, VeterinariansRepository],
+  exports: [VeterinariansService],
 })
 export class VeterinariansModule {}

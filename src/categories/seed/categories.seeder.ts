@@ -7,7 +7,6 @@ import * as path from 'path';
 
 @Injectable()
 export class CategoriesSeeder implements OnModuleInit {
-
   constructor(
     @InjectRepository(Category)
     private readonly repo: Repository<Category>,
@@ -17,7 +16,13 @@ export class CategoriesSeeder implements OnModuleInit {
     const count = await this.repo.count();
     if (count > 0) return;
 
-    const filePath = path.join(process.cwd(), 'src', 'categories', 'seed', 'categories.json');
+    const filePath = path.join(
+      process.cwd(),
+      'src',
+      'categories',
+      'seed',
+      'categories.json',
+    );
     const file = fs.readFileSync(filePath, 'utf8');
     const categories = JSON.parse(file);
 

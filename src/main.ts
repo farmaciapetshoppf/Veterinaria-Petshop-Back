@@ -3,14 +3,17 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ExcludePasswordInterceptor } from './password-exclude/password-exclude.interceptor';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.use(cookieParser());
+
   // CORS
   app.enableCors({
-    origin: ['http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: ['http://localhost:3000', 'http://localhost:3002'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   });
 
@@ -20,7 +23,7 @@ async function bootstrap() {
   // Validaciones globales
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist:true,
+      whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
     }),
