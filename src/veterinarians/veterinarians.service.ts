@@ -3,6 +3,7 @@ import { VeterinariansRepository } from './vaterinarians.repository';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import { ChangePasswordVeterinarianDto } from './dto/change-password-veterinarian.dto';
 import { Veterinarian } from './entities/veterinarian.entity';
+import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
 
 @Injectable()
 export class VeterinariansService {
@@ -20,6 +21,18 @@ export class VeterinariansService {
 
   createVeterinarian(createVeterinarian: CreateVeterinarianDto) {
     return this.veterinarianRepository.create(createVeterinarian);
+  }
+
+  updateVeterinarianProfile(
+    id: string,
+    updateVeterinarianDto: UpdateVeterinarianDto,
+    file?: Express.Multer.File,
+  ) {
+    return this.veterinarianRepository.updateProfile(
+      id,
+      updateVeterinarianDto,
+      file,
+    );
   }
 
   deleteVeterinarian(id: string) {

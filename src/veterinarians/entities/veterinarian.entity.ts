@@ -38,6 +38,9 @@ export class Veterinarian {
   })
   role: Role;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  profileImageUrl: string;
+
   @OneToMany(() => Appointments, (appointment) => appointment.veterinarian)
   appointments?: Appointments[];
 }

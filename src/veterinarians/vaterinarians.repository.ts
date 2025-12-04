@@ -15,6 +15,8 @@ import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import * as bcrypt from 'bcrypt';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Role } from 'src/auth/enum/roles.enum';
+import { StorageService } from 'src/supabase/storage.service';
+import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
 
 @Injectable()
 export class VeterinariansRepository {
@@ -22,6 +24,7 @@ export class VeterinariansRepository {
     @InjectRepository(Veterinarian)
     private readonly veterinarianRepository: Repository<Veterinarian>,
     private readonly supabaseService: SupabaseService,
+    private readonly storageService: StorageService,
   ) {}
 
   private generateTempPassword(length = 8): string {
@@ -213,6 +216,80 @@ export class VeterinariansRepository {
         'Ocurrió un error al crear el veterinario',
       );
     }
+  }
+
+  // veterinarians.repository.ts
+  async updateProfile(
+    id: string,
+    updateVeterinarianDto: UpdateVeterinarianDto,
+    file?: Express.Multer.File,
+  ) {
+    const veterinarian = await this.veterinarianRepository.findOne({
+      where: { id },
+    });
+
+    if (!veterinarian) {
+      throw new NotFoundException('Veterinario no encontrado');
+    }
+
+    // Crear un objeto vacío para las actualizaciones y solo agregar las propiedades que queremos actualizar
+    const updateData: Partial<Veterinarian> = {};
+
+    // Agregar solo las propiedades que están en el DTO
+    if (updateVeterinarianDto.description !== undefined) {
+      updateData.description = updateVeterinarianDto.description;
+    }
+
+    if (updateVeterinarianDto.phone !== undefined) {
+      updateData.phone = updateVeterinarianDto.phone;
+    }
+
+    // Manejar la imagen por separado
+    if (file) {
+      await this.validateImageFile(file);
+      const imageUrl = await this.uploadVeterinarianImage(file);
+      if (imageUrl) {
+        updateData.profileImageUrl = imageUrl;
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      throw new BadRequestException(
+        'No se proporcionaron datos para actualizar',
+      );
+    }
+
+    // Actualizar solo las propiedades que hemos definido explícitamente
+    Object.assign(veterinarian, updateData);
+    await this.veterinarianRepository.save(veterinarian);
+
+    // Eliminamos la contraseña antes de devolver el veterinario actualizado
+    const { password, ...result } = veterinarian;
+
+    return {
+      message: 'Perfil de veterinario actualizado correctamente',
+      result,
+    };
+  }
+
+  private async validateImageFile(file: Express.Multer.File): Promise<void> {
+    if (!file.mimetype.includes('image/')) {
+      throw new BadRequestException(
+        'El archivo debe ser una imagen (.jpg, .png, .webp)',
+      );
+    }
+  }
+
+  private async uploadVeterinarianImage(
+    file: Express.Multer.File,
+  ): Promise<string | null> {
+    const result = await this.storageService.uploadFile(file, 'veterinarians');
+
+    if (!result) {
+      throw new BadRequestException('Error al subir la imagen');
+    }
+
+    return result.publicUrl;
   }
 
   async remove(id: string) {
