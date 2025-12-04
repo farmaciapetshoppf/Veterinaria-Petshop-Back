@@ -245,7 +245,10 @@ export class UsersRepository {
   }
 
   async getUserByEmail(email: string): Promise<Users> {
-    const user = await this.usersRepository.findOne({ where: { email } });
+    const user = await this.usersRepository.findOne({
+      where: { email },
+      relations: ['pets'],
+    });
     if (!user) {
       throw new NotFoundException('Usuario no encontrado.');
     }

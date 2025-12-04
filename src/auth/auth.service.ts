@@ -135,20 +135,21 @@ export class AuthService {
       });
 
       const responsePayload: any = {
-        id: user.id,
+        id: userType === 'veterinarian' ? user.supabaseUserId : user.id,
         name: user.name,
         email: user.email,
         phone: user.phone || null,
         address: user.address || null,
         role: user.role,
-        uid: user,
         user: user.user,
         country: user.country,
         city: user.city,
         isDeleted: user.isDeleted,
         deletedAt: user.deletedAt,
-        pets: user.pets,
+        pets: user.pets || [],
       };
+
+      console.log(responsePayload);
 
       if (userType === 'veterinarian') {
         // Agregar campos específicos para veterinarios
@@ -157,6 +158,8 @@ export class AuthService {
         responsePayload.time = user.time;
         responsePayload.isActive = user.isActive;
       }
+
+      console.log(responsePayload);
 
       return responsePayload;
     } catch (error) {
