@@ -125,37 +125,6 @@ export class UsersRepository {
     if (address !== undefined) user.address = address;
     if (city !== undefined) user.city = city;
 
-    const supabasePayload: any = {};
-    if (phone !== undefined) supabasePayload.phone = phone;
-    if (name !== undefined) {
-      supabasePayload.user_metadata = {
-        ...(user as any).user_metadata,
-        name,
-      };
-    }
-
-    if (Object.keys(supabasePayload).length > 0) {
-      const client = this.supabaseService.getClient();
-      let result: any;
-      let error: any;
-
-      if (client.auth?.admin?.updateUserById) {
-        result = await client.auth.admin.updateUserById(id, supabasePayload);
-      } else {
-        result = await (client.auth.admin as any).updateUser(
-          id,
-          supabasePayload,
-        );
-      }
-
-      ({ error } = result);
-      if (error) {
-        throw new Error(
-          `Error updating Supabase user: ${error.message ?? error}`,
-        );
-      }
-    }
-
     return this.usersRepository.save(user);
   }
 
@@ -242,5 +211,16 @@ export class UsersRepository {
         `Error al eliminar usuario: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  async getUserByEmail(email: string): Promise<Users> {
+    const user = await this.usersRepository.findOne({
+      where: { email },
+      relations: ['pets'],
+    });
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado.');
+    }
+    return user;
   }
 }

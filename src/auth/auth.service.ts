@@ -14,12 +14,14 @@ import { SignUpDto } from './dto/singup.dto';
 import { SignInDto } from './dto/signin.dto';
 import { Role } from './enum/roles.enum';
 import { Response } from 'express';
+import { VeterinariansService } from 'src/veterinarians/veterinarians.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly usersService: UsersService,
+    private readonly veterinariansService: VeterinariansService,
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
@@ -99,38 +101,67 @@ export class AuthService {
         throw new UnauthorizedException('No se devolvieron datos de sesión');
       }
 
-      try {
-        const user = await this.usersService.getUserById(data.user.id);
-
-        res.cookie('access_token', data.session.access_token, {
-          httpOnly: true,
-          secure: false, //false en desarrollo para que funcione en localhost
-          sameSite: 'lax' as const,
-          path: '/',
-          maxAge: 3600 * 1000, // 1 hora
-          domain: 'localhost', // Especificar dominio para localhost
-        });
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone || null,
-          address: user.address || null,
-          role: user.role,
-          uid: user,
-          user: user.user,
-          country: user.country,
-          city: user.city,
-          isDeleted: user.isDeleted,
-          deletedAt: user.deletedAt,
-          pets: user.pets,
-        };
-      } catch (userError) {
-        throw new NotFoundException(
-          'La cuenta existe pero no tiene un perfil completo. Por favor, contacte al administrador o regístrese nuevamente.',
-        );
+      const email = data.user.email;
+      if (!email) {
+        throw new UnauthorizedException('El email no está disponible.');
       }
+
+      let user;
+      let userType;
+
+      // Intentar obtener el usuario de la tabla de usuarios comunes
+      try {
+        user = await this.usersService.getUserByEmail(email);
+        userType = 'regular';
+      } catch {
+        // Si no está en usuarios, buscar en veterinarios
+        try {
+          user = await this.veterinariansService.getVeterinarianByEmail(email);
+          userType = 'veterinarian';
+        } catch {
+          throw new NotFoundException(
+            'Usuario no encontrado en ninguna tabla.',
+          );
+        }
+      }
+
+      res.cookie('access_token', data.session.access_token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax' as const,
+        path: '/',
+        maxAge: 3600 * 1000,
+        domain: 'localhost',
+      });
+
+      const responsePayload: any = {
+        id: userType === 'veterinarian' ? user.supabaseUserId : user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || null,
+        address: user.address || null,
+        role: user.role,
+        user: user.user,
+        country: user.country,
+        city: user.city,
+        isDeleted: user.isDeleted,
+        deletedAt: user.deletedAt,
+        pets: user.pets || [],
+      };
+
+      console.log(responsePayload);
+
+      if (userType === 'veterinarian') {
+        // Agregar campos específicos para veterinarios
+        responsePayload.matricula = user.matricula;
+        responsePayload.description = user.description;
+        responsePayload.time = user.time;
+        responsePayload.isActive = user.isActive;
+      }
+
+      console.log(responsePayload);
+
+      return responsePayload;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

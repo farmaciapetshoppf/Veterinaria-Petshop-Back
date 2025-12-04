@@ -68,4 +68,8 @@ export class UsersService {
     }
     return user.pets;
   }
+
+  async getUserByEmail(email: string): Promise<Users> {
+    return this.usersRepository.getUserByEmail(email);
+  }
 }
