@@ -14,6 +14,7 @@ import { Repository, QueryFailedError } from 'typeorm';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import * as bcrypt from 'bcrypt';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @Injectable()
 export class VeterinariansRepository {
@@ -157,12 +158,12 @@ export class VeterinariansRepository {
         );
       }
 
-      // Crear entidad Veterinarian en nuestra BD
       const vet = this.veterinarianRepository.create({
+        id: data?.user?.id || '', // Asegúrate de que esto nunca sea null
         ...createVeterinarianDto,
         time: new Date(createVeterinarianDto.time),
-        password: hashedPassword, // Seguimos guardando el hash en nuestra BD
-        supabaseUserId: data?.user?.id ?? null,
+        password: hashedPassword,
+        role: Role.Veterinarian,
       });
 
       await this.veterinarianRepository.save(vet);
