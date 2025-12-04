@@ -30,7 +30,9 @@ export class VeterinariansController {
   @Get(':id')
   fillByIdVeterinarians(@Param('id', ParseUUIDPipe) id: string) {
     // service returns single veterinarian (password already stripped for GET)
-    return this.veterinariansService.fillByIdVeterinarians(id).then(data => ({ message: `Veterinarian ${id} retrieved`, data }));
+    return this.veterinariansService
+      .fillByIdVeterinarians(id)
+      .then((data) => ({ message: `Veterinarian ${id} retrieved`, data }));
   }
 
   @ApiOperation({ summary: 'Create new veterinarian' })

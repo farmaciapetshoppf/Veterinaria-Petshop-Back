@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
@@ -21,14 +23,35 @@ export class VeterinariansRepository {
     private readonly supabaseService: SupabaseService,
   ) {}
 
-  private generateTempPassword(length = 10): string {
-    const chars =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
-    let pass = '';
-    for (let i = 0; i < length; i++) {
-      pass += chars[Math.floor(Math.random() * chars.length)];
+  private generateTempPassword(length = 8): string {
+    // Aseguramos que la longitud sea al menos 8
+    const finalLength = Math.max(length, 8);
+
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*()_-+=<>?';
+
+    // Aseguramos que tenga al menos uno de cada tipo
+    let password = '';
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+
+    // Completamos el resto de la contraseña
+    const allChars = lowercase + uppercase + numbers + special;
+    const remainingLength = finalLength - 4;
+
+    for (let i = 0; i < remainingLength; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
     }
-    return pass;
+
+    // Mezclamos los caracteres para que no queden en orden predecible
+    return password
+      .split('')
+      .sort(() => 0.5 - Math.random())
+      .join('');
   }
 
   async fillAll(onlyActive?: boolean) {
@@ -74,36 +97,31 @@ export class VeterinariansRepository {
 
   async create(createVeterinarianDto: CreateVeterinarianDto) {
     const tempPassword = this.generateTempPassword();
+    // Seguimos generando el hash para nuestra base de datos
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    // 1) Tomamos el email del DTO y lo normalizamos
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // Resto del código para normalizar el email
     const rawEmail =
       (createVeterinarianDto as any).email ??
       (createVeterinarianDto as any).mail;
-
     if (!rawEmail) {
       throw new BadRequestException(
         'El veterinario debe tener un email válido',
       );
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const email = rawEmail.trim().toLowerCase();
 
     try {
-      // 2) Crear usuario en Supabase Auth
+      // Crear usuario en Supabase Auth
       const { data, error: authError } = await this.supabaseService
         .getClient()
         .auth.signUp({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           email,
           password: tempPassword,
         });
 
       if (authError) {
         const errorMessage = authError.message.toLowerCase();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const errorCode = (authError as any).code;
 
         // ⛔ email inválido
@@ -139,11 +157,11 @@ export class VeterinariansRepository {
         );
       }
 
-      // 3) Crear entidad Veterinarian en nuestra BD
+      // Crear entidad Veterinarian en nuestra BD
       const vet = this.veterinarianRepository.create({
         ...createVeterinarianDto,
         time: new Date(createVeterinarianDto.time),
-        password: hashedPassword,
+        password: hashedPassword, // Seguimos guardando el hash en nuestra BD
         supabaseUserId: data?.user?.id ?? null,
       });
 
@@ -162,7 +180,6 @@ export class VeterinariansRepository {
         error instanceof QueryFailedError &&
         (error as any).code === '23505'
       ) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const detail: string = (error as any).detail ?? '';
 
         if (detail.includes('(email)=')) {
@@ -217,16 +234,48 @@ export class VeterinariansRepository {
     const findEmail = await this.veterinarianRepository.findOne({
       where: { email },
     });
-    if (!findEmail) throw new NotFoundException('Veterinario no encotrado');
+    if (!findEmail) throw new NotFoundException('Veterinario no encontrado');
 
-    const isMatch = await bcrypt.compare(currentPassword, findEmail.password);
-    if (!isMatch) {
-      throw new BadRequestException('Contraseña actual incorrecta');
+    try {
+      // Verificamos la contraseña actual con bcrypt
+      const isMatch = await bcrypt.compare(currentPassword, findEmail.password);
+      if (!isMatch) {
+        throw new BadRequestException('Contraseña actual incorrecta');
+      }
+
+      // Actualizamos en Supabase
+      const { error: updateError } = await this.supabaseService
+        .getClient()
+        .auth.updateUser({
+          password: newPassword,
+        });
+
+      if (updateError) {
+        throw new InternalServerErrorException(
+          'Error al actualizar la contraseña en Supabase',
+        );
+      }
+
+      // Actualizamos en nuestra base de datos
+      findEmail.password = await bcrypt.hash(newPassword, 10);
+      await this.veterinarianRepository.save(findEmail);
+
+      return { message: 'Contraseña actualizada correctamente' };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Error al cambiar la contraseña');
     }
+  }
 
-    findEmail.password = await bcrypt.hash(newPassword, 10);
-    await this.veterinarianRepository.save(findEmail);
-
-    return { message: 'Contraseña actualizada correctamente' };
+  async getVeterinarianByEmail(email: string): Promise<Veterinarian> {
+    const veterinarian = await this.veterinarianRepository.findOne({
+      where: { email },
+    });
+    if (!veterinarian) {
+      throw new NotFoundException('Veterinario no encontrado.');
+    }
+    return veterinarian;
   }
 }

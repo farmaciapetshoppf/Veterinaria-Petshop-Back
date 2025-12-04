@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { VeterinariansRepository } from './vaterinarians.repository';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import { ChangePasswordVeterinarianDto } from './dto/change-password-veterinarian.dto';
+import { Veterinarian } from './entities/veterinarian.entity';
 
 @Injectable()
 export class VeterinariansService {
@@ -32,5 +33,9 @@ export class VeterinariansService {
       dto.newPassword,
       dto.repeatNewPassword,
     );
+  }
+
+  getVeterinarianByEmail(email: string): Promise<Veterinarian> {
+    return this.veterinarianRepository.getVeterinarianByEmail(email);
   }
 }

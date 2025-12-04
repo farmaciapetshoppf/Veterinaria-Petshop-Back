@@ -243,4 +243,12 @@ export class UsersRepository {
       );
     }
   }
+
+  async getUserByEmail(email: string): Promise<Users> {
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado.');
+    }
+    return user;
+  }
 }
