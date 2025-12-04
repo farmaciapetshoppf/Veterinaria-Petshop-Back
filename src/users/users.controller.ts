@@ -1,10 +1,25 @@
-import { Controller, Get, Param, HttpCode, Patch, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  HttpCode,
+  Patch,
+  Body,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
-import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { Users } from './entities/user.entity';
 
 @ApiTags('Users')
 @Controller('users')
@@ -32,11 +47,48 @@ export class UsersController {
     return { message: `User ${id} retrieved`, data };
   }
 
-  // @HttpCode(200)
-  // @Put(':id')
-  // updateUser(@Param('id') id: string) {
-  //   return this.usersService.updateUser(id);
-  // }
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Actualizar usuario por ID incluyendo imagen de perfil opcional',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del usuario',
+    type: String,
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Raymond Weiler' },
+        phone: { type: 'string', example: '+34123456789' },
+        country: { type: 'string', example: 'Luxemburgo' },
+        address: {
+          type: 'string',
+          example: '13 Place De Lhôtel De Ville, L-3590',
+        },
+        city: { type: 'string', example: 'Dudelange' },
+        profileImage: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagen de perfil del usuario (opcional)',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('profileImage'))
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() profileImage?: Express.Multer.File,
+  ): Promise<Users> {
+    return this.usersService.updateUserComplete(
+      id,
+      updateUserDto,
+      profileImage,
+    );
+  }
 
   @ApiOperation({ summary: 'Change user role' })
   @ApiParam({
@@ -69,9 +121,8 @@ export class UsersController {
     return this.usersService.deleteUser(id);
   }
 
-  @Get(':id/pets') 
-    getUserPets(@Param('id') id: string){
-      return this.usersService.getUserPets(id)
-    
+  @Get(':id/pets')
+  getUserPets(@Param('id') id: string) {
+    return this.usersService.getUserPets(id);
   }
 }

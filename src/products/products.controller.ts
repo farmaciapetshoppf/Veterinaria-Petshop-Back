@@ -93,12 +93,20 @@ export class ProductsController {
     return this.productsService.create(createProductDto);
   }
 
-  @ApiOperation({ summary: 'Update product image' })
+  @ApiOperation({ summary: 'Update product with optional image' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
+        name: { type: 'string', example: 'Nombre del producto' },
+        description: { type: 'string', example: 'Descripción del producto' },
+        price: { type: 'number', example: 20.99 },
+        stock: { type: 'integer', example: 50 },
+        categoryId: {
+          type: 'string',
+          example: '550e8400-e29b-41d4-a716-446655440000',
+        },
         image: {
           type: 'string',
           format: 'binary',
@@ -107,35 +115,41 @@ export class ProductsController {
       },
     },
   })
-  @Patch(':id/image')
+  @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
-  async updateProductImage(
+  async update(
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @Body() updateProductDtoRaw: any,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    if (!file) {
-      throw new BadRequestException('No se ha proporcionado una imagen');
+    if (file) {
+      if (!file.mimetype.includes('image/')) {
+        throw new BadRequestException(
+          'El archivo debe ser una imagen (.jpg, .png, .webp)',
+        );
+      }
+
+      const result = await this.storageService.uploadFile(file, 'products');
+
+      if (!result) {
+        throw new BadRequestException('Error al subir la imagen');
+      }
+
+      updateProductDtoRaw.imgUrl = result.publicUrl;
     }
 
-    if (!file.mimetype.includes('image/')) {
-      throw new BadRequestException(
-        'El archivo debe ser una imagen (.jpg, .png, .webp)',
-      );
-    }
-
-    const product = await this.productsService.findOne(id);
-
-    const result = await this.storageService.uploadFile(file, 'products');
-
-    if (!result) {
-      throw new BadRequestException('Error al subir la imagen');
-    }
-
-    const updateDto: UpdateProductDto = {
-      imgUrl: result.publicUrl,
+    // Conversión de tipos
+    const updateProductDto: UpdateProductDto = {
+      ...updateProductDtoRaw,
+      price: updateProductDtoRaw.price
+        ? Number(updateProductDtoRaw.price)
+        : undefined,
+      stock: updateProductDtoRaw.stock
+        ? Number(updateProductDtoRaw.stock)
+        : undefined,
     };
 
-    return this.productsService.update(id, updateDto);
+    return this.productsService.update(id, updateProductDto);
   }
 
   @ApiOperation({ summary: 'Get all products' })
@@ -148,12 +162,6 @@ export class ProductsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
-  }
-
-  @ApiOperation({ summary: 'Update product' })
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(id, updateProductDto);
   }
 
   @ApiOperation({ summary: 'Delete product' })

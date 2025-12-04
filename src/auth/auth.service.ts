@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
@@ -289,9 +288,18 @@ export class AuthService {
 
       return {
         id: user.id,
-        email: user.email,
         name: user.name,
+        email: user.email,
+        phone: user.phone || null,
+        address: user.address || null,
         role: user.role,
+        uid: user,
+        user: user.user,
+        country: user.country,
+        city: user.city,
+        isDeleted: user.isDeleted,
+        deletedAt: user.deletedAt,
+        pets: user.pets,
         // Puedes incluir más campos del usuario si es necesario
       };
     } catch (error) {
