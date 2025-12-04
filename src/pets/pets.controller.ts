@@ -8,12 +8,17 @@ import {
   Delete,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { Pet } from './entities/pet.entity';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/decorators/roles.decorator';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Pets')
 @Controller('pets')
@@ -22,6 +27,8 @@ export class PetsController {
 
   @ApiOperation({ summary: 'Create new pet' })
   @Post('NewPet')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User)
   async create(@Body() createPetDto: CreatePetDto) {
     try {
       const NewPet = await this.petsService.create(createPetDto);
@@ -46,7 +53,6 @@ export class PetsController {
     const data = await this.petsService.findAll();
     return { message: 'Pets retrieved', data };
   }
-
 
   @ApiOperation({ summary: 'Get pet by ID' })
   @Get(':id')
