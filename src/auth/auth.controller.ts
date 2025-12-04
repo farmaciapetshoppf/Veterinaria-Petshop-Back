@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -10,8 +11,11 @@ import {
   HttpCode,
   Res,
   Get,
-  UseGuards,
   Req,
+  BadRequestException,
+  Query,
+  UseGuards,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/singup.dto';
@@ -49,8 +53,16 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  getProfile(@Req() req: Request) {
-    return (req as any).user;
+  async getProfile(@Req() req: Request) {
+    try {
+      const userId = (req as any).user.id; // Asegúrate de que el guardia coloca el usuario en la solicitud
+      const user = await this.authService.getUserProfile(userId); // Obteniendo desde el servicio SQL
+      return user;
+    } catch (error) {
+      throw new UnauthorizedException(
+        'No se pudo obtener el perfil del usuario',
+      );
+    }
   }
 
   @ApiOperation({ summary: 'Google OAuth URL' })
@@ -59,6 +71,25 @@ export class AuthController {
     return this.authService.getGoogleAuthURL();
   }
 
+  @ApiOperation({ summary: 'Handle OAuth callback' })
+  @Get('callback')
+  async handleCallback(
+    @Query('code') code: string,
+    @Query('hash') hash: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // Determinar si estamos procesando un código o un hash
+    const urlFragment = code || hash || (req.query.fragment as string);
+
+    if (!urlFragment) {
+      throw new BadRequestException('Falta el código o hash de autenticación');
+    }
+
+    return this.authService.handleAuthCallback(urlFragment, res);
+  }
+
+  // Mantener el endpoint anterior para compatibilidad
   @ApiOperation({ summary: 'Handle successful OAuth authentication' })
   @ApiBody({
     description: 'OAuth access token data',

@@ -1,3 +1,5 @@
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -9,7 +11,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Role } from 'src/auth/enum/roles.enum';
 import { generateShortUuid } from 'src/utils/uuid.utils';
-// import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { StorageService } from 'src/supabase/storage.service';
 
 @Injectable()
 export class UsersRepository {
@@ -17,6 +20,7 @@ export class UsersRepository {
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
     private supabaseService: SupabaseService,
+    private storageService: StorageService,
   ) {}
 
   async getUsers(): Promise<Users[]> {
@@ -108,11 +112,75 @@ export class UsersRepository {
     return this.usersRepository.save(newUser);
   }
 
-  // async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<Users> {
-  //   await this.findOne(id);
-  //   await this.usersRepository.update(id, updateUserDto);
-  //   return this.findOne(id);
-  // }
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<Users> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user)
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+
+    const { name, phone, country, address, city } = updateUserDto;
+
+    if (name !== undefined) user.name = name;
+    if (phone !== undefined) user.phone = phone;
+    if (country !== undefined) user.country = country;
+    if (address !== undefined) user.address = address;
+    if (city !== undefined) user.city = city;
+
+    const supabasePayload: any = {};
+    if (phone !== undefined) supabasePayload.phone = phone;
+    if (name !== undefined) {
+      supabasePayload.user_metadata = {
+        ...(user as any).user_metadata,
+        name,
+      };
+    }
+
+    if (Object.keys(supabasePayload).length > 0) {
+      const client = this.supabaseService.getClient();
+      let result: any;
+      let error: any;
+
+      if (client.auth?.admin?.updateUserById) {
+        result = await client.auth.admin.updateUserById(id, supabasePayload);
+      } else {
+        result = await (client.auth.admin as any).updateUser(
+          id,
+          supabasePayload,
+        );
+      }
+
+      ({ error } = result);
+      if (error) {
+        throw new Error(
+          `Error updating Supabase user: ${error.message ?? error}`,
+        );
+      }
+    }
+
+    return this.usersRepository.save(user);
+  }
+
+  async updateUserProfileImage(
+    id: string,
+    file: Express.Multer.File,
+  ): Promise<Users> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+
+    if (!file.mimetype.includes('image/')) {
+      throw new Error('El archivo debe ser una imagen (.jpg, .png, .webp)');
+    }
+
+    const result = await this.storageService.uploadFile(file, 'users');
+    if (!result) {
+      throw new Error('Error al subir la imagen de perfil');
+    }
+
+    user.profileImageUrl = result.publicUrl;
+
+    return this.usersRepository.save(user);
+  }
 
   async updateRole(id: string, role: Role): Promise<Users> {
     const user = await this.usersRepository.findOne({ where: { id } });

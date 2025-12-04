@@ -1,7 +1,22 @@
 [
-  { "name": "Alimentos" },
-  { "name": "Salud" },
-  { "name": "Higiene" },
-  { "name": "Accesorios" },
-  { "name": "Juguetes" }
+  {
+    "name": "Alimentos",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/categories/1764785041499_Alimento-mascotas.png"
+  },
+  {
+    "name": "Salud",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/categories/1764785985694_Salud-mascotas.png"
+  },
+  {
+    "name": "Higiene",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/categories/1764785135459_Higiene-mascotas.png"
+  },
+  {
+    "name": "Accesorios",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/categories/1764785626150_Collar-mascotas.png"
+  },
+  {
+    "name": "Juguetes",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/categories/1764785772105_Juguetes-mascotas.png"
+  }
 ]

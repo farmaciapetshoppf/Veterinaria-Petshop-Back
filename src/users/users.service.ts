@@ -7,6 +7,7 @@ import { Users } from './entities/user.entity';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Role } from 'src/auth/enum/roles.enum';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -24,9 +25,24 @@ export class UsersService {
     return this.usersRepository.createUser(createUserDto);
   }
 
-  // updateUser(id: string) {
-  //   return this.usersRepository.updateUser();
-  // }
+  async updateUserComplete(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    profileImage?: Express.Multer.File,
+  ): Promise<Users> {
+    // Primero actualizamos los datos básicos del usuario
+    const updatedUser = await this.usersRepository.updateUser(
+      id,
+      updateUserDto,
+    );
+
+    // Si se proporcionó una imagen, la actualizamos también
+    if (profileImage) {
+      return this.usersRepository.updateUserProfileImage(id, profileImage);
+    }
+
+    return updatedUser;
+  }
 
   updateRole(id: string, role: Role) {
     return this.usersRepository.updateRole(id, role);
@@ -39,7 +55,17 @@ export class UsersService {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
       }
-      throw new InternalServerErrorException(error instanceof Error ? error.message : 'An error occurred');
+      throw new InternalServerErrorException(
+        error instanceof Error ? error.message : 'An error occurred',
+      );
     }
+  }
+
+  async getUserPets(id: string) {
+    const user = await this.usersRepository.getUserById(id);
+    if (!user) {
+      throw new NotFoundException('No existe el usuario');
+    }
+    return user.pets;
   }
 }
