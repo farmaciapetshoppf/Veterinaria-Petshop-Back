@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
@@ -112,8 +113,18 @@ export class AuthService {
 
         return {
           id: user.id,
+          name: user.name,
           email: user.email,
+          phone: user.phone || null,
+          address: user.address || null,
           role: user.role,
+          uid: user,
+          user: user.user,
+          country: user.country,
+          city: user.city,
+          isDeleted: user.isDeleted,
+          deletedAt: user.deletedAt,
+          pets: user.pets,
         };
       } catch (userError) {
         throw new NotFoundException(
@@ -256,7 +267,6 @@ export class AuthService {
     return await this.usersService.getUserById(userId);
   }
 
-  // Método privado para procesar la sesión del usuario
   private async processUserSession(
     accessToken: string,
     res: Response,
@@ -274,8 +284,43 @@ export class AuthService {
         );
       }
 
-      // Obtener el usuario desde la base de datos SQL
-      const user = await this.usersService.getUserById(data.user.id);
+      let user;
+
+      // Intentar obtener el usuario de la base de datos SQL
+      try {
+        user = await this.usersService.getUserById(data.user.id);
+      } catch (userError) {
+        // Si el usuario no existe en la base de datos SQL, crearlo
+        if (userError instanceof NotFoundException) {
+          // Obtener datos adicionales del perfil del usuario de Google desde Supabase
+          const userMetadata = data.user.user_metadata || {};
+
+          // Verificar que el email existe
+          if (!data.user.email) {
+            throw new UnauthorizedException(
+              'El usuario no tiene un correo electrónico válido',
+            );
+          }
+
+          const emailPrefix = data.user.email.split('@')[0];
+
+          // Crear el usuario en la base de datos SQL con valores compatibles con el DTO
+          user = await this.usersService.createUser({
+            id: data.user.id,
+            email: data.user.email,
+            name: userMetadata.full_name || userMetadata.name || emailPrefix,
+            user: userMetadata.name || emailPrefix,
+            // Para los campos opcionales, usamos undefined en lugar de null
+            phone: undefined,
+            country: undefined,
+            address: undefined,
+            city: undefined,
+            role: Role.User,
+          });
+        } else {
+          throw userError; // Re-lanzar otros tipos de errores
+        }
+      }
 
       res.cookie('access_token', accessToken, {
         httpOnly: true,
@@ -295,12 +340,11 @@ export class AuthService {
         role: user.role,
         uid: user,
         user: user.user,
-        country: user.country,
-        city: user.city,
+        country: user.country || null,
+        city: user.city || null,
         isDeleted: user.isDeleted,
         deletedAt: user.deletedAt,
         pets: user.pets,
-        // Puedes incluir más campos del usuario si es necesario
       };
     } catch (error) {
       if (error instanceof HttpException) {
