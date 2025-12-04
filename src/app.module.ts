@@ -19,6 +19,7 @@ import { SaleOrdersModule } from './sale-orders/sale-orders.module';
 import { AuthModule } from './auth/auth.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { ProductsService } from './products/products.service';
+import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
 
 @Module({
@@ -41,6 +42,7 @@ import { UploadModule } from './upload/upload.module';
     SaleOrdersModule,
     DatabaseModule,
     AuthModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

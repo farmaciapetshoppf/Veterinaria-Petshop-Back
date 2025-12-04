@@ -30,6 +30,8 @@ export class Veterinarian {
   @Column({ type: 'varchar', length: 255, nullable: false })
   password: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  supabaseUserId: string | null;
   @OneToMany(() => Appointments, (appointment) => appointment.veterinarian)
   appointments?: Appointments[];
 }
