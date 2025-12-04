@@ -1,6 +1,7 @@
 import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { typeormConfig } from './config/typeorm';
 
 import { AppController } from './app.controller';
@@ -25,6 +26,7 @@ import { UploadModule } from './upload/upload.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(), // Habilita tareas programadas (CRON jobs)
 
     TypeOrmModule.forRootAsync(typeormConfig),
     UsersModule,

@@ -103,10 +103,11 @@ export class AuthService {
 
         res.cookie('access_token', data.session.access_token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
+          secure: false, //false en desarrollo para que funcione en localhost
           sameSite: 'lax' as const,
           path: '/',
-          maxAge: 3600 * 1000,
+          maxAge: 3600 * 1000, // 1 hora
+          domain: 'localhost', // Especificar dominio para localhost
         });
 
         return {
@@ -139,9 +140,10 @@ export class AuthService {
 
       const cookieOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false, // ✅ false en desarrollo
         sameSite: 'lax' as const,
         path: '/',
+        domain: 'localhost', // ✅ Especificar dominio
         expires: new Date(0),
       };
 
@@ -277,10 +279,11 @@ export class AuthService {
 
       res.cookie('access_token', accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false, // ✅ false en desarrollo para que funcione en localhost
         sameSite: 'lax' as const,
         path: '/',
-        maxAge: 3600 * 1000,
+        maxAge: 3600 * 1000, // 1 hora
+        domain: 'localhost', // ✅ Especificar dominio para localhost
       });
 
       return {
