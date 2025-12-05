@@ -1,4 +1,3 @@
-/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -107,6 +106,7 @@ export class UsersRepository {
   createUser(createUserDto: CreateUserDto): Promise<Users> {
     const newUser = this.usersRepository.create({
       ...createUserDto,
+      email: createUserDto.email.toLowerCase(),
       uid: generateShortUuid(12),
     });
     return this.usersRepository.save(newUser);
@@ -215,7 +215,7 @@ export class UsersRepository {
 
   async getUserByEmail(email: string): Promise<Users> {
     const user = await this.usersRepository.findOne({
-      where: { email },
+      where: { email: email.toLowerCase() },
       relations: ['pets'],
     });
     if (!user) {

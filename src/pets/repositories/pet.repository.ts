@@ -30,6 +30,7 @@ export class PetRepository extends Repository<Pet> {
       father: null,
       childrenAsMother: [],
       childrenAsFather: [],
+      deletedAt: null,
     },
     {
       id: '2',
@@ -48,6 +49,7 @@ export class PetRepository extends Repository<Pet> {
       father: null,
       childrenAsMother: [],
       childrenAsFather: [],
+      deletedAt: null,
     },
   ];
 }
