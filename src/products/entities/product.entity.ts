@@ -2,6 +2,7 @@ import { Category } from 'src/categories/entities/category.entity';
 import { SaleOrderProduct } from 'src/sale-orders/entities/sale-order-product.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -46,6 +47,9 @@ export class Products {
     default: 'No image',
   })
   imgUrl: string;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 
   @ManyToOne(() => Category, (category) => category.products)
   @JoinColumn({ name: 'category_id' })
