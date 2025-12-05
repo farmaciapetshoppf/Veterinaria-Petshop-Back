@@ -7,7 +7,6 @@ import { AuthGuard } from './guards/auth.guard';
 import { MailerModule } from 'src/mailer/mailer.module';
 import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
 
-
 @Module({
   imports: [SupabaseModule, UsersModule, VeterinariansModule, MailerModule],
   controllers: [AuthController],
