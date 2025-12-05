@@ -34,14 +34,24 @@ export class AuthController {
     return this.authService.signUp(signUpDto);
   }
 
-  @ApiOperation({ summary: 'Login user' })
+  @ApiOperation({ summary: 'Login regular user' })
   @Post('signin')
   @HttpCode(200)
-  async signIn(
+  signIn(
     @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.signIn(signInDto, res);
+    return this.authService.signInUser(signInDto, res);
+  }
+
+  @ApiOperation({ summary: 'Login veterinarian' })
+  @Post('signin/veterinarian')
+  @HttpCode(200)
+  signInVeterinarian(
+    @Body() signInDto: SignInDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.signInVeterinarian(signInDto, res);
   }
 
   @ApiOperation({ summary: 'Signout user' })

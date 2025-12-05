@@ -51,18 +51,13 @@ export class MailerService {
       CLIENT_SECRET,
       REDIRECT_URI,
     );
-    console.log(oAuth2Client);
 
     oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
-
-    console.log(REFRESH_TOKEN);
 
     try {
       // 5. Obtener Access Token
       const accessTokenResponse = await oAuth2Client.getAccessToken();
       const accessToken = accessTokenResponse.token;
-
-      console.log(accessToken);
 
       if (!accessToken) {
         throw new Error('No se pudo generar el Access Token para Nodemailer.');
@@ -90,7 +85,6 @@ export class MailerService {
       );
       // No relanzamos, solo registramos el error para que la app pueda iniciar
       // pero el transporter permanecerá 'undefined', lo que será manejado en sendMail.
-      console.log(this.transporter);
     }
   }
 
@@ -112,8 +106,6 @@ export class MailerService {
       );
     }
 
-    console.log(this.transporter);
-
     // 2. Opciones del correo
     const mailOptions = {
       from: `Huellitas Pet🐾 <${this.emailUser}>`, // Usamos la propiedad de la clase para el FROM
@@ -126,10 +118,8 @@ export class MailerService {
     try {
       const result = await this.transporter.sendMail(mailOptions);
       console.log('Correo enviado exitosamente. Message ID:', result.messageId);
-      console.log(result);
     } catch (error) {
       console.error('Fallo el envío de correo:', error);
-      console.log(error);
       // Relanzamos el error para que el AuthService pueda capturarlo y generar un 'warn'
       throw new InternalServerErrorException(
         'Fallo al contactar al servidor de correo durante el envío.',
