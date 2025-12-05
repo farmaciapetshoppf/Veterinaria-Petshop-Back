@@ -71,28 +71,31 @@ export class AuthService {
         });
 
         try {
-            const subject = '👋 ¡Bienvenido a Huellitas Pet 🐾!';
-            const htmlContent = `
+          const subject = '👋 ¡Bienvenido a Huellitas Pet 🐾!';
+          const htmlContent = `
                 <h1>Hola, ${name}!</h1>
                 <p>¡Gracias por registrarte! Estamos listos para ayudarte con tus mascotas.</p>
                 <p>Tu cuenta ya está activa.</p>
             `;
-            await this.mailerService.sendMail(email, subject, htmlContent);
-            console.log(`Correo de bienvenida enviado a ${email}`);
+          await this.mailerService.sendMail(email, subject, htmlContent);
+          console.log(`Correo de bienvenida enviado a ${email}`);
         } catch (mailError) {
+          const errorMessage =
+            mailError instanceof Error
+              ? mailError.message
+              : 'Error desconocido al enviar el correo.';
 
-          const errorMessage = mailError instanceof Error ? mailError.message : 'Error desconocido al enviar el correo.';
-         
-            console.warn(`[Mailer Warning]: Fallo el envío de correo a ${email}. Causa: ${errorMessage}`);
+          console.warn(
+            `[Mailer Warning]: Fallo el envío de correo a ${email}. Causa: ${errorMessage}`,
+          );
         }
       }
 
       return {
         message:
           'Registro de usuario iniciado. Revise su email para verificar.',
-          
+        user: data.user,
       };
-      
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Error desconocido';

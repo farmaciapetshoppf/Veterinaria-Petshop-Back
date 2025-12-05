@@ -42,7 +42,6 @@ import { UploadModule } from './upload/upload.module';
     DatabaseModule,
     AuthModule,
     MailerModule,
-    MailerModule,
     ReviewsModule,
   ],
   controllers: [AppController],
