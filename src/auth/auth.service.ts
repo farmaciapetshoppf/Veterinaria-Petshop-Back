@@ -103,7 +103,7 @@ export class AuthService {
     }
   }
 
-  async signIn(signInDto: SignInDto, res: Response): Promise<any> {
+  async signInUser(signInDto: SignInDto, res: Response): Promise<any> {
     try {
       const { data, error } = await this.supabaseService
         .getClient()
@@ -123,58 +123,93 @@ export class AuthService {
         throw new UnauthorizedException('El email no está disponible.');
       }
 
-      let user;
-      let userType;
-
-      // Intentar obtener el usuario de la tabla de usuarios comunes
+      // Buscar solo en la tabla de usuarios regulares
       try {
-        user = await this.usersService.getUserByEmail(email);
-        userType = 'regular';
-      } catch {
-        // Si no está en usuarios, buscar en veterinarios
-        try {
-          user = await this.veterinariansService.getVeterinarianByEmail(email);
-          userType = 'veterinarian';
-        } catch {
-          throw new NotFoundException(
-            'Usuario no encontrado en ninguna tabla.',
-          );
-        }
+        const user = await this.usersService.getUserByEmail(email);
+
+        res.cookie('access_token', data.session.access_token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax' as const,
+          path: '/',
+          maxAge: 3600 * 1000,
+          domain: 'localhost',
+        });
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || null,
+          address: user.address || null,
+          role: user.role,
+          user: user.user,
+          country: user.country,
+          city: user.city,
+          isDeleted: user.isDeleted,
+          deletedAt: user.deletedAt,
+          pets: user.pets || [],
+        };
+      } catch (error) {
+        throw new NotFoundException('Usuario no encontrado.');
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Error en el proceso de inicio de sesión',
+      );
+    }
+  }
+
+  async signInVeterinarian(signInDto: SignInDto, res: Response): Promise<any> {
+    try {
+      const { data, error } = await this.supabaseService
+        .getClient()
+        .auth.signInWithPassword({
+          email: signInDto.email,
+          password: signInDto.password,
+        });
+
+      if (error) throw new UnauthorizedException(error.message);
+
+      if (!data.session) {
+        throw new UnauthorizedException('No se devolvieron datos de sesión');
       }
 
-      res.cookie('access_token', data.session.access_token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'lax' as const,
-        path: '/',
-        maxAge: 3600 * 1000,
-        domain: 'localhost',
-      });
-
-      const responsePayload: any = {
-        id: userType === 'veterinarian' ? user.supabaseUserId : user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || null,
-        address: user.address || null,
-        role: user.role,
-        user: user.user,
-        country: user.country,
-        city: user.city,
-        isDeleted: user.isDeleted,
-        deletedAt: user.deletedAt,
-        pets: user.pets || [],
-      };
-
-      if (userType === 'veterinarian') {
-        // Agregar campos específicos para veterinarios
-        responsePayload.matricula = user.matricula;
-        responsePayload.description = user.description;
-        responsePayload.time = user.time;
-        responsePayload.isActive = user.isActive;
+      const email = data.user.email;
+      if (!email) {
+        throw new UnauthorizedException('El email no está disponible.');
       }
 
-      return responsePayload;
+      // Buscar solo en la tabla de veterinarios
+      try {
+        const veterinarian =
+          await this.veterinariansService.getVeterinarianByEmail(email);
+
+        res.cookie('access_token', data.session.access_token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax' as const,
+          path: '/',
+          maxAge: 3600 * 1000,
+          domain: 'localhost',
+        });
+
+        return {
+          id: veterinarian.id,
+          name: veterinarian.name,
+          email: veterinarian.email,
+          matricula: veterinarian.matricula,
+          description: veterinarian.description,
+          phone: veterinarian.phone || null,
+          time: veterinarian.time,
+          isActive: veterinarian.isActive,
+        };
+      } catch (error) {
+        throw new NotFoundException('Veterinario no encontrado.');
+      }
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
