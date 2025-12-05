@@ -1,6 +1,7 @@
 import { Module, OnApplicationBootstrap } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { typeormConfig } from './config/typeorm';
 
 import { AppController } from './app.controller';
@@ -19,17 +20,21 @@ import { AuthModule } from './auth/auth.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { ProductsService } from './products/products.service';
 import { MailerModule } from './mailer/mailer.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(), // Habilita tareas programadas (CRON jobs)
 
     TypeOrmModule.forRootAsync(typeormConfig),
     UsersModule,
     SupabaseModule,
     PetsModule,
+    UploadModule,
     VeterinariansModule,
     AppointmentsModule,
     ProductsModule,
@@ -38,7 +43,8 @@ import { MailerModule } from './mailer/mailer.module';
     SaleOrdersModule,
     DatabaseModule,
     AuthModule,
-    MailerModule
+    MailerModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

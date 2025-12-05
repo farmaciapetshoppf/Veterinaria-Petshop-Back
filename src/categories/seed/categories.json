@@ -1,7 +1,22 @@
 [
-  { "name": "Alimentos" },
-  { "name": "Salud" },
-  { "name": "Higiene" },
-  { "name": "Accesorios" },
-  { "name": "Juguetes" }
+  {
+    "name": "Alimentos",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/sign/categories/1764785041499_Alimento-mascotas.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lODdjNTIwNC0wODczLTQ0MTEtODdlNC0yNjFjZGUzMGJiY2QiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjYXRlZ29yaWVzLzE3NjQ3ODUwNDE0OTlfQWxpbWVudG8tbWFzY290YXMucG5nIiwiaWF0IjoxNzY0ODgwNTA1LCJleHAiOjE3Njc0NzI1MDV9.lPptVnfDdTZF7llVmJOlFOl3wlROnr3JlDGuliM0fUE"
+  },
+  {
+    "name": "Salud",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/sign/categories/1764785985694_Salud-mascotas.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lODdjNTIwNC0wODczLTQ0MTEtODdlNC0yNjFjZGUzMGJiY2QiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjYXRlZ29yaWVzLzE3NjQ3ODU5ODU2OTRfU2FsdWQtbWFzY290YXMucG5nIiwiaWF0IjoxNzY0ODgwNTE0LCJleHAiOjE3Njc0NzI1MTR9.koAVp8gN04kJL1tqYR7H3rbnPmmtiA8qqDzWA6tnRSc"
+  },
+  {
+    "name": "Higiene",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/sign/categories/1764785135459_Higiene-mascotas.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lODdjNTIwNC0wODczLTQ0MTEtODdlNC0yNjFjZGUzMGJiY2QiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjYXRlZ29yaWVzLzE3NjQ3ODUxMzU0NTlfSGlnaWVuZS1tYXNjb3Rhcy5wbmciLCJpYXQiOjE3NjQ4ODA1MjEsImV4cCI6MTc2NzQ3MjUyMX0.GOzDZ6Smldwu-YnBQ_DSUEUd7zwqLs5zXCRQF79z69k"
+  },
+  {
+    "name": "Accesorios",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/sign/categories/1764785626150_Collar-mascotas.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lODdjNTIwNC0wODczLTQ0MTEtODdlNC0yNjFjZGUzMGJiY2QiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjYXRlZ29yaWVzLzE3NjQ3ODU2MjYxNTBfQ29sbGFyLW1hc2NvdGFzLnBuZyIsImlhdCI6MTc2NDg4MDUyOSwiZXhwIjoxNzY3NDcyNTI5fQ.IzYtu3t1jQ-V5CAq-a2tOorUJV3wxnbvcA3_QYK0_6A"
+  },
+  {
+    "name": "Juguetes",
+    "imgUrl": "https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/sign/categories/1764785772105_Juguetes-mascotas.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lODdjNTIwNC0wODczLTQ0MTEtODdlNC0yNjFjZGUzMGJiY2QiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjYXRlZ29yaWVzLzE3NjQ3ODU3NzIxMDVfSnVndWV0ZXMtbWFzY290YXMucG5nIiwiaWF0IjoxNzY0ODgwNTM4LCJleHAiOjE3Njc0NzI1Mzh9.CoouH0HXnhbpBvvKAOPEJK_DI_sL6XowjMDm6jxgVug"
+  }
 ]

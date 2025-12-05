@@ -5,9 +5,11 @@ import { SupabaseModule } from 'src/supabase/supabase.module';
 import { UsersModule } from 'src/users/users.module';
 import { AuthGuard } from './guards/auth.guard';
 import { MailerModule } from 'src/mailer/mailer.module';
+import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
+
 
 @Module({
-  imports: [SupabaseModule, UsersModule, MailerModule],
+  imports: [SupabaseModule, UsersModule, VeterinariansModule, MailerModule],
   controllers: [AuthController],
   providers: [AuthService, AuthGuard],
   exports: [AuthService, AuthGuard],

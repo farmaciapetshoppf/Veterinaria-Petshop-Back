@@ -55,10 +55,11 @@ export class CreateProductDto {
     description: 'URL de la imagen del producto',
     example: 'https://example.com/images/alimento-perro.jpg',
     type: 'string',
-    default: 'No image',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  imgUrl: string;
+  imgUrl?: string;
 
   @ApiProperty({
     description: 'ID de la categoría a la que pertenece el producto',
