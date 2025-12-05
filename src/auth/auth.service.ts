@@ -88,7 +88,7 @@ export class AuthService {
       return {
         message:
           'Registro de usuario iniciado. Revise su email para verificar.',
-          user: newUser,
+          
       };
       
     } catch (error) {
