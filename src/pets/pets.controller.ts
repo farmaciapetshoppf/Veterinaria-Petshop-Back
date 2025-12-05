@@ -5,11 +5,11 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   HttpException,
   HttpStatus,
   UseInterceptors,
   UploadedFile,
+  Put,
 } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
@@ -132,8 +132,8 @@ export class PetsController {
     }
   }
 
-  @ApiOperation({ summary: 'Delete pet' })
-  @Delete(':id')
+  @ApiOperation({ summary: 'Soft delete by ID' })
+  @Put(':id')
   remove(@Param('id') id: string) {
     return this.petsService.remove(id);
   }

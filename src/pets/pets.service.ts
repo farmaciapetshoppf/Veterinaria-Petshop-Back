@@ -114,7 +114,9 @@ export class PetsService {
     return this.petRepository.save(pet);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} pet`;
+  async remove(id: string) {
+    const pet = await this.findOne(id);
+    await this.petRepository.softRemove(pet);
+    return { message: 'Mascota eliminada correctamente' };
   }
 }
