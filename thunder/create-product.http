@@ -1,0 +1,21 @@
+# Thunder Client / REST Client example for CreateProductDto
+# Usage:
+# - Replace <TOKEN> with a valid bearer token if your endpoint requires auth
+# - Adjust URL if your server runs on a different host/port
+
+### Create product
+POST http://localhost:3000/products
+Content-Type: application/json
+Authorization: Bearer <TOKEN>
+
+{
+  "name": "Collar para perro",
+  "description": "Collar ajustable y resistente para perro de tamaño mediano.",
+  "price": 19.99,
+  "stock": 50,
+  "imgUrl": "https://example.com/images/collar-perro.jpg",
+  "categoryId": "11111111-1111-1111-1111-111111111111"
+}
+
+# cURL equivalent (PowerShell) - copia y pega en PowerShell si prefieres:
+# curl -X POST "http://localhost:3000/products" -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d '{"name":"Collar para perro","description":"Collar ajustable y resistente","price":19.99,"stock":50,"imgUrl":"https://example.com/images/collar-perro.jpg","categoryId":"11111111-1111-1111-1111-111111111111"}'
