@@ -15,25 +15,34 @@ export class MailerService {
     const emailUser = this.configService.get<string>('MAIL_USER');
 
     if (!emailUser) {
-        // En NestJS, es mejor lanzar un error en el constructor si falta una dependencia clave
-        throw new Error('La variable MAIL_USER es crucial y no está definida en .env.');
+      // En NestJS, es mejor lanzar un error en el constructor si falta una dependencia clave
+      throw new Error(
+        'La variable MAIL_USER es crucial y no está definida en .env.',
+      );
     }
     this.emailUser = emailUser; // Asignamos la variable a la propiedad de la clase
-    
+
     // 2. Iniciamos el transporter de forma asíncrona
     this.initializeTransporter();
   }
 
   private async initializeTransporter() {
     // 3. Leemos las credenciales de OAuth2 (solo necesarias aquí dentro)
-    const CLIENT_ID = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    const CLIENT_SECRET = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
-    const REFRESH_TOKEN = this.configService.get<string>('GOOGLE_REFRESH_TOKEN');
+    const CLIENT_ID = this.configService.get<string>('GOOGLE_MAIL_CLIENT_ID');
+    const CLIENT_SECRET = this.configService.get<string>(
+      'GOOGLE_MAIL_CLIENT_SECRET',
+    );
+    const REFRESH_TOKEN = this.configService.get<string>(
+      'GOOGLE_REFRESH_TOKEN',
+    );
     const REDIRECT_URI = this.configService.get<string>('GOOGLE_REDIRECT_URI');
-    
+
     if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN || !REDIRECT_URI) {
-      console.error('ERROR: Faltan credenciales de OAuth2. El servicio de correo no funcionará.');
-      return; 
+      console.error(
+        'ERROR: Faltan credenciales de OAuth2. El servicio de correo no funcionará.',
+      );
+
+      return;
     }
 
     // 4. Configurar cliente OAuth2
@@ -42,12 +51,18 @@ export class MailerService {
       CLIENT_SECRET,
       REDIRECT_URI,
     );
+    console.log(oAuth2Client);
+
     oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+
+    console.log(REFRESH_TOKEN);
 
     try {
       // 5. Obtener Access Token
       const accessTokenResponse = await oAuth2Client.getAccessToken();
       const accessToken = accessTokenResponse.token;
+
+      console.log(accessToken);
 
       if (!accessToken) {
         throw new Error('No se pudo generar el Access Token para Nodemailer.');
@@ -64,13 +79,18 @@ export class MailerService {
           refreshToken: REFRESH_TOKEN,
           accessToken: accessToken,
         },
+        tls: { rejectUnauthorized: false }, //Cambiar en produccion, no puede quedar en false!
       } as nodemailer.TransportOptions);
-
     } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Error fatal al configurar el servicio de correo:', errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(
+        'Error fatal al configurar el servicio de correo:',
+        errorMessage,
+      );
       // No relanzamos, solo registramos el error para que la app pueda iniciar
       // pero el transporter permanecerá 'undefined', lo que será manejado en sendMail.
+      console.log(this.transporter);
     }
   }
 
@@ -80,12 +100,20 @@ export class MailerService {
    * @param subject Asunto del correo.
    * @param htmlContent Contenido HTML del cuerpo.
    */
-  async sendMail(to: string, subject: string, htmlContent: string): Promise<void> {
+  async sendMail(
+    to: string,
+    subject: string,
+    htmlContent: string,
+  ): Promise<void> {
     // 1. Verificación de inicialización
     if (!this.transporter) {
-        throw new InternalServerErrorException('El servicio de correo no pudo inicializarse. Revise las credenciales en .env.');
+      throw new InternalServerErrorException(
+        'El servicio de correo no pudo inicializarse. Revise las credenciales en .env.',
+      );
     }
-    
+
+    console.log(this.transporter);
+
     // 2. Opciones del correo
     const mailOptions = {
       from: `Huellitas Pet🐾 <${this.emailUser}>`, // Usamos la propiedad de la clase para el FROM
@@ -98,10 +126,14 @@ export class MailerService {
     try {
       const result = await this.transporter.sendMail(mailOptions);
       console.log('Correo enviado exitosamente. Message ID:', result.messageId);
+      console.log(result);
     } catch (error) {
       console.error('Fallo el envío de correo:', error);
+      console.log(error);
       // Relanzamos el error para que el AuthService pueda capturarlo y generar un 'warn'
-      throw new InternalServerErrorException('Fallo al contactar al servidor de correo durante el envío.');
+      throw new InternalServerErrorException(
+        'Fallo al contactar al servidor de correo durante el envío.',
+      );
     }
   }
 }
