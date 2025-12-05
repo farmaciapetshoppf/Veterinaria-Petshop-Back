@@ -3,10 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { typeormConfig } from './config/typeorm';
-
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { PetsModule } from './pets/pets.module';
