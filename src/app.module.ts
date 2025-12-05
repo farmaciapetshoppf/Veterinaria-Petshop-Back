@@ -12,7 +12,6 @@ import { VeterinariansModule } from './veterinarians/veterinarians.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
-import { BranchesModule } from './branches/branches.module';
 import { SaleOrdersModule } from './sale-orders/sale-orders.module';
 import { AuthModule } from './auth/auth.module';
 import { SupabaseModule } from './supabase/supabase.module';
@@ -37,7 +36,6 @@ import { UploadModule } from './upload/upload.module';
     AppointmentsModule,
     ProductsModule,
     CategoriesModule,
-    BranchesModule,
     SaleOrdersModule,
     DatabaseModule,
     AuthModule,

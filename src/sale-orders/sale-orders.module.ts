@@ -8,17 +8,10 @@ import { UsersModule } from 'src/users/users.module';
 import { SaleOrderProduct } from './entities/sale-order-product.entity';
 import { Products } from 'src/products/entities/product.entity';
 import { Users } from 'src/users/entities/user.entity';
-import { Branch } from 'src/branches/entities/branch.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      SaleOrder,
-      SaleOrderProduct,
-      Products,
-      Users,
-      Branch,
-    ]),
+    TypeOrmModule.forFeature([SaleOrder, SaleOrderProduct, Products, Users]),
     ProductsModule,
     UsersModule,
   ],

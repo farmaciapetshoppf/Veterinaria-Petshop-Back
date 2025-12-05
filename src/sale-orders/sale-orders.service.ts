@@ -12,7 +12,6 @@ import { SaleOrder, SaleOrderStatus } from './entities/sale-order.entity';
 import { SaleOrderProduct } from './entities/sale-order-product.entity';
 import { Users } from 'src/users/entities/user.entity';
 import { Products } from 'src/products/entities/product.entity';
-import { Branch } from 'src/branches/entities/branch.entity';
 
 @Injectable()
 export class SaleOrdersService {
@@ -25,13 +24,12 @@ export class SaleOrdersService {
     private readonly usersRepository: Repository<Users>,
     @InjectRepository(Products)
     private readonly productsRepository: Repository<Products>,
-    @InjectRepository(Branch)
-    private readonly branchRepository: Repository<Branch>,
+
     private readonly dataSource: DataSource,
   ) {}
 
   // ==================== CARRITO ACTIVO ====================
-  
+
   /**
    * Agregar producto al carrito activo del usuario
    * - Busca o crea carrito ACTIVE
@@ -42,9 +40,9 @@ export class SaleOrdersService {
     return this.dataSource.transaction(async (manager) => {
       // Buscar carrito activo del usuario
       let cart = await manager.findOne(SaleOrder, {
-        where: { 
-          buyer: { id: userId }, 
-          status: SaleOrderStatus.ACTIVE
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
         },
         relations: ['items', 'items.product'],
       });
@@ -69,7 +67,9 @@ export class SaleOrdersService {
 
       // Validar que el carrito no esté vencido
       if (cart.expiresAt && new Date() > cart.expiresAt) {
-        throw new BadRequestException('El carrito ha expirado. Se creará uno nuevo.');
+        throw new BadRequestException(
+          'El carrito ha expirado. Se creará uno nuevo.',
+        );
       }
 
       // Buscar el producto
@@ -88,12 +88,14 @@ export class SaleOrdersService {
       }
 
       // Verificar si el producto ya está en el carrito
-      const existingItem = cart.items?.find(item => item.product.id === productId);
+      const existingItem = cart.items?.find(
+        (item) => item.product.id === productId,
+      );
 
       if (existingItem) {
         // Actualizar cantidad existente
         const additionalQty = quantity;
-        
+
         // Validar que hay stock para la cantidad adicional
         if (product.stock < additionalQty) {
           throw new BadRequestException(
@@ -149,9 +151,9 @@ export class SaleOrdersService {
    */
   async getActiveCart(userId: string) {
     const cart = await this.saleOrderRepository.findOne({
-      where: { 
-        buyer: { id: userId }, 
-        status: SaleOrderStatus.ACTIVE
+      where: {
+        buyer: { id: userId },
+        status: SaleOrderStatus.ACTIVE,
       },
       relations: ['items', 'items.product', 'buyer'],
     });
@@ -176,9 +178,9 @@ export class SaleOrdersService {
   async updateCartItem(userId: string, productId: string, newQuantity: number) {
     return this.dataSource.transaction(async (manager) => {
       const cart = await manager.findOne(SaleOrder, {
-        where: { 
-          buyer: { id: userId }, 
-          status: SaleOrderStatus.ACTIVE
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
         },
         relations: ['items', 'items.product'],
       });
@@ -187,7 +189,7 @@ export class SaleOrdersService {
         throw new NotFoundException('No hay carrito activo');
       }
 
-      const item = cart.items.find(i => i.product.id === productId);
+      const item = cart.items.find((i) => i.product.id === productId);
       if (!item) {
         throw new NotFoundException('Producto no encontrado en el carrito');
       }
@@ -260,9 +262,9 @@ export class SaleOrdersService {
   async clearCart(userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const cart = await manager.findOne(SaleOrder, {
-        where: { 
-          buyer: { id: userId }, 
-          status: SaleOrderStatus.ACTIVE
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
         },
         relations: ['items', 'items.product'],
       });
@@ -294,17 +296,17 @@ export class SaleOrdersService {
    */
   async getOrderHistory(userId: string) {
     const orders = await this.saleOrderRepository.find({
-      where: { 
+      where: {
         buyer: { id: userId },
-        status: SaleOrderStatus.PAID
+        status: SaleOrderStatus.PAID,
       },
       relations: ['items', 'items.product'],
       order: { createdAt: 'DESC' },
     });
 
-    return { 
-      message: 'Historial de compras', 
-      data: orders 
+    return {
+      message: 'Historial de compras',
+      data: orders,
     };
   }
 
@@ -345,8 +347,10 @@ export class SaleOrdersService {
    */
   @Cron(CronExpression.EVERY_2_HOURS)
   async cancelExpiredCarts() {
-    console.log('🕐 Ejecutando tarea programada: Cancelar carritos vencidos...');
-    
+    console.log(
+      '🕐 Ejecutando tarea programada: Cancelar carritos vencidos...',
+    );
+
     const expiredCarts = await this.saleOrderRepository.find({
       where: {
         status: SaleOrderStatus.ACTIVE,
@@ -365,7 +369,7 @@ export class SaleOrdersService {
     }
 
     console.log(`✅ Tarea completada: ${cancelled.length} carritos cancelados`);
-    
+
     return {
       message: `${cancelled.length} carritos vencidos cancelados`,
       data: cancelled,
@@ -379,17 +383,6 @@ export class SaleOrdersService {
       // Validar comprador (buyer)
       const buyer = await manager.findOne(Users, { where: { id: dto.userId } });
       if (!buyer) throw new NotFoundException(`User ${dto.userId} not found`);
-
-      // Validate branch if provided
-      let branch: Branch | undefined = undefined;
-      if (dto.branchId) {
-        const foundBranch = await manager.findOne(Branch, {
-          where: { id: dto.branchId },
-        });
-        if (!foundBranch)
-          throw new NotFoundException(`Branch ${dto.branchId} not found`);
-        branch = foundBranch;
-      }
 
       // Validate products and stock
       const orderItems: SaleOrderProduct[] = [];
@@ -428,7 +421,6 @@ export class SaleOrdersService {
       // Create sale order
       const saleOrder = manager.create(SaleOrder, {
         buyer,
-        branch: branch ?? undefined,
         items: orderItems,
         total,
         paymentMethod: dto.paymentMethod,
@@ -440,7 +432,7 @@ export class SaleOrdersService {
       // Load full order with relations for response
       const fullOrder = await manager.findOne(SaleOrder, {
         where: { id: saved.id },
-        relations: ['buyer', 'branch', 'items', 'items.product'],
+        relations: ['buyer', 'items', 'items.product'],
       });
 
       return {
@@ -452,7 +444,7 @@ export class SaleOrdersService {
 
   async findAll() {
     const orders = await this.saleOrderRepository.find({
-      relations: ['buyer', 'branch', 'items', 'items.product'],
+      relations: ['buyer', 'items', 'items.product'],
       order: { createdAt: 'DESC' },
     });
     return { message: 'Sale orders retrieved', data: orders };
@@ -461,7 +453,7 @@ export class SaleOrdersService {
   async findOne(id: number) {
     const order = await this.saleOrderRepository.findOne({
       where: { id: String(id) },
-      relations: ['buyer', 'branch', 'items', 'items.product'],
+      relations: ['buyer', 'items', 'items.product'],
     });
     if (!order) throw new NotFoundException(`Sale order ${id} not found`);
     return { message: `Sale order ${id} retrieved`, data: order };

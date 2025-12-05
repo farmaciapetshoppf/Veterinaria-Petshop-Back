@@ -23,10 +23,6 @@ export class CreateSaleOrderDto {
   @IsUUID()
   userId: string;
 
-  @IsOptional()
-  @IsUUID()
-  branchId?: string;
-
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
