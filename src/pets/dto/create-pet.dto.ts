@@ -119,15 +119,8 @@ export class CreatePetDto {
   @IsUUID()
   fatherId?: string | null;
 
-  @ApiProperty({
-    description: 'URL de la imagen de la mascota',
-    example: 'https://example.com/images/firulais.jpg',
-    type: 'string',
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
   @IsString()
+  @IsOptional()
   image?: string | null;
 
   @ApiProperty({

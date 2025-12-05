@@ -93,7 +93,10 @@ export class Pet {
   breed: string | null;
 
   //imagen del peludito
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({
+    type: 'text',
+    default: 'No image',
+  })
   image: string | null;
 
   //relaciones familiares

@@ -149,8 +149,6 @@ export class AuthService {
         pets: user.pets || [],
       };
 
-      console.log(responsePayload);
-
       if (userType === 'veterinarian') {
         // Agregar campos específicos para veterinarios
         responsePayload.matricula = user.matricula;
@@ -158,8 +156,6 @@ export class AuthService {
         responsePayload.time = user.time;
         responsePayload.isActive = user.isActive;
       }
-
-      console.log(responsePayload);
 
       return responsePayload;
     } catch (error) {
