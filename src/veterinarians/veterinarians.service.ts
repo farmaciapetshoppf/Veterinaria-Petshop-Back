@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { VeterinariansRepository } from './vaterinarians.repository';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import { ChangePasswordVeterinarianDto } from './dto/change-password-veterinarian.dto';
+import { Veterinarian } from './entities/veterinarian.entity';
+import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
 
 @Injectable()
 export class VeterinariansService {
@@ -21,6 +23,18 @@ export class VeterinariansService {
     return this.veterinarianRepository.create(createVeterinarian);
   }
 
+  updateVeterinarianProfile(
+    id: string,
+    updateVeterinarianDto: UpdateVeterinarianDto,
+    file?: Express.Multer.File,
+  ) {
+    return this.veterinarianRepository.updateProfile(
+      id,
+      updateVeterinarianDto,
+      file,
+    );
+  }
+
   deleteVeterinarian(id: string) {
     return this.veterinarianRepository.remove(id);
   }
@@ -32,5 +46,9 @@ export class VeterinariansService {
       dto.newPassword,
       dto.repeatNewPassword,
     );
+  }
+
+  getVeterinarianByEmail(email: string): Promise<Veterinarian> {
+    return this.veterinarianRepository.getVeterinarianByEmail(email);
   }
 }

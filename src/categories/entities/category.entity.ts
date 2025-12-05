@@ -14,7 +14,11 @@ export class Category {
   })
   name: string;
 
-  
+  @Column({
+    type: 'text',
+    default: 'No image',
+  })
+  imgUrl: string;
 
   @OneToMany(() => Products, (products) => products.category)
   products: Products[];

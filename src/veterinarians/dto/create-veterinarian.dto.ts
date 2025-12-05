@@ -1,12 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   IsBoolean,
   IsDateString,
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { Role } from 'src/auth/enum/roles.enum';
 
 export class CreateVeterinarianDto {
   @ApiProperty({
@@ -28,6 +33,9 @@ export class CreateVeterinarianDto {
   })
   @IsEmail()
   @IsNotEmpty()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
 
   @ApiProperty({
@@ -80,4 +88,8 @@ export class CreateVeterinarianDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsNotEmpty()
+  @IsEnum(Role)
+  role: Role = Role.Veterinarian;
 }

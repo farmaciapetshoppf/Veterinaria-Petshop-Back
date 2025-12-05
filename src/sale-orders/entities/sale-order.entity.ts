@@ -4,9 +4,10 @@ import { Users } from "src/users/entities/user.entity";
 import { Branch } from 'src/branches/entities/branch.entity';
 import { SaleOrderProduct } from './sale-order-product.entity';
 export enum SaleOrderStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  CANCELLED = 'CANCELLED',
+  ACTIVE = 'ACTIVE',       // Carrito activo - stock ya descontado
+  PENDING = 'PENDING',     // Esperando confirmación de pago en Mercado Pago
+  PAID = 'PAID',           // Pagado y finalizado
+  CANCELLED = 'CANCELLED', // Cancelado - stock restaurado
 }
 
 @Entity('sale_orders')
@@ -23,7 +24,7 @@ export class SaleOrder {
   @Column({
     type: 'enum',
     enum: SaleOrderStatus,
-    default: SaleOrderStatus.PENDING,
+    default: SaleOrderStatus.ACTIVE,  // Por defecto inicia como carrito activo
   })
   status: SaleOrderStatus;
 
@@ -35,6 +36,18 @@ export class SaleOrder {
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
+
+  // Fecha de expiración del carrito (24hs desde creación)
+  @Column({ type: 'timestamp', nullable: true })
+  expiresAt?: Date;
+
+  // ID de preferencia/pago en Mercado Pago
+  @Column({ type: 'varchar', nullable: true })
+  mercadoPagoId?: string;
+
+  // Estado del pago según Mercado Pago
+  @Column({ type: 'varchar', nullable: true })
+  mercadoPagoStatus?: string;
 
     // Buyer: el cliente que realiza la compra
     @ManyToOne(() => Users, (user) => user.buyerSaleOrders)

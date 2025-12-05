@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SupabaseService {
+  
   private supabase: SupabaseClient;
 
   constructor(private configService: ConfigService) {

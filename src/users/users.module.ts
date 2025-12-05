@@ -7,13 +7,20 @@ import { UsersRepository } from './users.repository';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Pet } from 'src/pets/entities/pet.entity';
 import { SaleOrder } from 'src/sale-orders/entities/sale-order.entity';
-
-
+import { StorageService } from 'src/supabase/storage.service';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Users, Pet, SaleOrder])],
+  imports: [
+    TypeOrmModule.forFeature([Users, Pet, SaleOrder]),
+    MulterModule.register({
+      limits: {
+        fileSize: 50 * 1024 * 1024, // Limitar el tamaño a 50MB
+      },
+    }),
+  ],
   controllers: [UsersController],
-  providers: [UsersService, UsersRepository, SupabaseService],
+  providers: [UsersService, UsersRepository, SupabaseService, StorageService],
   exports: [UsersService],
 })
 export class UsersModule {}

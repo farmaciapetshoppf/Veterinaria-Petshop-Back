@@ -33,6 +33,26 @@ export class ProductsService {
     return { message: 'Product created successfully', data: saved };
   }
 
+  async findOneForUpdate(id: string): Promise<Products> {
+    const product = await this.productsRepository.findOne({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return product;
+  }
+
+  async updateImageUrl(id: string, imageUrl: string) {
+    const product = await this.findOneForUpdate(id);
+    product.imgUrl = imageUrl;
+
+    const saved = await this.productsRepository.save(product);
+    return saved;
+  }
+
   async findAll() {
     const products = await this.productsRepository.find({
       relations: ['category'],

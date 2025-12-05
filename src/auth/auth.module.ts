@@ -8,6 +8,10 @@ import { MailerModule } from 'src/mailer/mailer.module';
 
 @Module({
   imports: [SupabaseModule, UsersModule, MailerModule],
+import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
+
+@Module({
+  imports: [SupabaseModule, UsersModule, VeterinariansModule],
   controllers: [AuthController],
   providers: [AuthService, AuthGuard],
   exports: [AuthService, AuthGuard],
