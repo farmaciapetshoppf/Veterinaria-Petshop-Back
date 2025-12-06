@@ -9,7 +9,6 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Role } from 'src/auth/enum/roles.enum';
-import { generateShortUuid } from 'src/utils/uuid.utils';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { StorageService } from 'src/supabase/storage.service';
 
@@ -111,7 +110,6 @@ export class UsersRepository {
     const newUser = this.usersRepository.create({
       ...createUserDto,
       email: createUserDto.email.toLowerCase(),
-      uid: generateShortUuid(12),
     });
     return this.usersRepository.save(newUser);
   }

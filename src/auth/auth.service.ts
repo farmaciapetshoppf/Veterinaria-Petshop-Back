@@ -417,7 +417,6 @@ export class AuthService {
         phone: user.phone || null,
         address: user.address || null,
         role: user.role,
-        uid: user,
         user: user.user,
         country: user.country || null,
         city: user.city || null,

@@ -8,8 +8,6 @@ import { SaleOrder } from 'src/sale-orders/entities/sale-order.entity';
 export class Users {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  @Column({ unique: true, nullable: true })
-  uid: string;
   @Column({ type: 'varchar', length: 50, nullable: false })
   name: string;
   @Column({ type: 'varchar', length: 50, unique: true, nullable: false })
