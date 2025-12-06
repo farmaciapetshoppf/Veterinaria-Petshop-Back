@@ -24,6 +24,7 @@ import { UploadModule } from './upload/upload.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
     ScheduleModule.forRoot(), // Habilita tareas programadas (CRON jobs)
 
