@@ -155,6 +155,51 @@ export class SaleOrdersController {
   }
 
   @ApiOperation({ 
+    summary: 'Procesar checkout y crear preferencia de MercadoPago',
+    description: 'Convierte el carrito ACTIVE en PENDING y genera una preferencia de pago en MercadoPago.'
+  })
+  @ApiParam({ 
+    name: 'userId', 
+    type: 'string', 
+    example: '84ef5839-2fc2-4689-a203-cf7bb25074d0',
+    description: 'ID del usuario'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Preferencia creada exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Preferencia de pago creada exitosamente' },
+        data: {
+          type: 'object',
+          properties: {
+            preferenceId: { type: 'string', example: '123456789-abcd-1234-5678-123456789abc' },
+            initPoint: { type: 'string', example: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=...' },
+            sandboxInitPoint: { type: 'string', example: 'https://sandbox.mercadopago.com.ar/checkout/v1/redirect?pref_id=...' }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Carrito vacío o vencido' })
+  @ApiResponse({ status: 404, description: 'No hay carrito activo' })
+  @Post('checkout/:userId')
+  checkout(@Param('userId') userId: string) {
+    return this.saleOrdersService.checkout(userId);
+  }
+
+  @ApiOperation({ 
+    summary: 'Webhook de MercadoPago',
+    description: 'Endpoint para recibir notificaciones de pago de MercadoPago. Este endpoint es llamado automáticamente por MercadoPago cuando hay cambios en el estado del pago.'
+  })
+  @ApiResponse({ status: 200, description: 'Webhook procesado correctamente' })
+  @Post('webhook')
+  handleWebhook(@Body() body: any) {
+    return this.saleOrdersService.handleWebhook(body);
+  }
+
+  @ApiOperation({ 
     summary: 'Cancelar carritos vencidos (CRON JOB)',
     description: 'Busca y cancela todos los carritos ACTIVE que hayan superado las 24hs de vida. Restaura el stock. Este endpoint se ejecuta automáticamente cada 2 horas, pero puede ser invocado manualmente.'
   })
@@ -197,5 +242,17 @@ export class SaleOrdersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.saleOrdersService.remove(+id);
+  }
+
+  // ==================== ENDPOINT DE PRUEBA ====================
+  
+  @ApiOperation({ 
+    summary: 'TEST: Completar orden manualmente',
+    description: 'Endpoint de prueba para marcar una orden como PAID sin pasar por MercadoPago'
+  })
+  @Get('test/complete-order/:orderId')
+  async testCompleteOrder(@Param('orderId') orderId: string) {
+    await this.saleOrdersService.updateOrderStatus(orderId, 'PAID');
+    return { message: 'Orden actualizada a PAID' };
   }
 }
