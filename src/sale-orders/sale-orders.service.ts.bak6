@@ -403,9 +403,7 @@ export class SaleOrdersService {
 
       const result = response.data;
 
-      console.log('✅ Respuesta de MercadoPago:', JSON.stringify(result, null, 2));
-      console.log('🔗 USAR ESTE LINK PARA PRODUCCIÓN:', result.init_point);
-      console.log('⚠️ Link de sandbox (NO usar en producción):', result.sandbox_init_point);
+      console.log('âœ… Respuesta de MercadoPago:', JSON.stringify(result, null, 2));
 
       // 5. Guardar ID de preferencia en el carrito y cambiar estado a PENDING
       cart.mercadoPagoId = result.id;
@@ -416,8 +414,8 @@ export class SaleOrdersService {
         message: 'Preferencia de pago creada exitosamente',
         data: {
           preferenceId: result.id,
-          initPoint: result.init_point, // Este es el link de PRODUCCIÓN
-          sandboxInitPoint: result.sandbox_init_point, // Este es solo para testing
+          initPoint: result.init_point,
+          sandboxInitPoint: result.sandbox_init_point,
         },
       };
     } catch (error) {
@@ -727,6 +725,7 @@ export class SaleOrdersService {
               success: `${frontendUrl}/checkout/success`,
               failure: `${frontendUrl}/checkout/failure`,
               pending: `${frontendUrl}/checkout/pending`,
+            auto_return: 'approved',
             },
             notification_url: `${backendUrl}/api/mercadopago/webhook`,
             external_reference: saved.id,
