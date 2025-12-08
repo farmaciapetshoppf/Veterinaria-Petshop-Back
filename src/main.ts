@@ -13,10 +13,10 @@ async function bootstrap() {
   // CORS - Configuración para permitir cookies entre dominios
   app.enableCors({
     origin: [
-      process.env.API_URL, 
+      process.env.API_URL,
       process.env.FRONTEND_URL,
       'http://localhost:3002',
-      'http://localhost:3000'
+      'http://localhost:3000',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true, // ✅ Crucial para que las cookies funcionen

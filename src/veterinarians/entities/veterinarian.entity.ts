@@ -1,9 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { Appointments } from 'src/appointments/entities/appointment.entity';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @Entity('veterinarians')
 export class Veterinarian {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn()
   id: string;
 
   @Column({ type: 'varchar', length: 100, nullable: false })
@@ -30,8 +31,16 @@ export class Veterinarian {
   @Column({ type: 'varchar', length: 255, nullable: false })
   password: string;
 
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.Veterinarian,
+  })
+  role: Role;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
-  supabaseUserId: string | null;
+  profileImageUrl: string;
+
   @OneToMany(() => Appointments, (appointment) => appointment.veterinarian)
   appointments?: Appointments[];
 }

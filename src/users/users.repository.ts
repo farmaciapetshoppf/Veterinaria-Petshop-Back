@@ -1,4 +1,3 @@
-/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -36,6 +35,7 @@ export class UsersRepository {
       .leftJoinAndSelect('user.buyerSaleOrders', 'orders')
       .leftJoinAndSelect('orders.items', 'orderItems')
       .leftJoinAndSelect('orderItems.product', 'orderItemProduct')
+      .where('user.isDeleted = :isDeleted', { isDeleted: false })
       .getMany();
 
     // Remove sensitive fields from nested veterinarians
@@ -76,7 +76,10 @@ export class UsersRepository {
       .leftJoinAndSelect('user.buyerSaleOrders', 'orders')
       .leftJoinAndSelect('orders.items', 'orderItems')
       .leftJoinAndSelect('orderItems.product', 'orderItemProduct')
-      .where('user.id = :id', { id })
+      .where('user.id = :id AND user.isDeleted = :isDeleted', {
+        id,
+        isDeleted: false,
+      })
       .getOne();
 
     // Strip password from nested veterinarians
@@ -107,6 +110,7 @@ export class UsersRepository {
   createUser(createUserDto: CreateUserDto): Promise<Users> {
     const newUser = this.usersRepository.create({
       ...createUserDto,
+      email: createUserDto.email.toLowerCase(),
       uid: generateShortUuid(12),
     });
     return this.usersRepository.save(newUser);
@@ -124,37 +128,6 @@ export class UsersRepository {
     if (country !== undefined) user.country = country;
     if (address !== undefined) user.address = address;
     if (city !== undefined) user.city = city;
-
-    const supabasePayload: any = {};
-    if (phone !== undefined) supabasePayload.phone = phone;
-    if (name !== undefined) {
-      supabasePayload.user_metadata = {
-        ...(user as any).user_metadata,
-        name,
-      };
-    }
-
-    if (Object.keys(supabasePayload).length > 0) {
-      const client = this.supabaseService.getClient();
-      let result: any;
-      let error: any;
-
-      if (client.auth?.admin?.updateUserById) {
-        result = await client.auth.admin.updateUserById(id, supabasePayload);
-      } else {
-        result = await (client.auth.admin as any).updateUser(
-          id,
-          supabasePayload,
-        );
-      }
-
-      ({ error } = result);
-      if (error) {
-        throw new Error(
-          `Error updating Supabase user: ${error.message ?? error}`,
-        );
-      }
-    }
 
     return this.usersRepository.save(user);
   }
@@ -200,47 +173,47 @@ export class UsersRepository {
       });
 
       if (!userToDelete) {
-        const { error } = await this.supabaseService
-          .getClient()
-          .auth.admin.deleteUser(id);
-
-        if (error && error.message.includes('User not found')) {
-          return { message: `El usuario con id: '${id}' no existe` };
-        }
-      } else {
-        await this.usersRepository.delete(id);
+        throw new NotFoundException(`El usuario con id: '${id}' no existe`);
       }
 
+      // Marcar como eliminado
+      userToDelete.isDeleted = true;
+      userToDelete.deletedAt = new Date();
+      await this.usersRepository.save(userToDelete);
+
+      // Opcional: también podrías actualizar o desactivar el usuario en Supabase
       const { error } = await this.supabaseService
         .getClient()
-        .auth.admin.deleteUser(id);
+        .auth.admin.updateUserById(id, {
+          email: `disabled_${userToDelete.email}`,
+        }); // O alguna otra acción adecuada
 
       if (error) {
-        if (error.message.includes('User not found')) {
-          return {
-            message:
-              'Usuario borrado correctamente de la base de datos SQL, pero no se encontró en Supabase',
-          };
-        }
         throw new Error(
-          `Error al eliminar usuario de Supabase: ${error.message}`,
+          `Error al actualizar usuario en Supabase: ${error.message}`,
         );
       }
 
-      return { message: 'Usuario borrado correctamente' };
+      return { message: 'Usuario marcado como eliminado' };
     } catch (error) {
       console.error('Error en deleteUser:', error);
-
-      if (
-        error instanceof Error &&
-        error.message &&
-        error.message.includes('User not found')
-      ) {
-        return { message: `El usuario con id: '${id}' no existe` };
+      if (error instanceof NotFoundException) {
+        throw error;
       }
       throw new Error(
-        `Error al eliminar usuario: ${error instanceof Error ? error.message : String(error)}`,
+        `Error al marcar usuario como eliminado: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  async getUserByEmail(email: string): Promise<Users> {
+    const user = await this.usersRepository.findOne({
+      where: { email: email.toLowerCase() },
+      relations: ['pets'],
+    });
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado.');
+    }
+    return user;
   }
 }

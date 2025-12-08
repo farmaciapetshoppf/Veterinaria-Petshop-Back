@@ -41,7 +41,10 @@ export class CategoriesService {
   }
 
   async findAll() {
-    return this.categoryRepo.find({ relations: ['products'] });
+    return this.categoryRepo.find({
+      relations: ['products'],
+      withDeleted: false, // Esto es opcional, ya que es el comportamiento por defecto
+    });
   }
 
   async findAllBasic() {
@@ -51,7 +54,9 @@ export class CategoriesService {
   }
 
   async findOne(id: string) {
-    const category = await this.categoryRepo.findOne({ where: { id } });
+    const category = await this.categoryRepo.findOne({
+      where: { id },
+    });
 
     if (!category) {
       throw new NotFoundException('Categoría no encontrada');
@@ -89,7 +94,7 @@ export class CategoriesService {
 
   async remove(id: string) {
     const category = await this.findOne(id);
-    await this.categoryRepo.remove(category);
+    await this.categoryRepo.softRemove(category);
     return { message: 'Categoría eliminada correctamente' };
   }
 

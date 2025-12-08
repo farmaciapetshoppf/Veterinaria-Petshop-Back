@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -100,8 +99,8 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-    await this.productsRepository.remove(product);
-    return { message: 'Product deleted' };
+    await this.productsRepository.softRemove(product);
+    return { message: 'Producto eliminado correctamente' };
   }
 
   async seeder(): Promise<string> {

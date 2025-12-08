@@ -7,11 +7,15 @@ import {
   Get,
   Query,
   Patch,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import { ChangePasswordVeterinarianDto } from './dto/change-password-veterinarian.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
 
 @ApiTags('Veterinarians')
 @Controller('veterinarians')
@@ -29,6 +33,7 @@ export class VeterinariansController {
   @ApiOperation({ summary: 'Get veterinarian by ID' })
   @Get(':id')
   fillByIdVeterinarians(@Param('id', ParseUUIDPipe) id: string) {
+    // service returns single veterinarian (password already stripped for GET)
     return this.veterinariansService
       .fillByIdVeterinarians(id)
       .then((data) => ({ message: `Veterinarian ${id} retrieved`, data }));
@@ -38,6 +43,39 @@ export class VeterinariansController {
   @Post()
   createVeterinarian(@Body() createVeterinarian: CreateVeterinarianDto) {
     return this.veterinariansService.createVeterinarian(createVeterinarian);
+  }
+
+  @ApiOperation({ summary: 'Update veterinarian profile' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        description: {
+          type: 'string',
+          example: 'Especialista en medicina felina con 5 años de experiencia',
+        },
+        phone: { type: 'string', example: '+542966777777' },
+        profileImage: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagen de perfil del veterinario (.jpg, .png, .webp)',
+        },
+      },
+    },
+  })
+  @Patch(':id/profile')
+  @UseInterceptors(FileInterceptor('profileImage'))
+  updateVeterinarianProfile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateVeterinarianDto: UpdateVeterinarianDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.veterinariansService.updateVeterinarianProfile(
+      id,
+      updateVeterinarianDto,
+      file,
+    );
   }
 
   @ApiOperation({ summary: 'Deactivate veterinarian' })

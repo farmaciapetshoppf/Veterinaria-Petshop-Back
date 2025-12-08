@@ -6,6 +6,7 @@ import {
   Column,
   ManyToOne,
   OneToMany,
+  DeleteDateColumn,
 } from 'typeorm';
 
 export enum PetEspecies {
@@ -93,8 +94,14 @@ export class Pet {
   breed: string | null;
 
   //imagen del peludito
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({
+    type: 'text',
+    default: 'No image',
+  })
   image: string | null;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 
   //relaciones familiares
   @ManyToOne(() => Pet, (pet) => pet.childrenAsMother, { nullable: true })

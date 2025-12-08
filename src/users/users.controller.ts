@@ -7,6 +7,7 @@ import {
   Body,
   UploadedFile,
   UseInterceptors,
+  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Role } from 'src/auth/enum/roles.enum';
@@ -116,7 +117,7 @@ export class UsersController {
 
   @ApiOperation({ summary: 'Delete user' })
   @HttpCode(200)
-  @Patch(':id/delete')
+  @Put(':id/delete')
   deleteUser(@Param('id') id: string) {
     return this.usersService.deleteUser(id);
   }

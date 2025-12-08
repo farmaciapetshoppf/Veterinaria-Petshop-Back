@@ -1,5 +1,11 @@
 import { Products } from 'src/products/entities/product.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity({ name: 'CATEGORIES' })
 export class Category {
@@ -19,6 +25,9 @@ export class Category {
     default: 'No image',
   })
   imgUrl: string;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 
   @OneToMany(() => Products, (products) => products.category)
   products: Products[];
