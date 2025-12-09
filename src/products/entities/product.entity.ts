@@ -44,7 +44,8 @@ export class Products {
 
   @Column({
     type: 'text',
-    default: 'No image',
+    default:
+      'https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/products/1765290507434_pngtree-no-image-available-icon-flatvector-illustration-blank-avatar-modern-vector-png-image_40962406.jpg',
   })
   imgUrl: string;
 

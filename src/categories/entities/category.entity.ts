@@ -22,7 +22,8 @@ export class Category {
 
   @Column({
     type: 'text',
-    default: 'No image',
+    default:
+      'https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/categories/1765290659268_pngtree-no-image-available-icon-flatvector-illustration-blank-avatar-modern-vector-png-image_40962406.jpg',
   })
   imgUrl: string;
 
