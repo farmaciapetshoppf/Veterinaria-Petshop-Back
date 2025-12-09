@@ -4,6 +4,7 @@ import { Users } from 'src/users/entities/user.entity';
 import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -57,4 +58,12 @@ export class Appointments {
     default: true,
   })
   status: boolean;
+
+  @ApiProperty({
+    description: 'Fecha de eliminación (para borrado lógico)',
+    example: '2025-12-01T15:30:00Z',
+    nullable: true,
+  })
+  @DeleteDateColumn()
+  deletedAt: Date;
 }
