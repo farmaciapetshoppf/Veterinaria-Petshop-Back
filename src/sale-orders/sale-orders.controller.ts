@@ -43,6 +43,12 @@ export class SaleOrdersController {
   addToCart(
     @Body() body: { userId: string; productId: string; quantity: number },
   ) {
+    console.log('🛒 Request para agregar al carrito:', {
+      userId: body.userId,
+      productId: body.productId,
+      quantity: body.quantity,
+      tipo: typeof body.quantity
+    });
     return this.saleOrdersService.addToCart(
       body.userId,
       body.productId,
@@ -170,22 +176,17 @@ export class SaleOrdersController {
     summary: 'Iniciar checkout con Mercado Pago',
     description: 'Cambia el carrito de ACTIVE a PENDING y genera el link de pago de Mercado Pago. Retorna la URL para redirigir al usuario al checkout.'
   })
-  @ApiBody({
+  @ApiParam({
+    name: 'userId',
     description: 'ID del usuario',
-    schema: {
-      type: 'object',
-      properties: {
-        userId: { type: 'string', example: '84ef5839-2fc2-4689-a203-cf7bb25074d0', description: 'ID del usuario' }
-      },
-      required: ['userId']
-    }
+    example: '84ef5839-2fc2-4689-a203-cf7bb25074d0'
   })
   @ApiResponse({ status: 200, description: 'Checkout iniciado - retorna link de pago' })
   @ApiResponse({ status: 400, description: 'Carrito vacío o vencido' })
   @ApiResponse({ status: 404, description: 'No hay carrito activo' })
-  @Post('checkout')
-  checkout(@Body() body: { userId: string }) {
-    return this.saleOrdersService.checkout(body.userId);
+  @Post('checkout/:userId')
+  checkout(@Param('userId') userId: string) {
+    return this.saleOrdersService.checkout(userId);
   }
 
   @ApiOperation({

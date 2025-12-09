@@ -515,6 +515,12 @@ export class SaleOrdersService {
         }
       }
 
+      // Log detallado de items antes de crear preferencia
+      console.log('🛒 Items en el carrito antes de crear preferencia:');
+      cart.items.forEach(item => {
+        console.log(`  - ${item.product.name}: ${item.quantity} x $${item.unitPrice} = $${item.quantity * Number(item.unitPrice)}`);
+      });
+
       // Crear preferencia de pago en Mercado Pago
       const preference = await this.mercadoPagoService.createPreference(
         cart.items,
