@@ -13,6 +13,7 @@ import { SaleOrderProduct } from './entities/sale-order-product.entity';
 import { Users } from 'src/users/entities/user.entity';
 import { Products } from 'src/products/entities/product.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
+import { MercadoPagoService } from 'src/mercadopago/mercadopago.service';
 
 @Injectable()
 export class SaleOrdersService {
@@ -28,6 +29,7 @@ export class SaleOrdersService {
     @InjectRepository(Branch)
     private readonly branchRepository: Repository<Branch>,
     private readonly dataSource: DataSource,
+    private readonly mercadoPagoService: MercadoPagoService,
   ) {}
 
   // ==================== CARRITO ACTIVO ====================
@@ -35,7 +37,7 @@ export class SaleOrdersService {
   /**
    * Agregar producto al carrito activo del usuario
    * - Busca o crea carrito ACTIVE
-   * - Descuenta stock inmediatamente
+   * - NO descuenta stock (se descuenta al hacer checkout)
    * - Expira en 24hs
    */
   async addToCart(userId: string, productId: string, quantity: number) {
@@ -80,7 +82,7 @@ export class SaleOrdersService {
         throw new NotFoundException(`Product ${productId} not found`);
       }
 
-      // Validar stock disponible
+      // Validar stock disponible (sin descontar)
       if (product.stock < quantity) {
         throw new BadRequestException(
           `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, solicitado: ${quantity}`,
@@ -92,28 +94,20 @@ export class SaleOrdersService {
 
       if (existingItem) {
         // Actualizar cantidad existente
-        const additionalQty = quantity;
+        const newTotalQty = existingItem.quantity + quantity;
         
-        // Validar que hay stock para la cantidad adicional
-        if (product.stock < additionalQty) {
+        // Validar que hay stock para la nueva cantidad total
+        if (product.stock < newTotalQty) {
           throw new BadRequestException(
             `Stock insuficiente. Ya tenés ${existingItem.quantity} en el carrito. Disponible: ${product.stock}`,
           );
         }
 
-        // Descontar stock adicional
-        product.stock -= additionalQty;
-        await manager.save(Products, product);
-
-        // Actualizar item del carrito
-        existingItem.quantity += additionalQty;
+        // Actualizar item del carrito (SIN descontar stock)
+        existingItem.quantity = newTotalQty;
         await manager.save(SaleOrderProduct, existingItem);
       } else {
-        // Agregar nuevo item al carrito
-        // Descontar stock inmediatamente
-        product.stock -= quantity;
-        await manager.save(Products, product);
-
+        // Agregar nuevo item al carrito (SIN descontar stock)
         const newItem = manager.create(SaleOrderProduct, {
           order: cart,
           product,
@@ -172,6 +166,7 @@ export class SaleOrdersService {
 
   /**
    * Actualizar cantidad de un producto en el carrito
+   * Stock NO se modifica, solo se valida
    */
   async updateCartItem(userId: string, productId: string, newQuantity: number) {
     return this.dataSource.transaction(async (manager) => {
@@ -199,29 +194,18 @@ export class SaleOrdersService {
         throw new NotFoundException(`Product ${productId} not found`);
       }
 
-      const currentQuantity = item.quantity;
-      const difference = newQuantity - currentQuantity;
-
-      if (difference > 0) {
-        // Aumentar cantidad - necesita más stock
-        if (product.stock < difference) {
-          throw new BadRequestException(
-            `Stock insuficiente. Disponible: ${product.stock}`,
-          );
-        }
-        product.stock -= difference;
-      } else if (difference < 0) {
-        // Reducir cantidad - devolver stock
-        product.stock += Math.abs(difference);
+      // Validar stock disponible para la nueva cantidad (sin descontar)
+      if (newQuantity > 0 && product.stock < newQuantity) {
+        throw new BadRequestException(
+          `Stock insuficiente. Disponible: ${product.stock}, solicitado: ${newQuantity}`,
+        );
       }
-
-      await manager.save(Products, product);
 
       if (newQuantity === 0) {
         // Eliminar item del carrito
         await manager.remove(SaleOrderProduct, item);
       } else {
-        // Actualizar cantidad
+        // Actualizar cantidad (SIN modificar stock)
         item.quantity = newQuantity;
         await manager.save(SaleOrderProduct, item);
       }
@@ -256,6 +240,7 @@ export class SaleOrdersService {
 
   /**
    * Vaciar carrito completo
+   * Stock NO se restaura porque nunca se descontó
    */
   async clearCart(userId: string) {
     return this.dataSource.transaction(async (manager) => {
@@ -271,18 +256,7 @@ export class SaleOrdersService {
         return { message: 'No hay carrito activo para vaciar', data: null };
       }
 
-      // Restaurar stock de todos los productos
-      for (const item of cart.items) {
-        const product = await manager.findOne(Products, {
-          where: { id: item.product.id },
-        });
-        if (product) {
-          product.stock += item.quantity;
-          await manager.save(Products, product);
-        }
-      }
-
-      // Eliminar carrito
+      // Eliminar carrito directamente (sin restaurar stock)
       await manager.remove(SaleOrder, cart);
 
       return { message: 'Carrito vaciado exitosamente', data: null };
@@ -309,7 +283,8 @@ export class SaleOrdersService {
   }
 
   /**
-   * Cancelar carrito vencido y restaurar stock
+   * Cancelar carrito vencido
+   * Stock NO se restaura porque nunca se descontó
    */
   async cancelExpiredCart(cartId: string) {
     return this.dataSource.transaction(async (manager) => {
@@ -320,22 +295,11 @@ export class SaleOrdersService {
 
       if (!cart) return;
 
-      // Restaurar stock de todos los productos
-      for (const item of cart.items) {
-        const product = await manager.findOne(Products, {
-          where: { id: item.product.id },
-        });
-        if (product) {
-          product.stock += item.quantity;
-          await manager.save(Products, product);
-        }
-      }
-
-      // Cambiar estado a CANCELLED
+      // Solo cambiar estado a CANCELLED (sin restaurar stock)
       cart.status = SaleOrderStatus.CANCELLED;
       await manager.save(SaleOrder, cart);
 
-      return { message: 'Carrito cancelado y stock restaurado' };
+      return { message: 'Carrito cancelado' };
     });
   }
 
@@ -477,5 +441,218 @@ export class SaleOrdersService {
     if (result.affected && result.affected > 0)
       return { message: `Sale order ${id} removed` };
     throw new NotFoundException(`Sale order ${id} not found`);
+  }
+
+  // ==================== CHECKOUT Y MERCADO PAGO ====================
+
+  /**
+   * Iniciar checkout - Validar stock, descontarlo y generar link de pago
+   */
+  async checkout(userId: string) {
+    return this.dataSource.transaction(async (manager) => {
+      // Buscar carrito activo
+      const cart = await manager.findOne(SaleOrder, {
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
+        },
+        relations: ['items', 'items.product', 'buyer'],
+      });
+
+      if (!cart) {
+        throw new NotFoundException('No hay carrito activo para procesar');
+      }
+
+      if (!cart.items || cart.items.length === 0) {
+        throw new BadRequestException('El carrito está vacío');
+      }
+
+      // Verificar que no esté vencido
+      if (cart.expiresAt && new Date() > cart.expiresAt) {
+        await this.cancelExpiredCart(cart.id);
+        throw new BadRequestException('El carrito ha expirado');
+      }
+
+      // ⚠️ VALIDAR Y DESCONTAR STOCK ANTES DE CREAR LA PREFERENCIA
+      const stockErrors: string[] = [];
+      
+      for (const item of cart.items) {
+        const product = await manager.findOne(Products, {
+          where: { id: item.product.id },
+        });
+
+        if (!product) {
+          stockErrors.push(`Producto ${item.product.name} no encontrado`);
+          continue;
+        }
+
+        // Validar que hay stock suficiente
+        if (product.stock < item.quantity) {
+          stockErrors.push(
+            `❌ ${product.name}: Stock insuficiente. Disponible: ${product.stock}, en carrito: ${item.quantity}`,
+          );
+        }
+      }
+
+      // Si hay errores de stock, NO continuar con el checkout
+      if (stockErrors.length > 0) {
+        throw new BadRequestException({
+          message: 'No hay stock suficiente para algunos productos',
+          errors: stockErrors,
+        });
+      }
+
+      // ✅ DESCONTAR STOCK de todos los productos
+      for (const item of cart.items) {
+        const product = await manager.findOne(Products, {
+          where: { id: item.product.id },
+        });
+
+        if (product) {
+          product.stock -= item.quantity;
+          await manager.save(Products, product);
+          console.log(`📦 Stock descontado: ${product.name} (-${item.quantity}). Nuevo stock: ${product.stock}`);
+        }
+      }
+
+      // Crear preferencia de pago en Mercado Pago
+      const preference = await this.mercadoPagoService.createPreference(
+        cart.items,
+        cart.id,
+        cart.buyer.email,
+      );
+
+      // Actualizar orden: cambiar a PENDING y guardar preferenceId
+      cart.status = SaleOrderStatus.PENDING;
+      cart.mercadoPagoId = preference.id;
+      cart.mercadoPagoStatus = 'pending';
+
+      await manager.save(SaleOrder, cart);
+
+      return {
+        message: 'Checkout iniciado - Stock reservado',
+        data: {
+          orderId: cart.id,
+          preferenceId: preference.id,
+          initPoint: preference.init_point, // URL para redirigir al usuario
+          sandboxInitPoint: preference.sandbox_init_point, // Para testing
+        },
+      };
+    });
+  }
+
+  /**
+   * Restaurar stock de una orden cancelada o rechazada
+   */
+  private async restoreStockFromOrder(orderId: string) {
+    return this.dataSource.transaction(async (manager) => {
+      const order = await manager.findOne(SaleOrder, {
+        where: { id: orderId },
+        relations: ['items', 'items.product'],
+      });
+
+      if (!order || !order.items) {
+        return;
+      }
+
+      // Restaurar stock de cada producto
+      for (const item of order.items) {
+        const product = await manager.findOne(Products, {
+          where: { id: item.product.id },
+        });
+
+        if (product) {
+          product.stock += item.quantity;
+          await manager.save(Products, product);
+          console.log(
+            `🔄 Stock restaurado: ${product.name} (+${item.quantity}). Nuevo stock: ${product.stock}`,
+          );
+        }
+      }
+
+      console.log(`✅ Stock restaurado completamente para orden ${orderId}`);
+    });
+  }
+
+  /**
+   * Webhook de Mercado Pago - Procesar notificación de pago
+   */
+  async handleWebhook(body: any) {
+    try {
+      console.log('📩 Webhook recibido de Mercado Pago:', body);
+
+      // Mercado Pago envía el ID del pago en diferentes formatos
+      const paymentId = body.data?.id || body.id;
+      const topic = body.type || body.topic;
+
+      if (topic !== 'payment') {
+        console.log('⏭️  Webhook ignorado, no es de tipo payment');
+        return { message: 'Webhook procesado (no payment)' };
+      }
+
+      if (!paymentId) {
+        console.error('❌ No se encontró payment ID en el webhook');
+        return { message: 'Payment ID no encontrado' };
+      }
+
+      // Obtener info del pago desde Mercado Pago
+      const paymentInfo = await this.mercadoPagoService.getPaymentInfo(
+        paymentId,
+      );
+
+      console.log('💳 Info del pago:', paymentInfo);
+
+      const orderId = paymentInfo.external_reference;
+      const paymentStatus = paymentInfo.status;
+
+      if (!orderId) {
+        console.error('❌ No se encontró external_reference (orderId)');
+        return { message: 'Order ID no encontrado' };
+      }
+
+      // Buscar la orden
+      const order = await this.saleOrderRepository.findOne({
+        where: { id: orderId },
+        relations: ['items', 'items.product'],
+      });
+
+      if (!order) {
+        console.error(`❌ Orden ${orderId} no encontrada`);
+        throw new NotFoundException(`Order ${orderId} not found`);
+      }
+
+      // Actualizar estado según el pago
+      order.mercadoPagoStatus = paymentStatus;
+
+      if (paymentStatus === 'approved') {
+        // Pago aprobado - marcar como PAID
+        order.status = SaleOrderStatus.PAID;
+        order.paymentMethod = paymentInfo.payment_method_id;
+        console.log(`✅ Pago aprobado - Orden ${orderId} marcada como PAID`);
+      } else if (
+        paymentStatus === 'rejected' ||
+        paymentStatus === 'cancelled'
+      ) {
+        // Pago rechazado/cancelado - restaurar stock y cancelar orden
+        await this.restoreStockFromOrder(orderId);
+        order.status = SaleOrderStatus.CANCELLED;
+        console.log(
+          `❌ Pago ${paymentStatus} - Stock restaurado y orden cancelada ${orderId}`,
+        );
+      } else {
+        console.log(`⏳ Pago en estado ${paymentStatus} - Esperando`);
+      }
+
+      await this.saleOrderRepository.save(order);
+
+      return {
+        message: 'Webhook procesado correctamente',
+        orderId,
+        status: paymentStatus,
+      };
+    } catch (error) {
+      console.error('❌ Error procesando webhook:', error);
+      throw error;
+    }
   }
 }

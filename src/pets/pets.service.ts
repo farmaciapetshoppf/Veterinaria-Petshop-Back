@@ -81,6 +81,7 @@ export class PetsService {
           'appointments',
           'appointments.veterinarian',
         ],
+        withDeleted: false, // Excluir mascotas eliminadas
       })
       .then((p) => {
         if (!p) throw new NotFoundException(`Pet with id ${id} not found`);

@@ -101,9 +101,29 @@ export class PetsController {
     schema: {
       type: 'object',
       properties: {
+        nombre: { type: 'string', example: 'Firulais' },
+        especie: {
+          type: 'string',
+          enum: ['PERRO', 'GATO', 'AVE', 'ROEDOR', 'REPTIL', 'OTRO'],
+        },
+        sexo: { type: 'string', enum: ['MACHO', 'HEMBRA'] },
+        tamano: { type: 'string', enum: ['PEQUENO', 'MEDIANO', 'GRANDE'] },
+        esterilizado: { type: 'string', enum: ['SI', 'NO'] },
+        status: { type: 'string', enum: ['VIVO', 'FALLECIDO'] },
+        fecha_nacimiento: { type: 'string', format: 'date', example: '2020-05-15' },
+        fecha_fallecimiento: { type: 'string', format: 'date', nullable: true },
+        breed: { type: 'string', nullable: true, example: 'Labrador' },
+        ownerId: { type: 'string', nullable: true, example: 'UUID del dueño' },
+        motherId: {
+          type: 'string',
+          nullable: true,
+          example: 'UUID de la madre',
+        },
+        fatherId: { type: 'string', nullable: true, example: 'UUID del padre' },
         image: {
           type: 'string',
           format: 'binary',
+          description: 'Nueva imagen de la mascota (opcional)',
         },
       },
     },

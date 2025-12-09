@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -16,6 +18,15 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
+
+  @ApiOperation({ summary: 'Get availability of a veterinarian for a date' })
+  @Get('availability/:veterinarianId')
+  getAvailability(
+    @Param('veterinarianId', ParseUUIDPipe) vetId: string,
+    @Query('date') date: string,
+  ) {
+    return this.appointmentsService.getAvailability(vetId, date);
+  }
 
   @ApiOperation({ summary: 'Create new appointment' })
   @Post('NewAppointment')
