@@ -67,10 +67,13 @@ export class ReviewsRepository {
   }
 
   async remove(id: string) {
-    const review = await this.reviewRepository.findOne({ where: { id } });
+    const review = await this.reviewRepository.findOne({
+      where: { id },
+      withDeleted: false,
+    });
     if (!review) throw new NotFoundException('Reseña no encontrada');
 
-    await this.reviewRepository.remove(review);
+    await this.reviewRepository.softDelete(review);
 
     return { message: 'Reseña eliminada correctamente' };
   }
