@@ -164,6 +164,40 @@ export class SaleOrdersController {
     return this.saleOrdersService.cancelExpiredCarts();
   }
 
+  // ==================== CHECKOUT Y MERCADO PAGO ====================
+
+  @ApiOperation({
+    summary: 'Iniciar checkout con Mercado Pago',
+    description: 'Cambia el carrito de ACTIVE a PENDING y genera el link de pago de Mercado Pago. Retorna la URL para redirigir al usuario al checkout.'
+  })
+  @ApiBody({
+    description: 'ID del usuario',
+    schema: {
+      type: 'object',
+      properties: {
+        userId: { type: 'string', example: '84ef5839-2fc2-4689-a203-cf7bb25074d0', description: 'ID del usuario' }
+      },
+      required: ['userId']
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Checkout iniciado - retorna link de pago' })
+  @ApiResponse({ status: 400, description: 'Carrito vacío o vencido' })
+  @ApiResponse({ status: 404, description: 'No hay carrito activo' })
+  @Post('checkout')
+  checkout(@Body() body: { userId: string }) {
+    return this.saleOrdersService.checkout(body.userId);
+  }
+
+  @ApiOperation({
+    summary: 'Webhook de Mercado Pago',
+    description: 'Endpoint para recibir notificaciones de pago de Mercado Pago. Actualiza el estado de la orden según el pago (approved -> PAID, rejected/cancelled -> CANCELLED con stock restaurado).'
+  })
+  @ApiResponse({ status: 200, description: 'Webhook procesado correctamente' })
+  @Post('webhook')
+  handleWebhook(@Body() body: any) {
+    return this.saleOrdersService.handleWebhook(body);
+  }
+
   // ==================== ENDPOINTS ORIGINALES ====================
 
   @ApiOperation({ summary: 'Create new sale order (DEPRECADO - usar cart/add)' })
