@@ -1,0 +1,202 @@
+[
+  {
+    "name": "Pablo Argento",
+    "email": "P.argento@gmail.com",
+    "user": "pargento",
+    "phone": "+54 11 1234-5678",
+    "country": "Argentina",
+    "address": "Av. Corrientes 1234",
+    "city": "Buenos Aires",
+    "role": "admin",
+    "pets": [
+      {
+        "name": "Max",
+        "species": "Perro",
+        "breed": "Golden Retriever",
+        "birthdate": "2020-05-15",
+        "weight": 30.5,
+        "appointments": [
+          {
+            "date": "2025-12-15",
+            "time": "10:00",
+            "reason": "Control anual y vacunación"
+          },
+          {
+            "date": "2025-12-20",
+            "time": "15:30",
+            "reason": "Revisión de piel"
+          }
+        ]
+      },
+      {
+        "name": "Luna",
+        "species": "Gato",
+        "breed": "Siamés",
+        "birthdate": "2021-03-20",
+        "weight": 4.2,
+        "appointments": [
+          {
+            "date": "2025-12-18",
+            "time": "11:00",
+            "reason": "Consulta por vómitos"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "María González",
+    "email": "maria.gonzalez@gmail.com",
+    "user": "mariag",
+    "phone": "+54 11 2345-6789",
+    "country": "Argentina",
+    "address": "Calle Falsa 456",
+    "city": "Rosario",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Rocky",
+        "species": "Perro",
+        "breed": "Bulldog Francés",
+        "birthdate": "2019-08-10",
+        "weight": 12.8,
+        "appointments": [
+          {
+            "date": "2025-12-16",
+            "time": "09:30",
+            "reason": "Control respiratorio"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Carlos Pérez",
+    "email": "carlos.perez@gmail.com",
+    "user": "carlosp",
+    "phone": "+54 11 3456-7890",
+    "country": "Argentina",
+    "address": "Av. Libertador 789",
+    "city": "Córdoba",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Coco",
+        "species": "Ave",
+        "breed": "Loro Amazónico",
+        "birthdate": "2018-12-05",
+        "weight": 0.5,
+        "appointments": [
+          {
+            "date": "2025-12-17",
+            "time": "14:00",
+            "reason": "Control de plumaje"
+          },
+          {
+            "date": "2025-12-22",
+            "time": "16:00",
+            "reason": "Corte de pico y uñas"
+          }
+        ]
+      },
+      {
+        "name": "Michi",
+        "species": "Gato",
+        "breed": "Persa",
+        "birthdate": "2020-11-12",
+        "weight": 5.5,
+        "appointments": []
+      }
+    ]
+  },
+  {
+    "name": "Ana Martínez",
+    "email": "ana.martinez@gmail.com",
+    "user": "anam",
+    "phone": "+54 11 4567-8901",
+    "country": "Argentina",
+    "address": "San Martín 321",
+    "city": "Mendoza",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Bella",
+        "species": "Perro",
+        "breed": "Labrador",
+        "birthdate": "2021-07-25",
+        "weight": 28.3,
+        "appointments": [
+          {
+            "date": "2025-12-19",
+            "time": "10:30",
+            "reason": "Vacunación antirrábica"
+          }
+        ]
+      },
+      {
+        "name": "Simba",
+        "species": "Gato",
+        "breed": "Naranja común",
+        "birthdate": "2022-02-14",
+        "weight": 4.8,
+        "appointments": [
+          {
+            "date": "2025-12-21",
+            "time": "12:00",
+            "reason": "Esterilización"
+          }
+        ]
+      },
+      {
+        "name": "Toby",
+        "species": "Conejo",
+        "breed": "Mini Lop",
+        "birthdate": "2023-01-08",
+        "weight": 1.2,
+        "appointments": []
+      }
+    ]
+  },
+  {
+    "name": "Jorge Rodríguez",
+    "email": "jorge.rodriguez@gmail.com",
+    "user": "jorger",
+    "phone": "+54 11 5678-9012",
+    "country": "Argentina",
+    "address": "Belgrano 555",
+    "city": "La Plata",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Thor",
+        "species": "Perro",
+        "breed": "Pastor Alemán",
+        "birthdate": "2019-04-30",
+        "weight": 35.0,
+        "appointments": [
+          {
+            "date": "2025-12-23",
+            "time": "09:00",
+            "reason": "Control de displasia de cadera"
+          },
+          {
+            "date": "2025-12-28",
+            "time": "11:30",
+            "reason": "Análisis de sangre anual"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Laura Fernández",
+    "email": "laura.fernandez@gmail.com",
+    "user": "lauraf",
+    "phone": "+54 11 6789-0123",
+    "country": "Argentina",
+    "address": "Rivadavia 888",
+    "city": "Tucumán",
+    "role": "user",
+    "pets": []
+  }
+]

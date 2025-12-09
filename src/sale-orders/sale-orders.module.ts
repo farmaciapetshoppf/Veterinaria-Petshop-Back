@@ -9,6 +9,7 @@ import { SaleOrderProduct } from './entities/sale-order-product.entity';
 import { Products } from 'src/products/entities/product.entity';
 import { Users } from 'src/users/entities/user.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
+import { MercadoPagoModule } from 'src/mercadopago/mercadopago.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { Branch } from 'src/branches/entities/branch.entity';
     ]),
     ProductsModule,
     UsersModule,
+    MercadoPagoModule,
   ],
   controllers: [SaleOrdersController],
   providers: [SaleOrdersService],
