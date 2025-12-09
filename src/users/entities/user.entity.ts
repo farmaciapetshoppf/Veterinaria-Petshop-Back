@@ -24,7 +24,12 @@ export class Users {
   address: string;
   @Column({ type: 'varchar', length: 50, nullable: true })
   city: string;
-  @Column({ type: 'text', nullable: true, default: 'No image' })
+  @Column({
+    type: 'text',
+    nullable: true,
+    default:
+      'https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/users/1765290549781_pngtree-no-image-available-icon-flatvector-illustration-blank-avatar-modern-vector-png-image_40962406.jpg',
+  })
   profileImageUrl: string;
   @Column({
     type: 'enum',

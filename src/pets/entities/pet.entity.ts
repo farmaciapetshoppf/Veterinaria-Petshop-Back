@@ -96,7 +96,8 @@ export class Pet {
   //imagen del peludito
   @Column({
     type: 'text',
-    default: 'No image',
+    default:
+      'https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/pets/1765297411732_pngtree-no-image-available-icon-flatvector-illustration-blank-avatar-modern-vector-png-image_40962406.jpg',
   })
   image: string | null;
 
