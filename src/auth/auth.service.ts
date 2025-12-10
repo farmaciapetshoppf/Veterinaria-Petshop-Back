@@ -105,6 +105,8 @@ export class AuthService {
 
  async signIn(signInDto: SignInDto, res: Response): Promise<any> {
   try {
+    console.log('🔐 Intentando login con:', { email: signInDto.email, passwordLength: signInDto.password?.length });
+    
     const { data, error } = await this.supabaseService
       .getClient()
       .auth.signInWithPassword({
@@ -112,7 +114,10 @@ export class AuthService {
         password: signInDto.password,
       });
 
-    if (error) throw new UnauthorizedException(error.message);
+    if (error) {
+      console.error('❌ Error de Supabase en signIn:', error);
+      throw new UnauthorizedException(error.message);
+    }
 
     if (!data.session) {
       throw new UnauthorizedException('No se devolvieron datos de sesión');
