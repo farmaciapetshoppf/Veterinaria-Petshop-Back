@@ -152,12 +152,13 @@ export class AuthService {
       });
 
       const responsePayload: any = {
-        id: userType === 'veterinarian' ? user.supabaseUserId : user.id,
+        /* id: userType === 'veterinarian' ? user.supabaseUserId : user.id, */
+        id: user.id,
         name: user.name,
         email: user.email,
         phone: user.phone || null,
         address: user.address || null,
-        role: user.role,
+        role: user.role || userType,
         user: user.user,
         country: user.country,
         city: user.city,
@@ -174,7 +175,10 @@ export class AuthService {
         responsePayload.isActive = user.isActive;
       }
 
-      return responsePayload;
+      return {
+        ...responsePayload,
+        token: data.session.access_token, // 👈 así llega al frontend
+      };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
