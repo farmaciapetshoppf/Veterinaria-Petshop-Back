@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { Appointments } from 'src/appointments/entities/appointment.entity';
+import { MedicalRecordsPet } from 'src/medical-records-pet/entities/medical-records-pet.entity';
 import { Role } from 'src/auth/enum/roles.enum';
 
 @Entity('veterinarians')
@@ -49,4 +50,7 @@ export class Veterinarian {
 
   @OneToMany(() => Appointments, (appointment) => appointment.veterinarian)
   appointments?: Appointments[];
+
+  @OneToMany(() => MedicalRecordsPet, (record) => record.veterinarian)
+  medicalRecords?: MedicalRecordsPet[];
 }

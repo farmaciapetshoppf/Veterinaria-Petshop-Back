@@ -1,129 +1,304 @@
-// src/mailer/mailer.service.ts
-
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
-import { google } from 'googleapis';
+import { Injectable } from '@nestjs/common';
+import { MailerService as NestMailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class MailerService {
-  private transporter: nodemailer.Transporter;
-  private readonly emailUser: string; // Propiedad de la clase para el remitente
+  constructor(private readonly nestMailerService: NestMailerService) {}
 
-  constructor(private readonly configService: ConfigService) {
-    // 1. Lectura crucial: Obtenemos el correo del remitente en el constructor
-    const emailUser = this.configService.get<string>('MAIL_USER');
-
-    if (!emailUser) {
-      // En NestJS, es mejor lanzar un error en el constructor si falta una dependencia clave
-      throw new Error(
-        'La variable MAIL_USER es crucial y no está definida en .env.',
-      );
-    }
-    this.emailUser = emailUser; // Asignamos la variable a la propiedad de la clase
-
-    // 2. Iniciamos el transporter de forma asíncrona
-    this.initializeTransporter();
-  }
-
-  private async initializeTransporter() {
-    // 3. Leemos las credenciales de OAuth2 (solo necesarias aquí dentro)
-    const CLIENT_ID = this.configService.get<string>('GOOGLE_MAIL_CLIENT_ID');
-    const CLIENT_SECRET = this.configService.get<string>(
-      'GOOGLE_MAIL_CLIENT_SECRET',
-    );
-    const REFRESH_TOKEN = this.configService.get<string>(
-      'GOOGLE_REFRESH_TOKEN',
-    );
-    const REDIRECT_URI = this.configService.get<string>('GOOGLE_REDIRECT_URI');
-
-    if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN || !REDIRECT_URI) {
-      console.error(
-        'ERROR: Faltan credenciales de OAuth2. El servicio de correo no funcionará.',
-      );
-
-      return;
-    }
-
-    // 4. Configurar cliente OAuth2
-    const oAuth2Client = new google.auth.OAuth2(
-      CLIENT_ID,
-      CLIENT_SECRET,
-      REDIRECT_URI,
-    );
-
-    oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
-
+  /**
+   * Enviar email de confirmación de turno
+   */
+  async sendAppointmentConfirmation(context: {
+    to: string;
+    userName: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    petName: string;
+    veterinarianName: string;
+    reason: string;
+  }) {
     try {
-      // 5. Obtener Access Token
-      const accessTokenResponse = await oAuth2Client.getAccessToken();
-      const accessToken = accessTokenResponse.token;
-
-      if (!accessToken) {
-        throw new Error('No se pudo generar el Access Token para Nodemailer.');
-      }
-
-      // 6. Crear el Transporter
-      this.transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          type: 'OAuth2',
-          user: this.emailUser, // Usamos la propiedad de la clase
-          clientId: CLIENT_ID,
-          clientSecret: CLIENT_SECRET,
-          refreshToken: REFRESH_TOKEN,
-          accessToken: accessToken,
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '✅ Turno Confirmado - Huellitas Pet',
+        template: './appointment-confirmation',
+        context: {
+          userName: context.userName,
+          appointmentDate: context.appointmentDate,
+          appointmentTime: context.appointmentTime,
+          petName: context.petName,
+          veterinarianName: context.veterinarianName,
+          reason: context.reason,
         },
-        tls: { rejectUnauthorized: false }, //Cambiar en produccion, no puede quedar en false!
-      } as nodemailer.TransportOptions);
+      });
+      console.log(`✅ Email de confirmación de turno enviado a ${context.to}`);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error(
-        'Error fatal al configurar el servicio de correo:',
-        errorMessage,
-      );
-      // No relanzamos, solo registramos el error para que la app pueda iniciar
-      // pero el transporter permanecerá 'undefined', lo que será manejado en sendMail.
+      console.error('❌ Error enviando email de confirmación de turno:', error);
+      throw error;
     }
   }
 
   /**
-   * Envía un correo electrónico. Este es el método inyectable.
-   * @param to Correo del destinatario.
-   * @param subject Asunto del correo.
-   * @param htmlContent Contenido HTML del cuerpo.
+   * Enviar recordatorio de turno
    */
-  async sendMail(
-    to: string,
-    subject: string,
-    htmlContent: string,
-  ): Promise<void> {
-    // 1. Verificación de inicialización
-    if (!this.transporter) {
-      throw new InternalServerErrorException(
-        'El servicio de correo no pudo inicializarse. Revise las credenciales en .env.',
-      );
-    }
-
-    // 2. Opciones del correo
-    const mailOptions = {
-      from: `Huellitas Pet🐾 <${this.emailUser}>`, // Usamos la propiedad de la clase para el FROM
-      to,
-      subject,
-      html: htmlContent,
-    };
-
-    // 3. Envío
+  async sendAppointmentReminder(context: {
+    to: string;
+    userName: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    petName: string;
+    veterinarianName: string;
+    reason: string;
+  }) {
     try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('Correo enviado exitosamente. Message ID:', result.messageId);
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '🐾 Recordatorio: Tu turno es mañana',
+        template: './appointment-reminder',
+        context: {
+          userName: context.userName,
+          appointmentDate: context.appointmentDate,
+          appointmentTime: context.appointmentTime,
+          petName: context.petName,
+          veterinarianName: context.veterinarianName,
+          reason: context.reason,
+        },
+      });
+      console.log(`✅ Recordatorio de turno enviado a ${context.to}`);
     } catch (error) {
-      console.error('Fallo el envío de correo:', error);
-      // Relanzamos el error para que el AuthService pueda capturarlo y generar un 'warn'
-      throw new InternalServerErrorException(
-        'Fallo al contactar al servidor de correo durante el envío.',
-      );
+      console.error('❌ Error enviando recordatorio de turno:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar confirmación de compra
+   */
+  async sendPurchaseConfirmation(context: {
+    to: string;
+    userName: string;
+    orderId: string;
+    items: Array<{
+      productName: string;
+      quantity: number;
+      unitPrice: string;
+      subtotal: string;
+    }>;
+    total: string;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '✅ Compra Confirmada - Huellitas Pet',
+        template: './purchase-confirmation',
+        context: {
+          userName: context.userName,
+          orderId: context.orderId,
+          items: context.items,
+          total: context.total,
+        },
+      });
+      console.log(`✅ Email de confirmación de compra enviado a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando email de confirmación de compra:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Método genérico para enviar emails (legacy support)
+   */
+  async sendMail(to: string, subject: string, html: string) {
+    try {
+      await this.nestMailerService.sendMail({
+        to,
+        subject,
+        html,
+      });
+      console.log(`✅ Email enviado a ${to}`);
+    } catch (error) {
+      console.error('❌ Error enviando email:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar notificación de registro médico
+   */
+  async sendMedicalRecordNotification(context: {
+    to: string;
+    ownerName: string;
+    petName: string;
+    veterinarianName: string;
+    diagnosis: string;
+    treatment: string;
+    medications?: string;
+    vaccinations?: string;
+    weight?: number;
+    temperature?: number;
+    nextAppointment?: string;
+    observations?: string;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '📋 Registro Médico de ' + context.petName,
+        template: './medical-record-notification',
+        context,
+      });
+      console.log(`✅ Notificación de registro médico enviada a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando notificación de registro médico:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar email de bienvenida
+   */
+  async sendWelcomeEmail(context: { to: string; userName: string }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '🎉 Bienvenido a Huellitas Pet',
+        template: './welcome',
+        context,
+      });
+      console.log(`✅ Email de bienvenida enviado a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando email de bienvenida:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar recordatorio de vacunación
+   */
+  async sendVaccineReminder(context: {
+    to: string;
+    ownerName: string;
+    petName: string;
+    vaccineName: string;
+    dueDate: string;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '💉 Recordatorio de Vacunación - ' + context.petName,
+        template: './vaccine-reminder',
+        context,
+      });
+      console.log(`✅ Recordatorio de vacuna enviado a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando recordatorio de vacuna:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar felicitación de cumpleaños
+   */
+  async sendPetBirthdayEmail(context: {
+    to: string;
+    ownerName: string;
+    petName: string;
+    age: number;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '🎂 Feliz Cumpleaños ' + context.petName + '!',
+        template: './pet-birthday',
+        context: {
+          ...context,
+          moreThanOne: context.age > 1,
+        },
+      });
+      console.log(`✅ Email de cumpleaños enviado a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando email de cumpleaños:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar confirmación de envío
+   */
+  async sendOrderShipped(context: {
+    to: string;
+    userName: string;
+    orderId: string;
+    trackingNumber?: string;
+    trackingUrl?: string;
+    items: Array<{ productName: string; quantity: number }>;
+    shippingAddress: string;
+    estimatedDelivery: string;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '📦 Tu pedido fue enviado - Huellitas Pet',
+        template: './order-shipped',
+        context,
+      });
+      console.log(`✅ Confirmación de envío enviada a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando confirmación de envío:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Solicitar reseña de producto
+   */
+  async sendReviewRequest(context: {
+    to: string;
+    userName: string;
+    items: Array<{ productName: string }>;
+    reviewUrl: string;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '⭐ ¿Qué te pareció tu compra? - Huellitas Pet',
+        template: './review-request',
+        context,
+      });
+      console.log(`✅ Solicitud de reseña enviada a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando solicitud de reseña:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar resumen semanal a veterinarios
+   */
+  async sendWeeklyScheduleToVet(context: {
+    to: string;
+    veterinarianName: string;
+    weekStart: string;
+    weekEnd: string;
+    totalAppointments: number;
+    daysWithAppointments: number;
+    appointments: Array<{
+      date: string;
+      time: string;
+      petName: string;
+      reason: string;
+    }>;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '📅 Tu agenda de la semana - Huellitas Pet',
+        template: './weekly-schedule-vet',
+        context,
+      });
+      console.log(`✅ Resumen semanal enviado a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando resumen semanal:', error);
+      throw error;
     }
   }
 }

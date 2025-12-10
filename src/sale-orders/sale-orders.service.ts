@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { MailerService } from 'src/mailer/mailer.service';
 import { CreateSaleOrderDto } from './dto/create-sale-order.dto';
 import { UpdateSaleOrderDto } from './dto/update-sale-order.dto';
 import { SaleOrder, SaleOrderStatus } from './entities/sale-order.entity';
@@ -30,6 +31,7 @@ export class SaleOrdersService {
     private readonly branchRepository: Repository<Branch>,
     private readonly dataSource: DataSource,
     private readonly mercadoPagoService: MercadoPagoService,
+    private readonly mailerService: MailerService,
   ) {}
 
   // ==================== CARRITO ACTIVO ====================
@@ -515,6 +517,12 @@ export class SaleOrdersService {
         }
       }
 
+      // Log detallado de items antes de crear preferencia
+      console.log('🛒 Items en el carrito antes de crear preferencia:');
+      cart.items.forEach(item => {
+        console.log(`  - ${item.product.name}: ${item.quantity} x $${item.unitPrice} = $${item.quantity * Number(item.unitPrice)}`);
+      });
+
       // Crear preferencia de pago en Mercado Pago
       const preference = await this.mercadoPagoService.createPreference(
         cart.items,
@@ -629,6 +637,19 @@ export class SaleOrdersService {
         order.status = SaleOrderStatus.PAID;
         order.paymentMethod = paymentInfo.payment_method_id;
         console.log(`✅ Pago aprobado - Orden ${orderId} marcada como PAID`);
+
+        // Cargar orden completa con relaciones para el email
+        const orderWithRelations = await this.saleOrderRepository.findOne({
+          where: { id: orderId },
+          relations: ['buyer', 'items', 'items.product'],
+        });
+
+        // Enviar email de confirmación de compra (asíncrono)
+        if (orderWithRelations) {
+          this.sendPurchaseConfirmationEmail(orderWithRelations).catch((err) =>
+            console.error('Error enviando email de confirmación de compra:', err),
+          );
+        }
       } else if (
         paymentStatus === 'rejected' ||
         paymentStatus === 'cancelled'
@@ -653,6 +674,37 @@ export class SaleOrdersService {
     } catch (error) {
       console.error('❌ Error procesando webhook:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Enviar email de confirmación de compra
+   */
+  private async sendPurchaseConfirmationEmail(order: SaleOrder) {
+    if (!order.buyer?.email) {
+      console.log('⚠️ No se puede enviar confirmación: comprador sin email');
+      return;
+    }
+
+    try {
+      const items = order.items.map((item) => ({
+        productName: item.product.name,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice).toFixed(2),
+        subtotal: (Number(item.unitPrice) * item.quantity).toFixed(2),
+      }));
+
+      await this.mailerService.sendPurchaseConfirmation({
+        to: order.buyer.email,
+        userName: order.buyer.name || 'Cliente',
+        orderId: order.id,
+        items: items,
+        total: Number(order.total).toFixed(2),
+      });
+
+      console.log(`✅ Email de confirmación de compra enviado a ${order.buyer.email}`);
+    } catch (error) {
+      console.error('❌ Error enviando email de confirmación de compra:', error);
     }
   }
 }
