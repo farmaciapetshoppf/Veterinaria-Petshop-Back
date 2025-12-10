@@ -47,6 +47,41 @@ export class ProductsController {
     return this.productsService.seeder();
   }
 
+  @ApiOperation({ summary: 'Create new product with multiple images' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Alimento Premium para Perros' },
+        description: {
+          type: 'string',
+          example:
+            'Alimento balanceado con nutrientes esenciales para perros adultos',
+        },
+        price: { type: 'number', example: 25.99 },
+        stock: { type: 'integer', example: 100 },
+        categoryId: {
+          type: 'string',
+          example: '550e8400-e29b-41d4-a716-446655440000',
+        },
+        mainImage: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagen principal del producto (.jpg, .png, .webp)',
+        },
+        additionalImages: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+          description: 'Imágenes adicionales del producto (.jpg, .png, .webp)',
+        },
+      },
+      required: ['name', 'price', 'stock', 'mainImage'],
+    },
+  })
   @Post()
   @UseInterceptors(
     FileFieldsInterceptor([
