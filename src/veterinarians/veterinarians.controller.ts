@@ -22,6 +22,11 @@ import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 
+  
+ @Get('seeder')
+  seeder(){
+    return this.veterinariansService.seeder();
+  }
   @ApiOperation({ summary: 'Get all veterinarians (optionally filter active)' })
   @Get()
   async fillAllVeterinarians(@Query('onlyActive') onlyActive?: string) {
@@ -38,6 +43,8 @@ export class VeterinariansController {
       .fillByIdVeterinarians(id)
       .then((data) => ({ message: `Veterinarian ${id} retrieved`, data }));
   }
+
+ 
 
   @ApiOperation({ summary: 'Create new veterinarian' })
   @Post()
