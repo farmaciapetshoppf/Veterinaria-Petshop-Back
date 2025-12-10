@@ -6,8 +6,12 @@ import {
   IsUUID,
   Min,
   IsOptional,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { ProductImageDto } from './product-image.dto';
 
 export class CreateProductDto {
   @ApiProperty({
@@ -71,4 +75,15 @@ export class CreateProductDto {
   @IsOptional()
   @IsUUID()
   categoryId?: string;
+
+  @ApiProperty({
+    description: 'Imágenes adicionales del producto',
+    type: [ProductImageDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductImageDto)
+  images?: ProductImageDto[];
 }
