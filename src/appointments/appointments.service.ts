@@ -123,28 +123,55 @@ export class AppointmentsService {
     const appointment = await this.appointmentsRepository.findOne({
       where: { id: String(id) },
       relations: ['pet', 'pet.owner', 'veterinarian'],
+      withDeleted: false,
     });
+
     if (!appointment) return null;
+
     if (
       appointment.veterinarian &&
       (appointment.veterinarian as any).password
     ) {
       delete (appointment.veterinarian as any).password;
     }
+
     return appointment;
   }
 
   async update(id: string, updateAppointmentDto: UpdateAppointmentDto) {
-    await this.appointmentsRepository.update(id, updateAppointmentDto as any);
+    const existingAppointment = await this.findOne(id);
+
+    if (!existingAppointment) {
+      throw new NotFoundException(`Appointment ${id} not found`);
+    }
+
+    await this.appointmentsRepository.update(id, {
+      ...(updateAppointmentDto.date && { date: updateAppointmentDto.date }),
+      ...(updateAppointmentDto.time && { time: updateAppointmentDto.time }),
+      ...(updateAppointmentDto.detail !== undefined && {
+        detail: updateAppointmentDto.detail,
+      }),
+      ...(updateAppointmentDto.status !== undefined && {
+        status: updateAppointmentDto.status,
+      }),
+    });
+
     const updated = await this.findOne(id);
-    return { message: `Appointment ${id} updated`, data: updated };
+    return { message: `Appointment ${id} updated`, updated };
   }
 
   async remove(id: string) {
-    const result = await this.appointmentsRepository.delete(id);
-    if (result.affected && result.affected > 0)
-      return { message: `Appointment ${id} removed` };
-    return { message: `Appointment ${id} not found` };
+    const appointment = await this.appointmentsRepository.findOne({
+      where: { id },
+      withDeleted: false,
+    });
+
+    if (!appointment) {
+      return { message: `Appointment ${id} not found` };
+    }
+
+    await this.appointmentsRepository.softDelete(id);
+    return { message: `Appointment ${id} removed` };
   }
 
   async getAvailability(vetId: string, date: string) {

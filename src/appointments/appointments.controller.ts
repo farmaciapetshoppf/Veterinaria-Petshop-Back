@@ -5,14 +5,21 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   ParseUUIDPipe,
   Query,
+  Put,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { ApiOperation, ApiTags, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Appointments')
 @Controller('appointments')
@@ -99,6 +106,10 @@ export class AppointmentsController {
   }
 
   @ApiOperation({ summary: 'Update appointment' })
+  @ApiParam({ name: 'id', description: 'Appointment ID' })
+  @ApiBody({ type: UpdateAppointmentDto })
+  @ApiResponse({ status: 200, description: 'Appointment updated successfully' })
+  @ApiResponse({ status: 404, description: 'Appointment not found' })
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -107,8 +118,40 @@ export class AppointmentsController {
     return this.appointmentsService.update(id, updateAppointmentDto);
   }
 
-  @ApiOperation({ summary: 'Delete appointment' })
-  @Delete(':id')
+  @ApiOperation({ summary: 'Delete appointment (soft delete)' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the appointment',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Appointment successfully marked as deleted',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Appointment 550e8400-e29b-41d4-a716-446655440000 removed',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Appointment not found',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Appointment 550e8400-e29b-41d4-a716-446655440000 not found',
+        },
+      },
+    },
+  })
+  @Put(':id')
   remove(@Param('id') id: string) {
     return this.appointmentsService.remove(id);
   }
