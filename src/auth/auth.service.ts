@@ -130,7 +130,7 @@ export class AuthService {
       secure: false,
       sameSite: 'lax' as const,
       path: '/',
-      maxAge: 3600 * 1000,
+      maxAge: 24 * 3600 * 1000, // 24 horas
       domain: 'localhost',
     });
 

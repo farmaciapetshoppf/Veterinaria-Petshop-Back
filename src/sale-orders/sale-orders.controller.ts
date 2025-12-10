@@ -11,6 +11,7 @@ import {
 import { SaleOrdersService } from './sale-orders.service';
 import { CreateSaleOrderDto } from './dto/create-sale-order.dto';
 import { UpdateSaleOrderDto } from './dto/update-sale-order.dto';
+import { CheckoutDto } from './dto/checkout.dto';
 import { ApiOperation, ApiTags, ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Sale Orders')
@@ -156,7 +157,7 @@ export class SaleOrdersController {
 
   @ApiOperation({ 
     summary: 'Procesar checkout y crear preferencia de MercadoPago',
-    description: 'Convierte el carrito ACTIVE en PENDING y genera una preferencia de pago en MercadoPago.'
+    description: 'Convierte el carrito ACTIVE en PENDING y genera una preferencia de pago en MercadoPago. Opcionalmente recibe back_urls personalizadas.'
   })
   @ApiParam({ 
     name: 'userId', 
@@ -185,8 +186,11 @@ export class SaleOrdersController {
   @ApiResponse({ status: 400, description: 'Carrito vacío o vencido' })
   @ApiResponse({ status: 404, description: 'No hay carrito activo' })
   @Post('checkout/:userId')
-  checkout(@Param('userId') userId: string) {
-    return this.saleOrdersService.checkout(userId);
+  checkout(
+    @Param('userId') userId: string,
+    @Body() checkoutDto: CheckoutDto,
+  ) {
+    return this.saleOrdersService.checkout(userId, checkoutDto);
   }
 
   @ApiOperation({ 

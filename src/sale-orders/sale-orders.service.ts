@@ -9,6 +9,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import axios from 'axios';
+import * as fs from 'fs';
+import * as path from 'path';
 import { CreateSaleOrderDto } from './dto/create-sale-order.dto';
 import { UpdateSaleOrderDto } from './dto/update-sale-order.dto';
 import { SaleOrder, SaleOrderStatus } from './entities/sale-order.entity';
@@ -20,6 +22,14 @@ import { Branch } from 'src/branches/entities/branch.entity';
 @Injectable()
 export class SaleOrdersService {
   private mercadoPagoClient: Preference;
+  private logFile = path.join(process.cwd(), 'mercadopago-checkout.log');
+
+  private logToFile(message: string, data?: any) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}${data ? '\n' + JSON.stringify(data, null, 2) : ''}\n${'='.repeat(80)}\n`;
+    fs.appendFileSync(this.logFile, logMessage);
+    console.log(message, data || '');
+  }
 
   constructor(
     @InjectRepository(SaleOrder)
@@ -105,8 +115,13 @@ export class SaleOrdersService {
 
       // Verificar si el producto ya estÃ¡ en el carrito
       const existingItem = cart.items?.find(item => item.product.id === productId);
+      
+      console.log(`🛒 addToCart - Usuario: ${userId}, Producto: ${product.name} (${productId}), Cantidad: ${quantity}`);
+      console.log(`📦 Items actuales en carrito:`, cart.items?.map(i => `${i.product.name} x${i.quantity}`));
 
       if (existingItem) {
+        console.log(`♻️ Item YA existe en carrito, actualizando cantidad: ${existingItem.quantity} → ${existingItem.quantity + quantity}`);
+        
         // Actualizar cantidad existente
         const additionalQty = quantity;
         
@@ -125,6 +140,8 @@ export class SaleOrdersService {
         existingItem.quantity += additionalQty;
         await manager.save(SaleOrderProduct, existingItem);
       } else {
+        console.log(`➕ Nuevo item, agregando al carrito`);
+        
         // Agregar nuevo item al carrito
         // Descontar stock inmediatamente
         product.stock -= quantity;
@@ -181,6 +198,46 @@ export class SaleOrdersService {
       // Cancelar y restaurar stock
       await this.cancelExpiredCart(cart.id);
       return { message: 'El carrito ha expirado', data: null };
+    }
+
+    // 🔧 DEDUPLICAR items con el mismo producto (fix para llamadas duplicadas del front)
+    const productMap = new Map<string, SaleOrderProduct>();
+    const duplicates: SaleOrderProduct[] = [];
+    
+    for (const item of cart.items) {
+      const productId = item.product.id;
+      if (productMap.has(productId)) {
+        // Si ya existe, sumar la cantidad al item existente
+        const existing = productMap.get(productId)!;
+        existing.quantity += item.quantity;
+        duplicates.push(item);
+        console.log(`🔧 Duplicado detectado: ${item.product.name} (qty: ${item.quantity})`);
+      } else {
+        productMap.set(productId, item);
+      }
+    }
+
+    // Eliminar duplicados de la BD si se encontraron
+    if (duplicates.length > 0) {
+      console.log(`🗑️ Eliminando ${duplicates.length} items duplicados del carrito`);
+      await this.saleOrderProductRepository.remove(duplicates);
+      
+      // Actualizar items consolidados
+      const consolidated = Array.from(productMap.values());
+      for (const item of consolidated) {
+        await this.saleOrderProductRepository.save(item);
+      }
+      
+      cart.items = consolidated;
+      
+      // Recalcular total
+      cart.total = cart.items.reduce(
+        (sum, item) => sum + Number(item.unitPrice) * item.quantity,
+        0,
+      );
+      await this.saleOrderRepository.save(cart);
+      
+      console.log(`✅ Carrito consolidado: ${cart.items.length} items únicos, total: $${cart.total}`);
     }
 
     return { message: 'Carrito activo', data: cart };
@@ -327,7 +384,7 @@ export class SaleOrdersService {
   /**
    * Checkout: Crear preferencia de MercadoPago
    */
-  async checkout(userId: string) {
+  async checkout(userId: string, checkoutDto: { success_url: string; failure_url: string; pending_url: string; auto_return?: 'approved' | 'all' }) {
     if (!this.mercadoPagoClient) {
       throw new BadRequestException('MercadoPago no estÃ¡ configurado. Verifica MERCADOPAGO_ACCESS_TOKEN en .env');
     }
@@ -356,7 +413,7 @@ export class SaleOrdersService {
     }
 
     try {
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3002';
+      // Configuración del backend
       const ngrokUrl = this.configService.get<string>('NGROK_URL');
       const publicBackendUrl = ngrokUrl || 
         this.configService.get<string>('BACKEND_PUBLIC_URL') ||
@@ -364,47 +421,69 @@ export class SaleOrdersService {
         'http://localhost:3000';
       const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
 
-      console.log('URLs configuradas:', { frontendUrl, publicBackendUrl, notificationUrl: `${publicBackendUrl}/sale-orders/webhook` });
-      console.log('Access Token (prefijo):', accessToken?.substring(0, 20) + '...');
+      if (!accessToken) {
+        throw new BadRequestException('Token de MercadoPago no configurado');
+      }
 
-      // 3. Crear preferencia usando axios directamente
-      const response = await axios.post(
-        'https://api.mercadopago.com/checkout/preferences',
-        {
-          items: cart.items.map(item => ({
-            id: String(item.product.id),
-            title: item.product.name,
-            quantity: item.quantity,
-            unit_price: Number(item.unitPrice),
-            currency_id: 'ARS',
-          })),
-          back_urls: {
-            success: `${frontendUrl}/dashboard`,
-            failure: `${frontendUrl}/checkout/failure`,
-            pending: `${frontendUrl}/dashboard`,
-          },
-          auto_return: 'approved',
-          notification_url: `${publicBackendUrl}/sale-orders/webhook`,
-          external_reference: String(cart.id),
-          metadata: {
-            orderId: cart.id,
-            userId: userId,
-          },
-          payer: {
-            email: cart.buyer?.email || undefined,
-          },
+      this.logToFile('📍 Backend configurado:', { publicBackendUrl, notificationUrl: `${publicBackendUrl}/sale-orders/webhook` });
+      this.logToFile('🔑 Access Token (prefijo):', accessToken?.substring(0, 20) + '...');
+      this.logToFile('📥 CheckoutDto recibido desde el frontend:', checkoutDto);
+
+      // Validar que el frontend envíe las URLs (son obligatorias)
+      if (!checkoutDto?.success_url || !checkoutDto?.failure_url || !checkoutDto?.pending_url) {
+        throw new BadRequestException('Las URLs de retorno (success_url, failure_url, pending_url) son obligatorias en el body');
+      }
+
+      // Usar SOLO las URLs que vienen del frontend (sin fallback)
+      const backUrls = {
+        success: checkoutDto.success_url,
+        failure: checkoutDto.failure_url,
+        pending: checkoutDto.pending_url,
+      };
+      
+      this.logToFile('🔗 Back URLs recibidas del frontend:', backUrls);
+
+      // 3. Crear preferencia usando el SDK de MercadoPago
+      const client = new MercadoPagoConfig({ 
+        accessToken: accessToken,
+        options: { timeout: 5000 }
+      });
+      
+      const preference = new Preference(client);
+
+      const preferenceBody: any = {
+        items: cart.items.map(item => ({
+          id: String(item.product.id),
+          title: item.product.name,
+          quantity: item.quantity,
+          unit_price: Number(item.unitPrice),
+          currency_id: 'ARS',
+        })),
+        back_urls: backUrls,
+        notification_url: `${publicBackendUrl}/sale-orders/webhook`,
+        external_reference: String(cart.id),
+        metadata: {
+          order_id: cart.id,
+          user_id: userId,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
+        payer: {
+          email: cart.buyer?.email || undefined,
         },
-      );
+      };
 
-      const result = response.data;
+      // Agregar auto_return solo si se proporciona
+      if (checkoutDto?.auto_return) {
+        preferenceBody.auto_return = checkoutDto.auto_return;
+        this.logToFile('🔄 Auto return habilitado:', checkoutDto.auto_return);
+      }
 
-      console.log('âœ… Respuesta de MercadoPago:', JSON.stringify(result, null, 2));
+      const preferenceData = { body: preferenceBody };
+
+      this.logToFile('📤 Datos que se enviarán al SDK:', preferenceData);
+
+      const result = await preference.create(preferenceData);
+
+      this.logToFile('✅ Respuesta COMPLETA de MercadoPago:', result);
 
       // 5. Guardar ID de preferencia en el carrito y cambiar estado a PENDING
       cart.mercadoPagoId = result.id;
