@@ -9,10 +9,17 @@ import { Category } from 'src/categories/entities/category.entity';
 import { SupabaseModule } from 'src/supabase/supabase.module';
 import { StorageService } from 'src/supabase/storage.service';
 import { MulterModule } from '@nestjs/platform-express';
+import { ProductImage } from './entities/product-image.entity';
+import { ProductImageService } from './products-image.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Products, Category, SaleOrderProduct]),
+    TypeOrmModule.forFeature([
+      Products,
+      ProductImage,
+      Category,
+      SaleOrderProduct,
+    ]),
     CategoriesModule,
     SupabaseModule,
     MulterModule.register({
@@ -22,7 +29,7 @@ import { MulterModule } from '@nestjs/platform-express';
     }),
   ],
   controllers: [ProductsController],
-  providers: [ProductsService, StorageService],
+  providers: [ProductsService, ProductImageService, StorageService],
   exports: [TypeOrmModule, ProductsService],
 })
 export class ProductsModule {}
