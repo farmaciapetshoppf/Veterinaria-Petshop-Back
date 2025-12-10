@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #FF5722; color: white; padding: 20px; text-align: center; border-radius: 5px; }
+    .content { background: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px; }
+    .warning { background: #FFF3E0; border-left: 4px solid #FF9800; padding: 15px; margin: 20px 0; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+    .highlight { color: #FF5722; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💉 Recordatorio de Vacunación - Huellitas Pet</h1>
+    </div>
+    <div class="content">
+      <p>Hola <strong>{{ownerName}}</strong>,</p>
+      
+      <div class="warning">
+        <strong>⚠️ Importante:</strong> La vacunación de <span class="highlight">{{petName}}</span> está próxima a vencer.
+      </div>
+      
+      <p><strong>Mascota:</strong> {{petName}}</p>
+      <p><strong>Vacuna:</strong> {{vaccineName}}</p>
+      <p><strong>Fecha de vencimiento:</strong> {{dueDate}}</p>
+      
+      <p style="margin-top: 20px;">Para mantener protegida a tu mascota, te recomendamos agendar un turno lo antes posible.</p>
+      <p>Mantener las vacunas al día es fundamental para la salud de {{petName}}.</p>
+    </div>
+    <div class="footer">
+      <p>Este es un correo automático. Por favor no respondas a este mensaje.</p>
+      <p>Huellitas Pet 🐾 - Cuidamos de los que más querés</p>
+    </div>
+  </div>
+</body>
+</html>

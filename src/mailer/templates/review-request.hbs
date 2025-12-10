@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #FFC107; color: #333; padding: 20px; text-align: center; border-radius: 5px; }
+    .content { background: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px; text-align: center; }
+    .stars { font-size: 40px; margin: 20px 0; }
+    .button { background: #FFC107; color: #333; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; font-weight: bold; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⭐ ¿Qué te pareció tu compra?</h1>
+    </div>
+    <div class="content">
+      <p>Hola <strong>{{userName}}</strong>,</p>
+      <p>Esperamos que estés disfrutando de tu compra.</p>
+      
+      <div class="stars">⭐⭐⭐⭐⭐</div>
+      
+      <p>Tu opinión es muy importante para nosotros y ayuda a otros clientes a tomar mejores decisiones.</p>
+      <p>¿Te tomarías un minuto para contarnos cómo fue tu experiencia?</p>
+      
+      <a href="{{reviewUrl}}" class="button">Dejar mi reseña</a>
+      
+      <p style="margin-top: 30px; font-size: 14px; color: #666;">
+        Productos comprados:<br>
+        {{#each items}}
+        • {{this.productName}}<br>
+        {{/each}}
+      </p>
+    </div>
+    <div class="footer">
+      <p>Este es un correo automático. Por favor no respondas a este mensaje.</p>
+      <p>Huellitas Pet 🐾 - Cuidamos de los que más querés</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -91,6 +91,12 @@ export class PetsController {
   @ApiOperation({ summary: 'Get pet by ID' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
+    if (!id || id === 'undefined' || id === 'null') {
+      throw new HttpException(
+        'ID de mascota inválido o no proporcionado',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const data = await this.petsService.findOne(id);
     return { message: `Pet ${id} retrieved`, data };
   }

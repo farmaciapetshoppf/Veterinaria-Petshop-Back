@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #2196F3; color: white; padding: 20px; text-align: center; border-radius: 5px; }
+    .content { background: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+    .highlight { color: #2196F3; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Turno Confirmado - Huellitas Pet</h1>
+    </div>
+    <div class="content">
+      <p>Hola <strong>{{userName}}</strong>,</p>
+      <p>Tu turno ha sido <span class="highlight">confirmado exitosamente</span>:</p>
+      <ul>
+        <li><strong>Fecha:</strong> {{appointmentDate}}</li>
+        <li><strong>Horario:</strong> {{appointmentTime}}</li>
+        <li><strong>Mascota:</strong> {{petName}}</li>
+        <li><strong>Veterinario/a:</strong> {{veterinarianName}}</li>
+        <li><strong>Motivo:</strong> {{reason}}</li>
+      </ul>
+      <p>Te enviaremos un recordatorio 24 horas antes de tu turno.</p>
+      <p>¡Te esperamos! 🐾</p>
+    </div>
+    <div class="footer">
+      <p>Este es un correo automático. Por favor no respondas a este mensaje.</p>
+      <p>Huellitas Pet 🐾 - Cuidamos de los que más querés</p>
+    </div>
+  </div>
+</body>
+</html>

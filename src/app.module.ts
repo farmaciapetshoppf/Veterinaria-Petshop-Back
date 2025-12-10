@@ -20,6 +20,7 @@ import { ProductsService } from './products/products.service';
 import { MailerModule } from './mailer/mailer.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
+import { MedicalRecordsPetModule } from './medical-records-pet/medical-records-pet.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { UploadModule } from './upload/upload.module';
     AuthModule,
     MailerModule,
     ReviewsModule,
+    MedicalRecordsPetModule,
   ],
   controllers: [AppController],
   providers: [AppService],

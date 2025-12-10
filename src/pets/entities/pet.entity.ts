@@ -1,5 +1,6 @@
 import { Users } from 'src/users/entities/user.entity';
 import { Appointments } from 'src/appointments/entities/appointment.entity';
+import { MedicalRecordsPet } from 'src/medical-records-pet/entities/medical-records-pet.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -119,4 +120,7 @@ export class Pet {
 
   @OneToMany(() => Appointments, (appointment) => appointment.pet)
   appointments?: Appointments[];
+
+  @OneToMany(() => MedicalRecordsPet, (record) => record.pet)
+  medicalRecords?: MedicalRecordsPet[];
 }
