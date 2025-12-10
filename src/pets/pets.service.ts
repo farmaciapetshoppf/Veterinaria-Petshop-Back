@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { Pet } from './entities/pet.entity';
 import { Users } from 'src/users/entities/user.entity';
 import { UsersRepository } from 'src/users/users.repository';
+import { StorageService } from 'src/supabase/storage.service';
 
 @Injectable()
 export class PetsService {
@@ -15,41 +16,32 @@ export class PetsService {
 
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
+    private readonly storageService: StorageService,
   ) {}
 
-  async create(dto: CreatePetDto) {
-    const pet = this.petRepository.create({
-      nombre: dto.nombre,
-      especie: dto.especie,
-      sexo: dto.sexo,
-      tamano: dto.tamano,
-      esterilizado: dto.esterilizado,
-      status: dto.status,
-      fecha_nacimiento: dto.fecha_nacimiento,
-      fecha_fallecimiento: dto.fecha_fallecimiento,
-      breed: dto.breed,
-      image: dto.image,
-    });
-
-    // dueño
+  async create(dto: CreatePetDto, image: Express.Multer.File) {
+    const pet = this.petRepository.create(dto);
     if (dto.ownerId) {
-      pet.owner = await this.usersRepository.findOneBy({ id: dto.ownerId });
+      pet.owner = await this.usersRepository.findOne({
+        where: { id: dto.ownerId },
+      });
     }
-
-    // madre
     if (dto.motherId) {
       pet.mother = await this.petRepository.findOne({
         where: { id: dto.motherId },
       });
     }
-
-    // padre
     if (dto.fatherId) {
       pet.father = await this.petRepository.findOne({
         where: { id: dto.fatherId },
       });
     }
-
+    if (image) {
+      const result = await this.storageService.uploadFile(image, 'pets');
+      if (result) {
+        pet.image = result.publicUrl;
+      }
+    }
     return this.petRepository.save(pet);
   }
 
@@ -89,6 +81,7 @@ export class PetsService {
           'appointments',
           'appointments.veterinarian',
         ],
+        withDeleted: false, // Excluir mascotas eliminadas
       })
       .then((p) => {
         if (!p) throw new NotFoundException(`Pet with id ${id} not found`);
@@ -103,14 +96,28 @@ export class PetsService {
       });
   }
 
-  update(id: string, updatePetDto: UpdatePetDto) {
-    return `This action updates a #${id} pet`;
+  async update(
+    id: string,
+    updatePetDto: UpdatePetDto,
+    image: Express.Multer.File,
+  ) {
+    const pet = await this.petRepository.findOne({ where: { id } });
+    if (!pet) {
+      throw new NotFoundException(`Pet with id ${id} not found`);
+    }
+    Object.assign(pet, updatePetDto);
+    if (image) {
+      const result = await this.storageService.uploadFile(image, 'pets');
+      if (result) {
+        pet.image = result.publicUrl;
+      }
+    }
+    return this.petRepository.save(pet);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} pet`;
+  async remove(id: string) {
+    const pet = await this.findOne(id);
+    await this.petRepository.softRemove(pet);
+    return { message: 'Mascota eliminada correctamente' };
   }
-
-
-
 }

@@ -14,6 +14,7 @@ import { SignUpDto } from './dto/singup.dto';
 import { SignInDto } from './dto/signin.dto';
 import { Role } from './enum/roles.enum';
 import { Response } from 'express';
+import { MailerService } from 'src/mailer/mailer.service';
 import { VeterinariansService } from 'src/veterinarians/veterinarians.service';
 
 @Injectable()
@@ -21,6 +22,7 @@ export class AuthService {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly usersService: UsersService,
+    private readonly mailerService: MailerService,
     private readonly veterinariansService: VeterinariansService,
   ) {}
 
@@ -68,16 +70,31 @@ export class AuthService {
           role: Role.User,
         });
 
-        return {
-          message:
-            'Usuario registrado correctamente. Revise su email para verificar.',
-          user: newUser,
-        };
+        try {
+          const subject = '👋 ¡Bienvenido a Huellitas Pet 🐾!';
+          const htmlContent = `
+                <h1>Hola, ${name}!</h1>
+                <p>¡Gracias por registrarte! Estamos listos para ayudarte con tus mascotas.</p>
+                <p>Tu cuenta ya está activa.</p>
+            `;
+          await this.mailerService.sendMail(email, subject, htmlContent);
+          console.log(`Correo de bienvenida enviado a ${email}`);
+        } catch (mailError) {
+          const errorMessage =
+            mailError instanceof Error
+              ? mailError.message
+              : 'Error desconocido al enviar el correo.';
+
+          console.warn(
+            `[Mailer Warning]: Fallo el envío de correo a ${email}. Causa: ${errorMessage}`,
+          );
+        }
       }
 
       return {
         message:
           'Registro de usuario iniciado. Revise su email para verificar.',
+        user: data.user,
       };
     } catch (error) {
       const message =
@@ -162,7 +179,7 @@ export class AuthService {
         email: user.email,
         phone: user.phone || null,
         address: user.address || null,
-        role: user.role,
+        role: user.role || userType,
         user: user.user,
         country: user.country,
         city: user.city,
@@ -180,6 +197,25 @@ return {
   } catch (error) {
     if (error instanceof HttpException) {
       throw error;
+      if (userType === 'veterinarian') {
+        // Agregar campos específicos para veterinarios
+        responsePayload.matricula = user.matricula;
+        responsePayload.description = user.description;
+        responsePayload.time = user.time;
+        responsePayload.isActive = user.isActive;
+      }
+
+      return {
+        ...responsePayload,
+        token: data.session.access_token, // 👈 así llega al frontend
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Error en el proceso de inicio de sesión',
+      );
     }
     throw new InternalServerErrorException(
       'Error en el proceso de inicio de sesión',

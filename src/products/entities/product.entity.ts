@@ -2,6 +2,7 @@ import { Category } from 'src/categories/entities/category.entity';
 import { SaleOrderProduct } from 'src/sale-orders/entities/sale-order-product.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -43,9 +44,13 @@ export class Products {
 
   @Column({
     type: 'text',
-    default: 'No image',
+    default:
+      'https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/products/1765290507434_pngtree-no-image-available-icon-flatvector-illustration-blank-avatar-modern-vector-png-image_40962406.jpg',
   })
   imgUrl: string;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 
   @ManyToOne(() => Category, (category) => category.products)
   @JoinColumn({ name: 'category_id' })

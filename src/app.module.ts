@@ -3,10 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { typeormConfig } from './config/typeorm';
-
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { PetsModule } from './pets/pets.module';
@@ -19,8 +17,10 @@ import { SaleOrdersModule } from './sale-orders/sale-orders.module';
 import { AuthModule } from './auth/auth.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { ProductsService } from './products/products.service';
+import { MailerModule } from './mailer/mailer.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
+import { MedicalRecordsPetModule } from './medical-records-pet/medical-records-pet.module';
 
 @Module({
   imports: [
@@ -42,7 +42,9 @@ import { UploadModule } from './upload/upload.module';
     SaleOrdersModule,
     DatabaseModule,
     AuthModule,
+    MailerModule,
     ReviewsModule,
+    MedicalRecordsPetModule,
   ],
   controllers: [AppController],
   providers: [AppService],

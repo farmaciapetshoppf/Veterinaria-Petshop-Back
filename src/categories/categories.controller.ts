@@ -5,10 +5,10 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   ParseUUIDPipe,
   UseInterceptors,
   UploadedFile,
+  Put,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -84,18 +84,20 @@ export class CategoriesController {
     return this.categoriesService.findAll();
   }
 
+  @ApiOperation({ summary: 'Get all categories (basic info)' })
   @Get('basic')
   findAllBasic() {
     return this.categoriesService.findAllBasic();
   }
 
+  @ApiOperation({ summary: 'Get category by ID' })
   @Get(':id')
   findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Delete category by ID' })
-  @Delete(':id')
+  @ApiOperation({ summary: 'Soft delete category by ID' })
+  @Put(':id')
   remove(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.remove(id);
   }

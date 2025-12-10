@@ -1,11 +1,13 @@
 import { Users } from 'src/users/entities/user.entity';
 import { Appointments } from 'src/appointments/entities/appointment.entity';
+import { MedicalRecordsPet } from 'src/medical-records-pet/entities/medical-records-pet.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
   OneToMany,
+  DeleteDateColumn,
 } from 'typeorm';
 
 export enum PetEspecies {
@@ -93,8 +95,15 @@ export class Pet {
   breed: string | null;
 
   //imagen del peludito
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({
+    type: 'text',
+    default:
+      'https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/pets/1765297411732_pngtree-no-image-available-icon-flatvector-illustration-blank-avatar-modern-vector-png-image_40962406.jpg',
+  })
   image: string | null;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 
   //relaciones familiares
   @ManyToOne(() => Pet, (pet) => pet.childrenAsMother, { nullable: true })
@@ -111,4 +120,7 @@ export class Pet {
 
   @OneToMany(() => Appointments, (appointment) => appointment.pet)
   appointments?: Appointments[];
+
+  @OneToMany(() => MedicalRecordsPet, (record) => record.pet)
+  medicalRecords?: MedicalRecordsPet[];
 }

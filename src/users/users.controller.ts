@@ -7,6 +7,7 @@ import {
   Body,
   UploadedFile,
   UseInterceptors,
+  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Role } from 'src/auth/enum/roles.enum';
@@ -27,7 +28,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @HttpCode(200)
-  @ApiOperation({ summary: 'Obtener lista de usuarios' })
+  @ApiOperation({ summary: 'Get all users' })
   @Get()
   async getUsers() {
     const data = await this.usersService.getUsers();
@@ -35,7 +36,7 @@ export class UsersController {
   }
 
   @HttpCode(200)
-  @ApiOperation({ summary: 'Obtener usuarios por id' })
+  @ApiOperation({ summary: 'Get user by ID' })
   @ApiParam({
     name: 'id',
     type: String,
@@ -49,7 +50,7 @@ export class UsersController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: 'Actualizar usuario por ID incluyendo imagen de perfil opcional',
+    summary: 'Update user by ID',
   })
   @ApiParam({
     name: 'id',
@@ -116,11 +117,12 @@ export class UsersController {
 
   @ApiOperation({ summary: 'Delete user' })
   @HttpCode(200)
-  @Patch(':id/delete')
+  @Put(':id/delete')
   deleteUser(@Param('id') id: string) {
     return this.usersService.deleteUser(id);
   }
 
+  @ApiOperation({ summary: 'Get pets of a user' })
   @Get(':id/pets')
   getUserPets(@Param('id') id: string) {
     return this.usersService.getUserPets(id);

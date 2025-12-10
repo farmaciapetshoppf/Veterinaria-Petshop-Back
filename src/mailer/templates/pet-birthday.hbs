@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 30px; text-align: center; border-radius: 5px; }
+    .content { background: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px; text-align: center; }
+    .coupon { background: #f5576c; color: white; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0; font-size: 24px; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+    .cake { font-size: 60px; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎂 ¡Feliz Cumpleaños {{petName}}!</h1>
+    </div>
+    <div class="content">
+      <div class="cake">🎉🐾🎂</div>
+      <p>Hola <strong>{{ownerName}}</strong>,</p>
+      <p style="font-size: 18px;">¡Hoy <strong>{{petName}}</strong> cumple {{age}} añito{{#if moreThanOne}}s{{/if}}!</p>
+      <p>Desde Huellitas Pet queremos celebrar este día especial con ustedes.</p>
+      
+      <div class="coupon">
+        🎁 CUMPLE{{petName}}
+        <br><span style="font-size: 16px;">20% OFF en productos para {{petName}}</span>
+        <br><span style="font-size: 14px;">Válido por 7 días</span>
+      </div>
+      
+      <p>¡Que tengan un día increíble lleno de mimos y juegos! 🐶🐱</p>
+    </div>
+    <div class="footer">
+      <p>Este es un correo automático. Por favor no respondas a este mensaje.</p>
+      <p>Huellitas Pet 🐾 - Cuidamos de los que más querés</p>
+    </div>
+  </div>
+</body>
+</html>

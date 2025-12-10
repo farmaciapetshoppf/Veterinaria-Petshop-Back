@@ -11,6 +11,7 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
+import { MailerService } from 'src/mailer/mailer.service';
 import { CreateSaleOrderDto } from './dto/create-sale-order.dto';
 import { UpdateSaleOrderDto } from './dto/update-sale-order.dto';
 import { SaleOrder, SaleOrderStatus } from './entities/sale-order.entity';
@@ -18,6 +19,7 @@ import { SaleOrderProduct } from './entities/sale-order-product.entity';
 import { Users } from 'src/users/entities/user.entity';
 import { Products } from 'src/products/entities/product.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
+import { MercadoPagoService } from 'src/mercadopago/mercadopago.service';
 
 @Injectable()
 export class SaleOrdersService {
@@ -55,13 +57,16 @@ export class SaleOrdersService {
       this.mercadoPagoClient = new Preference(client);
     }
   }
+    private readonly mercadoPagoService: MercadoPagoService,
+    private readonly mailerService: MailerService,
+  ) {}
 
   // ==================== CARRITO ACTIVO ====================
   
   /**
    * Agregar producto al carrito activo del usuario
    * - Busca o crea carrito ACTIVE
-   * - Descuenta stock inmediatamente
+   * - NO descuenta stock (se descuenta al hacer checkout)
    * - Expira en 24hs
    */
   async addToCart(userId: string, productId: string, quantity: number) {
@@ -106,7 +111,7 @@ export class SaleOrdersService {
         throw new NotFoundException(`Product ${productId} not found`);
       }
 
-      // Validar stock disponible
+      // Validar stock disponible (sin descontar)
       if (product.stock < quantity) {
         throw new BadRequestException(
           `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, solicitado: ${quantity}`,
@@ -123,21 +128,17 @@ export class SaleOrdersService {
         console.log(`♻️ Item YA existe en carrito, actualizando cantidad: ${existingItem.quantity} → ${existingItem.quantity + quantity}`);
         
         // Actualizar cantidad existente
-        const additionalQty = quantity;
+        const newTotalQty = existingItem.quantity + quantity;
         
-        // Validar que hay stock para la cantidad adicional
-        if (product.stock < additionalQty) {
+        // Validar que hay stock para la nueva cantidad total
+        if (product.stock < newTotalQty) {
           throw new BadRequestException(
             `Stock insuficiente. Ya tenÃ©s ${existingItem.quantity} en el carrito. Disponible: ${product.stock}`,
           );
         }
 
-        // Descontar stock adicional
-        product.stock -= additionalQty;
-        await manager.save(Products, product);
-
-        // Actualizar item del carrito
-        existingItem.quantity += additionalQty;
+        // Actualizar item del carrito (SIN descontar stock)
+        existingItem.quantity = newTotalQty;
         await manager.save(SaleOrderProduct, existingItem);
       } else {
         console.log(`➕ Nuevo item, agregando al carrito`);
@@ -147,6 +148,7 @@ export class SaleOrdersService {
         product.stock -= quantity;
         await manager.save(Products, product);
 
+        // Agregar nuevo item al carrito (SIN descontar stock)
         const newItem = manager.create(SaleOrderProduct, {
           order: cart,
           product,
@@ -245,6 +247,7 @@ export class SaleOrdersService {
 
   /**
    * Actualizar cantidad de un producto en el carrito
+   * Stock NO se modifica, solo se valida
    */
   async updateCartItem(userId: string, productId: string, newQuantity: number) {
     return this.dataSource.transaction(async (manager) => {
@@ -286,15 +289,18 @@ export class SaleOrdersService {
       } else if (difference < 0) {
         // Reducir cantidad - devolver stock
         product.stock += Math.abs(difference);
+      // Validar stock disponible para la nueva cantidad (sin descontar)
+      if (newQuantity > 0 && product.stock < newQuantity) {
+        throw new BadRequestException(
+          `Stock insuficiente. Disponible: ${product.stock}, solicitado: ${newQuantity}`,
+        );
       }
-
-      await manager.save(Products, product);
 
       if (newQuantity === 0) {
         // Eliminar item del carrito
         await manager.remove(SaleOrderProduct, item);
       } else {
-        // Actualizar cantidad
+        // Actualizar cantidad (SIN modificar stock)
         item.quantity = newQuantity;
         await manager.save(SaleOrderProduct, item);
       }
@@ -329,6 +335,7 @@ export class SaleOrdersService {
 
   /**
    * Vaciar carrito completo
+   * Stock NO se restaura porque nunca se descontó
    */
   async clearCart(userId: string) {
     return this.dataSource.transaction(async (manager) => {
@@ -344,18 +351,7 @@ export class SaleOrdersService {
         return { message: 'No hay carrito activo para vaciar', data: null };
       }
 
-      // Restaurar stock de todos los productos
-      for (const item of cart.items) {
-        const product = await manager.findOne(Products, {
-          where: { id: item.product.id },
-        });
-        if (product) {
-          product.stock += item.quantity;
-          await manager.save(Products, product);
-        }
-      }
-
-      // Eliminar carrito
+      // Eliminar carrito directamente (sin restaurar stock)
       await manager.remove(SaleOrder, cart);
 
       return { message: 'Carrito vaciado exitosamente', data: null };
@@ -656,22 +652,11 @@ export class SaleOrdersService {
 
       if (!cart) return;
 
-      // Restaurar stock de todos los productos
-      for (const item of cart.items) {
-        const product = await manager.findOne(Products, {
-          where: { id: item.product.id },
-        });
-        if (product) {
-          product.stock += item.quantity;
-          await manager.save(Products, product);
-        }
-      }
-
-      // Cambiar estado a CANCELLED
+      // Solo cambiar estado a CANCELLED (sin restaurar stock)
       cart.status = SaleOrderStatus.CANCELLED;
       await manager.save(SaleOrder, cart);
 
-      return { message: 'Carrito cancelado y stock restaurado' };
+      return { message: 'Carrito cancelado' };
     });
   }
 
