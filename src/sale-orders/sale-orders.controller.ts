@@ -219,56 +219,6 @@ export class SaleOrdersController {
     return this.saleOrdersService.cancelExpiredCarts();
   }
 
-  // ==================== CHECKOUT Y MERCADO PAGO ====================
-
-  @ApiOperation({
-    summary: 'Iniciar checkout con Mercado Pago',
-    description: 'Cambia el carrito de ACTIVE a PENDING y genera el link de pago de Mercado Pago. Retorna la URL para redirigir al usuario al checkout.'
-  })
-  @ApiParam({
-    name: 'userId',
-    description: 'ID del usuario',
-    example: '84ef5839-2fc2-4689-a203-cf7bb25074d0'
-  })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Checkout iniciado - retorna link de pago',
-    schema: {
-      example: {
-        message: 'Checkout exitoso',
-        checkoutUrl: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=123456789-abc...'
-      }
-    }
-  })
-  @ApiResponse({ status: 400, description: 'Carrito vacío o vencido' })
-  @ApiResponse({ status: 404, description: 'No hay carrito activo' })
-  @Post('checkout/:userId')
-  checkout(@Param('userId') userId: string) {
-    return this.saleOrdersService.checkout(userId);
-  }
-
-  @ApiOperation({
-    summary: 'Webhook de Mercado Pago',
-    description: 'Endpoint para recibir notificaciones de pago de Mercado Pago. Actualiza el estado de la orden según el pago (approved -> PAID con email de confirmación, rejected/cancelled -> CANCELLED con stock restaurado).'
-  })
-  @ApiBody({
-    description: 'Notificación de Mercado Pago',
-    schema: {
-      example: {
-        action: 'payment.updated',
-        data: {
-          id: '1234567890'
-        },
-        type: 'payment'
-      }
-    }
-  })
-  @ApiResponse({ status: 200, description: 'Webhook procesado correctamente' })
-  @Post('webhook')
-  handleWebhook(@Body() body: any) {
-    return this.saleOrdersService.handleWebhook(body);
-  }
-
   // ==================== ENDPOINTS ORIGINALES ====================
 
   @ApiOperation({ summary: 'Create new sale order (DEPRECADO - usar cart/add)' })

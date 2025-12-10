@@ -168,8 +168,11 @@ export class AuthService {
         isDeleted: false,
         deletedAt: null,
         pets: [],
-        // Agregar flag para que el frontend sepa que debe cambiar contraseña
         requirePasswordChange: user.requirePasswordChange || false,
+        matricula: user.matricula,
+        description: user.description,
+        time: user.time,
+        isActive: user.isActive,
       };
     } else {
       // Para usuarios regulares: usar todos los campos normalmente
@@ -179,7 +182,7 @@ export class AuthService {
         email: user.email,
         phone: user.phone || null,
         address: user.address || null,
-        role: user.role || userType,
+        role: user.role,
         user: user.user,
         country: user.country,
         city: user.city,
@@ -189,33 +192,14 @@ export class AuthService {
       };
     }
 
-return {
-  ...responsePayload,
-  token: data.session.access_token  // ⬅️ ESTA LÍNEA FALTA
-}
+    return {
+      ...responsePayload,
+      token: data.session.access_token,
+    };
 
   } catch (error) {
     if (error instanceof HttpException) {
       throw error;
-      if (userType === 'veterinarian') {
-        // Agregar campos específicos para veterinarios
-        responsePayload.matricula = user.matricula;
-        responsePayload.description = user.description;
-        responsePayload.time = user.time;
-        responsePayload.isActive = user.isActive;
-      }
-
-      return {
-        ...responsePayload,
-        token: data.session.access_token, // 👈 así llega al frontend
-      };
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException(
-        'Error en el proceso de inicio de sesión',
-      );
     }
     throw new InternalServerErrorException(
       'Error en el proceso de inicio de sesión',
