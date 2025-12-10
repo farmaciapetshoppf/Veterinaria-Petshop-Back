@@ -201,9 +201,15 @@ export class ProductsController {
   async update(
     @Param('id') id: string,
     @Body() updateProductDtoRaw: any,
-    @UploadedFile() mainImage?: Express.Multer.File,
-    @UploadedFiles() additionalImages?: Express.Multer.File[],
+    @UploadedFiles()
+    files: {
+      mainImage?: Express.Multer.File[];
+      additionalImages?: Express.Multer.File[];
+    },
   ) {
+    const mainImage = files?.mainImage?.[0];
+    const additionalImages = files?.additionalImages;
+
     // Procesa la imagen principal si se proporciona
     if (mainImage) {
       if (!mainImage.mimetype.includes('image/')) {
@@ -242,6 +248,17 @@ export class ProductsController {
 
     // Procesa imágenes adicionales si se proporcionan
     if (additionalImages && additionalImages.length > 0) {
+      // Obtener el producto actualizado para asociar las imágenes
+      const productEntity = await this.productsService.findOneForUpdate(id);
+
+      // Obtener el orden máximo actual de las imágenes existentes
+      const existingImages =
+        await this.productImageService.getProductImages(id);
+      let maxOrder = 0;
+      if (existingImages && existingImages.length > 0) {
+        maxOrder = Math.max(...existingImages.map((img) => img.order || 0));
+      }
+
       for (let i = 0; i < additionalImages.length; i++) {
         const file = additionalImages[i];
         if (file.mimetype.includes('image/')) {
@@ -249,8 +266,8 @@ export class ProductsController {
           if (result) {
             await this.productImageService.createProductImage(
               result.publicUrl,
-              updatedProduct.data,
-              i + 1,
+              productEntity,
+              maxOrder + i + 1, // Incrementar el orden a partir del máximo existente
             );
           }
         }
