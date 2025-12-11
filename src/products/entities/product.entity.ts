@@ -18,8 +18,9 @@ export class Products {
 
   @Column({
     type: 'varchar',
-    length: 50,
+    length: 150,
     unique: true,
+    nullable: true,
   })
   name: string;
 

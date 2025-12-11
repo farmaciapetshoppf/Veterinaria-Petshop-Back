@@ -189,33 +189,22 @@ export class AuthService {
       };
     }
 
-return {
-  ...responsePayload,
-  token: data.session.access_token  // ⬅️ ESTA LÍNEA FALTA
-}
+    // Agregar campos específicos para veterinarios si aplica
+    if (userType === 'veterinarian') {
+      responsePayload.matricula = user.matricula;
+      responsePayload.description = user.description;
+      responsePayload.time = user.time;
+      responsePayload.isActive = user.isActive;
+    }
+
+    return {
+      ...responsePayload,
+      token: data.session.access_token,
+    };
 
   } catch (error) {
     if (error instanceof HttpException) {
       throw error;
-      if (userType === 'veterinarian') {
-        // Agregar campos específicos para veterinarios
-        responsePayload.matricula = user.matricula;
-        responsePayload.description = user.description;
-        responsePayload.time = user.time;
-        responsePayload.isActive = user.isActive;
-      }
-
-      return {
-        ...responsePayload,
-        token: data.session.access_token, // 👈 así llega al frontend
-      };
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException(
-        'Error en el proceso de inicio de sesión',
-      );
     }
     throw new InternalServerErrorException(
       'Error en el proceso de inicio de sesión',

@@ -14,10 +14,12 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       process.env.API_URL,
+      process.env.NGROK_URL,
       process.env.FRONTEND_URL,
       'http://localhost:3002',
       'http://localhost:3000',
-    ],
+      'https://darcy-semisuccess-ashleigh.ngrok-free.dev',
+    ].filter(Boolean).map(url => url?.endsWith('/') ? url.slice(0, -1) : url),
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true, // ✅ Crucial para que las cookies funcionen
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cookie'],

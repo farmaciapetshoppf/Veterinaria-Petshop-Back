@@ -46,6 +46,8 @@ export class SaleOrdersService {
     private readonly branchRepository: Repository<Branch>,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
+    private readonly mercadoPagoService: MercadoPagoService,
+    private readonly mailerService: MailerService,
   ) {
     // Inicializar MercadoPago
     const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
@@ -57,9 +59,6 @@ export class SaleOrdersService {
       this.mercadoPagoClient = new Preference(client);
     }
   }
-    private readonly mercadoPagoService: MercadoPagoService,
-    private readonly mailerService: MailerService,
-  ) {}
 
   // ==================== CARRITO ACTIVO ====================
   
@@ -275,20 +274,6 @@ export class SaleOrdersService {
         throw new NotFoundException(`Product ${productId} not found`);
       }
 
-      const currentQuantity = item.quantity;
-      const difference = newQuantity - currentQuantity;
-
-      if (difference > 0) {
-        // Aumentar cantidad - necesita mÃ¡s stock
-        if (product.stock < difference) {
-          throw new BadRequestException(
-            `Stock insuficiente. Disponible: ${product.stock}`,
-          );
-        }
-        product.stock -= difference;
-      } else if (difference < 0) {
-        // Reducir cantidad - devolver stock
-        product.stock += Math.abs(difference);
       // Validar stock disponible para la nueva cantidad (sin descontar)
       if (newQuantity > 0 && product.stock < newQuantity) {
         throw new BadRequestException(
@@ -456,7 +441,7 @@ export class SaleOrdersService {
           currency_id: 'ARS',
         })),
         back_urls: backUrls,
-        notification_url: `${publicBackendUrl}/sale-orders/webhook`,
+        notification_url: `${publicBackendUrl.replace(/\/$/, '')}/sale-orders/webhook`,
         external_reference: String(cart.id),
         metadata: {
           order_id: cart.id,
