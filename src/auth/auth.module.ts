@@ -11,7 +11,7 @@ import { RolesGuard } from './guards/roles.guard';
 @Module({
   imports: [
     SupabaseModule,
-    UsersModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => VeterinariansModule),
     MailerModule,
   ],
