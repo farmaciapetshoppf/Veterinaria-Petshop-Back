@@ -4,7 +4,14 @@ import { Repository } from 'typeorm';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { UsersService } from '../users.service';
 import { Role } from 'src/auth/enum/roles.enum';
-import { Pet, PetEspecies, PetSexo, PetTamano, PetEsterilizado, PetStatus } from 'src/pets/entities/pet.entity';
+import {
+  Pet,
+  PetEspecies,
+  PetSexo,
+  PetTamano,
+  PetEsterilizado,
+  PetStatus,
+} from 'src/pets/entities/pet.entity';
 import { Appointments } from 'src/appointments/entities/appointment.entity';
 import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
 import { VeterinariansSeeder } from 'src/veterinarians/seed/veterinarians.seed';
@@ -27,8 +34,7 @@ export class UsersSeeder implements OnModuleInit {
 
   async onModuleInit() {
     // ⚠️ SEEDER DESHABILITADO - Descomentar para desarrollo local
-    return;
-    
+
     // // Primero cargar veterinarios
     // await this.veterinariansSeeder.seed();
 
@@ -43,14 +49,18 @@ export class UsersSeeder implements OnModuleInit {
 
     // Obtener veterinarios para asignar turnos
     const veterinarians = await this.veterinarianRepository.find();
-    
+
     if (veterinarians.length === 0) {
       console.error('❌ No hay veterinarios disponibles para asignar turnos');
       return;
     }
 
-    const abiVet = veterinarians.find(v => v.email === 'abiiibreazuuu@gmail.com');
-    const adrianVet = veterinarians.find(v => v.email === 'adrianmespindola@gmail.com');
+    const abiVet = veterinarians.find(
+      (v) => v.email === 'abiiibreazuuu@gmail.com',
+    );
+    const adrianVet = veterinarians.find(
+      (v) => v.email === 'adrianmespindola@gmail.com',
+    );
 
     // Datos de usuarios hardcodeados
     const usersData = [
@@ -142,18 +152,24 @@ export class UsersSeeder implements OnModuleInit {
           });
 
         if (authError) {
-          console.error(`❌ Error creando usuario en Supabase Auth: ${userData.email}`, authError.message);
+          console.error(
+            `❌ Error creando usuario en Supabase Auth: ${userData.email}`,
+            authError.message,
+          );
           continue;
         }
 
         if (!authData.user) {
-          console.error(`❌ No se pudo crear el usuario en Supabase: ${userData.email}`);
+          console.error(
+            `❌ No se pudo crear el usuario en Supabase: ${userData.email}`,
+          );
           continue;
         }
 
         // Crear usuario en la base de datos SQL
         const newUser = await this.usersService.createUser({
           id: authData.user.id,
+
           email: userData.email,
           name: userData.name,
           user: userData.user,
@@ -177,11 +193,12 @@ export class UsersSeeder implements OnModuleInit {
             });
 
             // Obtener productos con stock bajo (menos de 10 unidades)
-            const { data: products, error: productsError } = await this.supabaseService
-              .getClient()
-              .from('products')
-              .select('*')
-              .lt('stock', 10);
+            const { data: products, error: productsError } =
+              await this.supabaseService
+                .getClient()
+                .from('products')
+                .select('*')
+                .lt('stock', 10);
 
             // Obtener veterinarios recientes (últimos 7 días)
             const sevenDaysAgo = new Date();
@@ -194,16 +211,16 @@ export class UsersSeeder implements OnModuleInit {
             await this.mailerService.sendAdminDailyReport({
               to: userData.email,
               adminName: userData.name,
-              date: today.toLocaleDateString('es-AR', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+              date: today.toLocaleDateString('es-AR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
               }),
               totalAppointments: appointments.length,
               lowStockProducts: products?.length || 0,
               newVeterinarians: recentVets.length,
-              appointments: appointments.map(apt => ({
+              appointments: appointments.map((apt) => ({
                 petName: apt.pet?.nombre || 'Sin mascota',
                 ownerName: apt.user?.name || 'Sin dueño',
                 veterinarianName: apt.veterinarian?.name || 'Sin veterinario',
@@ -211,12 +228,13 @@ export class UsersSeeder implements OnModuleInit {
                 reason: 'Consulta general',
                 status: apt.status ? 'Confirmado' : 'Pendiente',
               })),
-              products: products?.map(p => ({
-                name: p.name,
-                stock: p.stock,
-                critical: p.stock < 5,
-              })) || [],
-              veterinarians: recentVets.map(vet => ({
+              products:
+                products?.map((p) => ({
+                  name: p.name,
+                  stock: p.stock,
+                  critical: p.stock < 5,
+                })) || [],
+              veterinarians: recentVets.map((vet) => ({
                 name: vet.name,
                 email: vet.email,
                 phone: vet.phone,
@@ -241,7 +259,9 @@ export class UsersSeeder implements OnModuleInit {
               });
 
               const savedPet = await this.petRepository.save(newPet);
-              console.log(`  🐾 Mascota creada: ${petData.nombre} (${petData.especie})`);
+              console.log(
+                `  🐾 Mascota creada: ${petData.nombre} (${petData.especie})`,
+              );
 
               // Crear turnos para cada mascota
               const appointmentDate = new Date();
@@ -259,7 +279,9 @@ export class UsersSeeder implements OnModuleInit {
               });
 
               await this.appointmentRepository.save(newAppointment);
-              console.log(`    📅 Turno creado para ${petData.nombre} con ${veterinarian.name}`);
+              console.log(
+                `    📅 Turno creado para ${petData.nombre} con ${veterinarian.name}`,
+              );
 
               // Enviar email de confirmación de turno
               try {
@@ -272,19 +294,31 @@ export class UsersSeeder implements OnModuleInit {
                   veterinarianName: veterinarian.name,
                   reason: 'Consulta general',
                 });
-                console.log(`    ✉️  Email de confirmación enviado a ${userData.email}`);
+                console.log(
+                  `    ✉️  Email de confirmación enviado a ${userData.email}`,
+                );
               } catch (emailError) {
                 console.error(`    ❌ Error enviando email:`, emailError);
               }
             } catch (petError) {
-              const errorMsg = petError instanceof Error ? petError.message : 'Error desconocido';
-              console.error(`  ❌ Error creando mascota ${petData.nombre}:`, errorMsg);
+              const errorMsg =
+                petError instanceof Error
+                  ? petError.message
+                  : 'Error desconocido';
+              console.error(
+                `  ❌ Error creando mascota ${petData.nombre}:`,
+                errorMsg,
+              );
             }
           }
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-        console.error(`❌ Error procesando usuario ${userData.email}:`, errorMessage);
+        const errorMessage =
+          error instanceof Error ? error.message : 'Error desconocido';
+        console.error(
+          `❌ Error procesando usuario ${userData.email}:`,
+          errorMessage,
+        );
       }
     }
 

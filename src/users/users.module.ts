@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -17,8 +17,14 @@ import { MailerModule } from 'src/mailer/mailer.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Users, Pet, SaleOrder, Appointments, Veterinarian]),
-    VeterinariansModule,
+    TypeOrmModule.forFeature([
+      Users,
+      Pet,
+      SaleOrder,
+      Appointments,
+      Veterinarian,
+    ]),
+    forwardRef(() => VeterinariansModule),
     MailerModule,
     MulterModule.register({
       limits: {
@@ -27,7 +33,13 @@ import { MailerModule } from 'src/mailer/mailer.module';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, UsersRepository, SupabaseService, StorageService, UsersSeeder],
+  providers: [
+    UsersService,
+    UsersRepository,
+    SupabaseService,
+    StorageService,
+    UsersSeeder,
+  ],
   exports: [UsersService],
 })
 export class UsersModule {}

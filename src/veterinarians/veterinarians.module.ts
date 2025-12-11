@@ -4,7 +4,7 @@ import { VeterinariansService } from './veterinarians.service';
 import { VeterinariansController } from './veterinarians.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Veterinarian } from './entities/veterinarian.entity';
-import { VeterinariansRepository } from './vaterinarians.repository';
+import { VeterinariansRepository } from './veterinarians.repository';
 import { SupabaseModule } from 'src/supabase/supabase.module';
 import { StorageService } from 'src/supabase/storage.service';
 import { MulterModule } from '@nestjs/platform-express';
@@ -20,7 +20,7 @@ import { UsersModule } from 'src/users/users.module';
     SupabaseModule,
     MailerModule,
     forwardRef(() => AuthModule),
-    UsersModule,
+    forwardRef(() => UsersModule),
     MulterModule.register({
       limits: {
         fileSize: 50 * 1024 * 1024, // Limitar el tamaño a 50MB

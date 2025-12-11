@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
-import { VeterinariansRepository } from './vaterinarians.repository';
+import { VeterinariansRepository } from './veterinarians.repository';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import { ChangePasswordVeterinarianDto } from './dto/change-password-veterinarian.dto';
 import { Veterinarian } from './entities/veterinarian.entity';
