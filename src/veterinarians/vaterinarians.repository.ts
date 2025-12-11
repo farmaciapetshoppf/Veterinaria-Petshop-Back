@@ -158,11 +158,12 @@ export class VeterinariansRepository {
       }
 
       const vet = this.veterinarianRepository.create({
-        id: data?.user?.id || '', // Asegúrate de que esto nunca sea null
+        id: data?.user?.id || '',
         ...createVeterinarianDto,
         time: new Date(createVeterinarianDto.time),
         password: hashedPassword,
         role: Role.Veterinarian,
+        requirePasswordChange: true,
       });
 
       await this.veterinarianRepository.save(vet);
@@ -332,6 +333,7 @@ export class VeterinariansRepository {
 
       // Actualizamos en nuestra base de datos
       findEmail.password = await bcrypt.hash(newPassword, 10);
+      findEmail.requirePasswordChange = false;
       await this.veterinarianRepository.save(findEmail);
 
       return { message: 'Contraseña actualizada correctamente' };

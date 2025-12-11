@@ -53,4 +53,7 @@ export class Veterinarian {
 
   @OneToMany(() => MedicalRecordsPet, (record) => record.veterinarian)
   medicalRecords?: MedicalRecordsPet[];
+
+  @Column({ type: 'boolean', default: true })
+  requirePasswordChange: boolean;
 }
