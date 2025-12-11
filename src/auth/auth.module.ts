@@ -6,6 +6,7 @@ import { UsersModule } from 'src/users/users.module';
 import { AuthGuard } from './guards/auth.guard';
 import { MailerModule } from 'src/mailer/mailer.module';
 import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
     MailerModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard],
-  exports: [AuthService, AuthGuard],
+  providers: [AuthService, AuthGuard, RolesGuard],
+  exports: [AuthService, AuthGuard, RolesGuard],
 })
 export class AuthModule {}
