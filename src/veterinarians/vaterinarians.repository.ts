@@ -171,6 +171,9 @@ export class VeterinariansRepository {
         id: data?.user?.id || '',
         ...createVeterinarianDto,
         time: new Date(createVeterinarianDto.time),
+        horario_atencion: createVeterinarianDto.horario_atencion 
+          ? new Date(createVeterinarianDto.horario_atencion) 
+          : undefined,
         password: hashedPassword,
         role: Role.Veterinarian,
         requirePasswordChange: true,
@@ -238,6 +241,10 @@ export class VeterinariansRepository {
 
     if (updateVeterinarianDto.phone !== undefined) {
       updateData.phone = updateVeterinarianDto.phone;
+    }
+
+    if (updateVeterinarianDto.horario_atencion !== undefined) {
+      updateData.horario_atencion = new Date(updateVeterinarianDto.horario_atencion);
     }
 
     // Manejar la imagen por separado

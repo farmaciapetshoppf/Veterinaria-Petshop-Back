@@ -79,6 +79,17 @@ export class CreateVeterinarianDto {
   time: string;
 
   @ApiProperty({
+    description: 'Horario de atención del veterinario',
+    example: '2025-12-11T09:00:00Z',
+    type: 'string',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  horario_atencion?: string;
+
+  @ApiProperty({
     description: 'Estado de actividad del veterinario',
     example: true,
     type: 'boolean',
