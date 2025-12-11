@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/swagger';
 import { CreateVeterinarianDto } from './create-veterinarian.dto';
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateVeterinarianDto extends PartialType(CreateVeterinarianDto) {
@@ -21,4 +21,15 @@ export class UpdateVeterinarianDto extends PartialType(CreateVeterinarianDto) {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @ApiProperty({
+    description: 'Horario de atención actualizado',
+    example: '2025-12-11T09:00:00Z',
+    type: 'string',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  horario_atencion?: string;
 }

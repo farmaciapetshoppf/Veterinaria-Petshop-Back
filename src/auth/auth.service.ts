@@ -103,114 +103,113 @@ export class AuthService {
     }
   }
 
- async signIn(signInDto: SignInDto, res: Response): Promise<any> {
-  try {
-    const { data, error } = await this.supabaseService
-      .getClient()
-      .auth.signInWithPassword({
-        email: signInDto.email,
-        password: signInDto.password,
+  async signIn(signInDto: SignInDto, res: Response): Promise<any> {
+    try {
+      const { data, error } = await this.supabaseService
+        .getClient()
+        .auth.signInWithPassword({
+          email: signInDto.email,
+          password: signInDto.password,
+        });
+
+      if (error) throw new UnauthorizedException(error.message);
+
+      if (!data.session) {
+        throw new UnauthorizedException('No se devolvieron datos de sesión');
+      }
+
+      const email = data.user.email;
+      if (!email) {
+        throw new UnauthorizedException('El email no está disponible.');
+      }
+
+      let user;
+      let userType;
+
+      // Intentar obtener el usuario de la tabla de usuarios comunes
+      try {
+        user = await this.usersService.getUserByEmail(email);
+        userType = 'regular';
+      } catch {
+        // Si no está en usuarios, buscar en veterinarios
+        try {
+          user = await this.veterinariansService.getVeterinarianByEmail(email);
+          userType = 'veterinarian';
+        } catch {
+          throw new NotFoundException(
+            'Usuario no encontrado en ninguna tabla.',
+          );
+        }
+      }
+
+      res.cookie('access_token', data.session.access_token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax' as const,
+        path: '/',
+        maxAge: 24 * 3600 * 1000, // 24 horas
+        domain: 'localhost',
       });
 
-    if (error) throw new UnauthorizedException(error.message);
+      let responsePayload: any;
 
-    if (!data.session) {
-      throw new UnauthorizedException('No se devolvieron datos de sesión');
-    }
-
-    const email = data.user.email;
-    if (!email) {
-      throw new UnauthorizedException('El email no está disponible.');
-    }
-
-    let user;
-    let userType;
-
-    // Intentar obtener el usuario de la tabla de usuarios comunes
-    try {
-      user = await this.usersService.getUserByEmail(email);
-      userType = 'regular';
-    } catch {
-      // Si no está en usuarios, buscar en veterinarios
-      try {
-        user = await this.veterinariansService.getVeterinarianByEmail(email);
-        userType = 'veterinarian';
-      } catch {
-        throw new NotFoundException(
-          'Usuario no encontrado en ninguna tabla.',
-        );
+      if (userType === 'veterinarian') {
+        // Para veterinarios: devolver solo campos que existen en la entidad
+        responsePayload = {
+          id: user.supabaseUserId || user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+          address: '',
+          role: 'veterinarian',
+          user: user.email, // Usar email como fallback
+          country: '',
+          city: '',
+          isDeleted: false,
+          deletedAt: null,
+          pets: [],
+          // Agregar flag para que el frontend sepa que debe cambiar contraseña
+          requirePasswordChange: user.requirePasswordChange || false,
+        };
+      } else {
+        // Para usuarios regulares: usar todos los campos normalmente
+        responsePayload = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || null,
+          address: user.address || null,
+          role: user.role || userType,
+          user: user.user,
+          country: user.country,
+          city: user.city,
+          isDeleted: user.isDeleted,
+          deletedAt: user.deletedAt,
+          pets: user.pets || [],
+        };
       }
-    }
 
-    res.cookie('access_token', data.session.access_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax' as const,
-      path: '/',
-      maxAge: 24 * 3600 * 1000, // 24 horas
-      domain: 'localhost',
-    });
+      // Agregar campos específicos para veterinarios si aplica
+      if (userType === 'veterinarian') {
+        responsePayload.matricula = user.matricula;
+        responsePayload.description = user.description;
+        responsePayload.time = user.time;
+        responsePayload.isActive = user.isActive;
+      }
 
-    let responsePayload: any;
-
-    if (userType === 'veterinarian') {
-      // Para veterinarios: devolver solo campos que existen en la entidad
-      responsePayload = {
-        id: user.supabaseUserId || user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || '',
-        address: '',
-        role: 'veterinarian',
-        user: user.email, // Usar email como fallback
-        country: '',
-        city: '',
-        isDeleted: false,
-        deletedAt: null,
-        pets: [],
-        // Agregar flag para que el frontend sepa que debe cambiar contraseña
-        requirePasswordChange: user.requirePasswordChange || false,
+      return {
+        ...responsePayload,
+        token: data.session.access_token,
       };
-    } else {
-      // Para usuarios regulares: usar todos los campos normalmente
-      responsePayload = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || null,
-        address: user.address || null,
-        role: user.role || userType,
-        user: user.user,
-        country: user.country,
-        city: user.city,
-        isDeleted: user.isDeleted,
-        deletedAt: user.deletedAt,
-        pets: user.pets || [],
-      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Error en el proceso de inicio de sesión',
+      );
     }
-
-    // Agregar campos específicos para veterinarios si aplica
-    if (userType === 'veterinarian') {
-      responsePayload.matricula = user.matricula;
-      responsePayload.description = user.description;
-      responsePayload.time = user.time;
-      responsePayload.isActive = user.isActive;
-    }
-
-    return {
-      ...responsePayload,
-      token: data.session.access_token,
-    };
-
-  } catch (error) {
-    if (error instanceof HttpException) {
-      throw error;
-    }
-    throw new InternalServerErrorException(
-      'Error en el proceso de inicio de sesión',
-    );
   }
-}
 
   async signOut(res: Response): Promise<{ success: boolean; message: string }> {
     try {
