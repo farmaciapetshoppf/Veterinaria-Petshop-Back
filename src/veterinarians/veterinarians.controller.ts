@@ -5,7 +5,6 @@ import {
   Param,
   ParseUUIDPipe,
   Get,
-  Query,
   Patch,
   UseInterceptors,
   UploadedFile,
@@ -22,16 +21,15 @@ import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 
-  
- @Get('seeder')
-  seeder(){
+  @Get('seeder')
+  seeder() {
     return this.veterinariansService.seeder();
   }
-  @ApiOperation({ summary: 'Get all veterinarians (optionally filter active)' })
+
+  @ApiOperation({ summary: 'Get all active veterinarians' })
   @Get()
-  async fillAllVeterinarians(@Query('onlyActive') onlyActive?: string) {
-    const active = onlyActive === undefined ? true : onlyActive === 'true';
-    const data = await this.veterinariansService.fillAllVeterinarians(active);
+  async fillAllVeterinarians() {
+    const data = await this.veterinariansService.fillAllVeterinarians();
     return { message: 'Veterinarians retrieved', data };
   }
 
@@ -43,8 +41,6 @@ export class VeterinariansController {
       .fillByIdVeterinarians(id)
       .then((data) => ({ message: `Veterinarian ${id} retrieved`, data }));
   }
-
- 
 
   @ApiOperation({ summary: 'Create new veterinarian' })
   @Post()

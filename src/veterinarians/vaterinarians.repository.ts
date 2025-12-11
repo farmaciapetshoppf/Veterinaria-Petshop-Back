@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -58,28 +60,22 @@ export class VeterinariansRepository {
       .join('');
   }
 
-  async fillAll(onlyActive?: boolean) {
+  async fillAll() {
     const relations = [
       'appointments',
       'appointments.pet',
       'appointments.pet.owner',
     ];
 
-    if (onlyActive === false) {
-      const vets = await this.veterinarianRepository.find({ relations });
-      vets.forEach((v) => {
-        if ((v as any).password) delete (v as any).password;
-      });
-      return vets;
-    }
-
     const vets = await this.veterinarianRepository.find({
       where: { isActive: true },
       relations,
     });
+
     vets.forEach((v) => {
       if ((v as any).password) delete (v as any).password;
     });
+
     return vets;
   }
 
