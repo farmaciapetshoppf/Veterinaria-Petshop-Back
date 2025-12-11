@@ -3,7 +3,30 @@ import { MailerService as NestMailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class MailerService {
+  private readonly adminEmail = 'abiiibreazuuu@gmail.com';
+
   constructor(private readonly nestMailerService: NestMailerService) {}
+
+  /**
+   * Método auxiliar para enviar copia a admin
+   */
+  private async sendCopyToAdmin(subject: string, originalTo: string, context: any, template?: string) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: this.adminEmail,
+        subject: `[COPIA] ${subject} (Enviado a: ${originalTo})`,
+        template: template || 'welcome',
+        context: {
+          ...context,
+          isCopy: true,
+          originalRecipient: originalTo,
+        },
+      });
+      console.log(`📧 Copia enviada a admin (${this.adminEmail})`);
+    } catch (error) {
+      console.error('⚠️  Error enviando copia a admin:', error);
+    }
+  }
 
   /**
    * Enviar email de confirmación de turno
@@ -21,7 +44,7 @@ export class MailerService {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '✅ Turno Confirmado - Huellitas Pet',
-        template: './appointment-confirmation',
+        template: 'appointment-confirmation',
         context: {
           userName: context.userName,
           appointmentDate: context.appointmentDate,
@@ -32,6 +55,14 @@ export class MailerService {
         },
       });
       console.log(`✅ Email de confirmación de turno enviado a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '✅ Turno Confirmado - Huellitas Pet',
+        context.to,
+        context,
+        'appointment-confirmation'
+      );
     } catch (error) {
       console.error('❌ Error enviando email de confirmación de turno:', error);
       throw error;
@@ -54,7 +85,7 @@ export class MailerService {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '🐾 Recordatorio: Tu turno es mañana',
-        template: './appointment-reminder',
+        template: 'appointment-reminder',
         context: {
           userName: context.userName,
           appointmentDate: context.appointmentDate,
@@ -65,6 +96,14 @@ export class MailerService {
         },
       });
       console.log(`✅ Recordatorio de turno enviado a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '🐾 Recordatorio: Tu turno es mañana',
+        context.to,
+        context,
+        'appointment-reminder'
+      );
     } catch (error) {
       console.error('❌ Error enviando recordatorio de turno:', error);
       throw error;
@@ -90,7 +129,7 @@ export class MailerService {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '✅ Compra Confirmada - Huellitas Pet',
-        template: './purchase-confirmation',
+        template: 'purchase-confirmation',
         context: {
           userName: context.userName,
           orderId: context.orderId,
@@ -99,6 +138,14 @@ export class MailerService {
         },
       });
       console.log(`✅ Email de confirmación de compra enviado a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '✅ Compra Confirmada - Huellitas Pet',
+        context.to,
+        context,
+        'purchase-confirmation'
+      );
     } catch (error) {
       console.error('❌ Error enviando email de confirmación de compra:', error);
       throw error;
@@ -143,10 +190,18 @@ export class MailerService {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '📋 Registro Médico de ' + context.petName,
-        template: './medical-record-notification',
+        template: 'medical-record-notification',
         context,
       });
       console.log(`✅ Notificación de registro médico enviada a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '📋 Registro Médico de ' + context.petName,
+        context.to,
+        context,
+        'medical-record-notification'
+      );
     } catch (error) {
       console.error('❌ Error enviando notificación de registro médico:', error);
       throw error;
@@ -156,15 +211,23 @@ export class MailerService {
   /**
    * Enviar email de bienvenida
    */
-  async sendWelcomeEmail(context: { to: string; userName: string }) {
+  async sendWelcomeEmail(context: { to: string; userName: string; temporaryPassword?: string }) {
     try {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '🎉 Bienvenido a Huellitas Pet',
-        template: './welcome',
+        template: 'welcome',
         context,
       });
       console.log(`✅ Email de bienvenida enviado a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '🎉 Bienvenido a Huellitas Pet',
+        context.to,
+        context,
+        'welcome'
+      );
     } catch (error) {
       console.error('❌ Error enviando email de bienvenida:', error);
       throw error;
@@ -185,10 +248,18 @@ export class MailerService {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '💉 Recordatorio de Vacunación - ' + context.petName,
-        template: './vaccine-reminder',
+        template: 'vaccine-reminder',
         context,
       });
       console.log(`✅ Recordatorio de vacuna enviado a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '💉 Recordatorio de Vacunación - ' + context.petName,
+        context.to,
+        context,
+        'vaccine-reminder'
+      );
     } catch (error) {
       console.error('❌ Error enviando recordatorio de vacuna:', error);
       throw error;
@@ -208,13 +279,21 @@ export class MailerService {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '🎂 Feliz Cumpleaños ' + context.petName + '!',
-        template: './pet-birthday',
+        template: 'pet-birthday',
         context: {
           ...context,
           moreThanOne: context.age > 1,
         },
       });
       console.log(`✅ Email de cumpleaños enviado a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '🎂 Feliz Cumpleaños ' + context.petName + '!',
+        context.to,
+        { ...context, moreThanOne: context.age > 1 },
+        'pet-birthday'
+      );
     } catch (error) {
       console.error('❌ Error enviando email de cumpleaños:', error);
       throw error;
@@ -238,10 +317,18 @@ export class MailerService {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '📦 Tu pedido fue enviado - Huellitas Pet',
-        template: './order-shipped',
+        template: 'order-shipped',
         context,
       });
       console.log(`✅ Confirmación de envío enviada a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '📦 Tu pedido fue enviado - Huellitas Pet',
+        context.to,
+        context,
+        'order-shipped'
+      );
     } catch (error) {
       console.error('❌ Error enviando confirmación de envío:', error);
       throw error;
@@ -261,10 +348,18 @@ export class MailerService {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '⭐ ¿Qué te pareció tu compra? - Huellitas Pet',
-        template: './review-request',
+        template: 'review-request',
         context,
       });
       console.log(`✅ Solicitud de reseña enviada a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '⭐ ¿Qué te pareció tu compra? - Huellitas Pet',
+        context.to,
+        context,
+        'review-request'
+      );
     } catch (error) {
       console.error('❌ Error enviando solicitud de reseña:', error);
       throw error;
@@ -292,12 +387,74 @@ export class MailerService {
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '📅 Tu agenda de la semana - Huellitas Pet',
-        template: './weekly-schedule-vet',
+        template: 'weekly-schedule-vet',
         context,
       });
       console.log(`✅ Resumen semanal enviado a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '📅 Tu agenda de la semana - Huellitas Pet',
+        context.to,
+        context,
+        'weekly-schedule-vet'
+      );
     } catch (error) {
       console.error('❌ Error enviando resumen semanal:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar reporte diario a administradores
+   */
+  async sendAdminDailyReport(context: {
+    to: string;
+    adminName: string;
+    date: string;
+    totalAppointments: number;
+    lowStockProducts: number;
+    newVeterinarians: number;
+    appointments: Array<{
+      petName: string;
+      ownerName: string;
+      veterinarianName: string;
+      time: string;
+      reason: string;
+      status: string;
+    }>;
+    products: Array<{
+      name: string;
+      stock: number;
+      critical: boolean;
+    }>;
+    veterinarians: Array<{
+      name: string;
+      email: string;
+      phone: string;
+      matricula: string;
+    }>;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '📊 Reporte Diario de Administración - Huellitas Pet',
+        template: 'admin-daily-report',
+        context,
+      });
+      console.log(`✅ Reporte diario enviado a ${context.to}`);
+      
+      // Enviar copia a admin principal si es diferente
+      if (context.to !== this.adminEmail) {
+        await this.sendCopyToAdmin(
+          '📊 Reporte Diario de Administración - Huellitas Pet',
+          context.to,
+          context,
+          'admin-daily-report'
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error enviando reporte diario:', error);
       throw error;
     }
   }

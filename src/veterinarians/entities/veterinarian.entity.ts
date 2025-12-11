@@ -26,6 +26,9 @@ export class Veterinarian {
   @Column({ type: 'date', nullable: false })
   time: Date;
 
+  @Column({ type: 'timestamp', nullable: true })
+  horario_atencion: Date;
+
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
