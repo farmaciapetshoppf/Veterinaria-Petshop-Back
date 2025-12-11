@@ -105,8 +105,6 @@ export class AuthService {
 
  async signIn(signInDto: SignInDto, res: Response): Promise<any> {
   try {
-    console.log('🔐 Intentando login con:', { email: signInDto.email, passwordLength: signInDto.password?.length });
-    
     const { data, error } = await this.supabaseService
       .getClient()
       .auth.signInWithPassword({
@@ -114,10 +112,7 @@ export class AuthService {
         password: signInDto.password,
       });
 
-    if (error) {
-      console.error('❌ Error de Supabase en signIn:', error);
-      throw new UnauthorizedException(error.message);
-    }
+    if (error) throw new UnauthorizedException(error.message);
 
     if (!data.session) {
       throw new UnauthorizedException('No se devolvieron datos de sesión');
@@ -173,11 +168,8 @@ export class AuthService {
         isDeleted: false,
         deletedAt: null,
         pets: [],
+        // Agregar flag para que el frontend sepa que debe cambiar contraseña
         requirePasswordChange: user.requirePasswordChange || false,
-        matricula: user.matricula,
-        description: user.description,
-        time: user.time,
-        isActive: user.isActive,
       };
     } else {
       // Para usuarios regulares: usar todos los campos normalmente
@@ -187,7 +179,7 @@ export class AuthService {
         email: user.email,
         phone: user.phone || null,
         address: user.address || null,
-        role: user.role,
+        role: user.role || userType,
         user: user.user,
         country: user.country,
         city: user.city,
@@ -195,6 +187,14 @@ export class AuthService {
         deletedAt: user.deletedAt,
         pets: user.pets || [],
       };
+    }
+
+    // Agregar campos específicos para veterinarios si aplica
+    if (userType === 'veterinarian') {
+      responsePayload.matricula = user.matricula;
+      responsePayload.description = user.description;
+      responsePayload.time = user.time;
+      responsePayload.isActive = user.isActive;
     }
 
     return {

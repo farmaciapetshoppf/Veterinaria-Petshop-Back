@@ -274,6 +274,9 @@ export class SaleOrdersService {
         throw new NotFoundException(`Product ${productId} not found`);
       }
 
+      const currentQuantity = item.quantity;
+      const difference = newQuantity - currentQuantity;
+
       // Validar stock disponible para la nueva cantidad (sin descontar)
       if (newQuantity > 0 && product.stock < newQuantity) {
         throw new BadRequestException(

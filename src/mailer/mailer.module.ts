@@ -13,14 +13,13 @@ import { google } from 'googleapis';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        // Configurar OAuth2
         const CLIENT_ID = configService.get<string>('GOOGLE_MAIL_CLIENT_ID');
         const CLIENT_SECRET = configService.get<string>('GOOGLE_MAIL_CLIENT_SECRET');
         const REFRESH_TOKEN = configService.get<string>('GOOGLE_REFRESH_TOKEN');
         const REDIRECT_URI = configService.get<string>('GOOGLE_REDIRECT_URI');
         const MAIL_USER = configService.get<string>('MAIL_USER');
 
-        // Validar que existan las credenciales
+        // Si no hay credenciales, usar modo básico
         if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN) {
           console.warn('⚠️  Credenciales de Google OAuth incompletas. Mailer en modo básico (emails no se enviarán).');
           return {
