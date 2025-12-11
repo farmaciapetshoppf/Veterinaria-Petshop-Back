@@ -1,4 +1,3 @@
-// src/auth/guards/password-change.guard.ts
 import {
   Injectable,
   CanActivate,
@@ -24,11 +23,18 @@ export class PasswordChangeGuard implements CanActivate {
       user.role === Role.Veterinarian &&
       user.requirePasswordChange === true
     ) {
-      const allowedPaths = ['/veterinarians/change-password', '/auth/signout'];
+      const allowedPaths = [
+        '/veterinarians/change-password',
+        '/auth/signout',
+        '/auth/signin',
+      ];
 
       // Permitir solo rutas específicas
       const currentPath = request.route.path;
-      if (!allowedPaths.some((path) => currentPath.includes(path))) {
+      console.log('Current path:', request.route.path);
+      // Usar request.originalUrl en lugar de request.route.path
+      const currentUrl = request.originalUrl;
+      if (!allowedPaths.some((path) => currentUrl.includes(path))) {
         throw new UnauthorizedException(
           'Debe cambiar su contraseña temporal antes de continuar',
         );
