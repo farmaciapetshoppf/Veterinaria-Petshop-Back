@@ -97,19 +97,33 @@ export class VeterinariansRepository {
 
   async create(createVeterinarianDto: CreateVeterinarianDto) {
     const tempPassword = this.generateTempPassword();
-    // Seguimos generando el hash para nuestra base de datos
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    // Resto del código para normalizar el email
     const rawEmail =
       (createVeterinarianDto as any).email ??
       (createVeterinarianDto as any).mail;
+
     if (!rawEmail) {
       throw new BadRequestException(
         'El veterinario debe tener un email válido',
       );
     }
+
     const email = rawEmail.trim().toLowerCase();
+    const matricula = createVeterinarianDto.matricula; // Asegúrate de que la matricula esté en el DTO
+
+    // Verificar si el email o la matrícula ya existen en la base de datos
+    const existingVeterinarianByEmail =
+      await this.veterinarianRepository.findOne({ where: { email } });
+    if (existingVeterinarianByEmail) {
+      throw new ConflictException('El email ya está registrado.');
+    }
+
+    const existingVeterinarianByMatricula =
+      await this.veterinarianRepository.findOne({ where: { matricula } });
+    if (existingVeterinarianByMatricula) {
+      throw new ConflictException('La matrícula ya está registrada.');
+    }
 
     try {
       // Crear usuario en Supabase Auth
@@ -124,21 +138,18 @@ export class VeterinariansRepository {
         const errorMessage = authError.message.toLowerCase();
         const errorCode = (authError as any).code;
 
-        // ⛔ email inválido
         if (errorCode === 'email_address_invalid') {
           throw new BadRequestException(
             'El email ingresado no tiene un formato válido.',
           );
         }
 
-        // 🕒 te pasaste del límite de envíos de email
         if (errorCode === 'over_email_send_rate_limit') {
           throw new BadRequestException(
             'Estás intentando crear cuentas demasiado rápido. Esperá unos segundos e intentá de nuevo.',
           );
         }
 
-        // 🟡 usuario ya registrado
         if (
           errorMessage.includes('user') &&
           (errorMessage.includes('already') ||
@@ -151,7 +162,6 @@ export class VeterinariansRepository {
         }
 
         console.error('Error de Supabase al crear veterinario:', authError);
-
         throw new InternalServerErrorException(
           'Error de autenticación con Supabase',
         );
@@ -176,36 +186,25 @@ export class VeterinariansRepository {
     } catch (error) {
       console.error('Error al crear veterinario:', error);
 
-      // 🔁 errores de unicidad en la base de datos
       if (
         error instanceof QueryFailedError &&
         (error as any).code === '23505'
       ) {
         const detail: string = (error as any).detail ?? '';
 
-        if (detail.includes('(email)=')) {
-          throw new ConflictException('El email ya está registrado.');
-        }
-
-        if (detail.includes('(matricula)=')) {
-          throw new ConflictException('La matrícula ya está registrada.');
-        }
-
         if (detail.includes('(phone)=')) {
           throw new ConflictException('El teléfono ya está registrado.');
         }
 
-        // fallback genérico
         throw new ConflictException(
           'Ya existe un veterinario con datos únicos repetidos.',
         );
       }
 
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-
-      if (error instanceof BadRequestException) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
 

@@ -1,3 +1,4 @@
+// src/auth/guards/password-change.guard.ts
 import {
   Injectable,
   CanActivate,
@@ -5,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
+import { Role } from '../enum/roles.enum';
 
 @Injectable()
 export class PasswordChangeGuard implements CanActivate {
@@ -14,10 +16,19 @@ export class PasswordChangeGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    // Si el usuario es veterinario y requiere cambio de contraseña
-    if (user?.role === 'veterinarian' && user?.requirePasswordChange) {
-      // Solo permitir acceso a la ruta de cambio de contraseña
-      if (request.route.path !== '/veterinarians/change-password') {
+    if (!user || user.role === Role.Admin) {
+      return true;
+    }
+
+    if (
+      user.role === Role.Veterinarian &&
+      user.requirePasswordChange === true
+    ) {
+      const allowedPaths = ['/veterinarians/change-password', '/auth/signout'];
+
+      // Permitir solo rutas específicas
+      const currentPath = request.route.path;
+      if (!allowedPaths.some((path) => currentPath.includes(path))) {
         throw new UnauthorizedException(
           'Debe cambiar su contraseña temporal antes de continuar',
         );
