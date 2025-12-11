@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -58,28 +60,22 @@ export class VeterinariansRepository {
       .join('');
   }
 
-  async fillAll(onlyActive?: boolean) {
+  async fillAll() {
     const relations = [
       'appointments',
       'appointments.pet',
       'appointments.pet.owner',
     ];
 
-    if (onlyActive === false) {
-      const vets = await this.veterinarianRepository.find({ relations });
-      vets.forEach((v) => {
-        if ((v as any).password) delete (v as any).password;
-      });
-      return vets;
-    }
-
     const vets = await this.veterinarianRepository.find({
       where: { isActive: true },
       relations,
     });
+
     vets.forEach((v) => {
       if ((v as any).password) delete (v as any).password;
     });
+
     return vets;
   }
 
@@ -101,19 +97,33 @@ export class VeterinariansRepository {
 
   async create(createVeterinarianDto: CreateVeterinarianDto) {
     const tempPassword = this.generateTempPassword();
-    // Seguimos generando el hash para nuestra base de datos
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    // Resto del código para normalizar el email
     const rawEmail =
       (createVeterinarianDto as any).email ??
       (createVeterinarianDto as any).mail;
+
     if (!rawEmail) {
       throw new BadRequestException(
         'El veterinario debe tener un email válido',
       );
     }
+
     const email = rawEmail.trim().toLowerCase();
+    const matricula = createVeterinarianDto.matricula; // Asegúrate de que la matricula esté en el DTO
+
+    // Verificar si el email o la matrícula ya existen en la base de datos
+    const existingVeterinarianByEmail =
+      await this.veterinarianRepository.findOne({ where: { email } });
+    if (existingVeterinarianByEmail) {
+      throw new ConflictException('El email ya está registrado.');
+    }
+
+    const existingVeterinarianByMatricula =
+      await this.veterinarianRepository.findOne({ where: { matricula } });
+    if (existingVeterinarianByMatricula) {
+      throw new ConflictException('La matrícula ya está registrada.');
+    }
 
     try {
       // Crear usuario en Supabase Auth
@@ -128,21 +138,18 @@ export class VeterinariansRepository {
         const errorMessage = authError.message.toLowerCase();
         const errorCode = (authError as any).code;
 
-        // ⛔ email inválido
         if (errorCode === 'email_address_invalid') {
           throw new BadRequestException(
             'El email ingresado no tiene un formato válido.',
           );
         }
 
-        // 🕒 te pasaste del límite de envíos de email
         if (errorCode === 'over_email_send_rate_limit') {
           throw new BadRequestException(
             'Estás intentando crear cuentas demasiado rápido. Esperá unos segundos e intentá de nuevo.',
           );
         }
 
-        // 🟡 usuario ya registrado
         if (
           errorMessage.includes('user') &&
           (errorMessage.includes('already') ||
@@ -155,18 +162,18 @@ export class VeterinariansRepository {
         }
 
         console.error('Error de Supabase al crear veterinario:', authError);
-
         throw new InternalServerErrorException(
           'Error de autenticación con Supabase',
         );
       }
 
       const vet = this.veterinarianRepository.create({
-        id: data?.user?.id || '', // Asegúrate de que esto nunca sea null
+        id: data?.user?.id || '',
         ...createVeterinarianDto,
         time: new Date(createVeterinarianDto.time),
         password: hashedPassword,
         role: Role.Veterinarian,
+        requirePasswordChange: true,
       });
 
       await this.veterinarianRepository.save(vet);
@@ -179,36 +186,25 @@ export class VeterinariansRepository {
     } catch (error) {
       console.error('Error al crear veterinario:', error);
 
-      // 🔁 errores de unicidad en la base de datos
       if (
         error instanceof QueryFailedError &&
         (error as any).code === '23505'
       ) {
         const detail: string = (error as any).detail ?? '';
 
-        if (detail.includes('(email)=')) {
-          throw new ConflictException('El email ya está registrado.');
-        }
-
-        if (detail.includes('(matricula)=')) {
-          throw new ConflictException('La matrícula ya está registrada.');
-        }
-
         if (detail.includes('(phone)=')) {
           throw new ConflictException('El teléfono ya está registrado.');
         }
 
-        // fallback genérico
         throw new ConflictException(
           'Ya existe un veterinario con datos únicos repetidos.',
         );
       }
 
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-
-      if (error instanceof BadRequestException) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
 
@@ -336,6 +332,7 @@ export class VeterinariansRepository {
 
       // Actualizamos en nuestra base de datos
       findEmail.password = await bcrypt.hash(newPassword, 10);
+      findEmail.requirePasswordChange = false;
       await this.veterinarianRepository.save(findEmail);
 
       return { message: 'Contraseña actualizada correctamente' };
