@@ -1,5 +1,5 @@
 // veterinarians.module.ts
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { VeterinariansController } from './veterinarians.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';

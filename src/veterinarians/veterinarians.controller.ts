@@ -5,10 +5,10 @@ import {
   Param,
   ParseUUIDPipe,
   Get,
-  Query,
   Patch,
   UseInterceptors,
   UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
@@ -16,17 +16,24 @@ import { ChangePasswordVeterinarianDto } from './dto/change-password-veterinaria
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Veterinarians')
 @Controller('veterinarians')
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 
-  @ApiOperation({ summary: 'Get all veterinarians (optionally filter active)' })
+  @Get('seeder')
+  seeder() {
+    return this.veterinariansService.seeder();
+  }
+
+  @ApiOperation({ summary: 'Get all active veterinarians' })
   @Get()
-  async fillAllVeterinarians(@Query('onlyActive') onlyActive?: string) {
-    const active = onlyActive === undefined ? true : onlyActive === 'true';
-    const data = await this.veterinariansService.fillAllVeterinarians(active);
+  async fillAllVeterinarians() {
+    const data = await this.veterinariansService.fillAllVeterinarians();
     return { message: 'Veterinarians retrieved', data };
   }
 
@@ -45,6 +52,8 @@ export class VeterinariansController {
     return this.veterinariansService.createVeterinarian(createVeterinarian);
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.Veterinarian)
   @ApiOperation({ summary: 'Update veterinarian profile' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({

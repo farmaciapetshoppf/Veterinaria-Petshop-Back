@@ -1,5 +1,6 @@
 import { Category } from 'src/categories/entities/category.entity';
 import { SaleOrderProduct } from 'src/sale-orders/entities/sale-order-product.entity';
+import { ProductImage } from './product-image.entity';
 import {
   Column,
   DeleteDateColumn,
@@ -17,8 +18,9 @@ export class Products {
 
   @Column({
     type: 'varchar',
-    length: 50,
+    length: 150,
     unique: true,
+    nullable: true,
   })
   name: string;
 
@@ -52,6 +54,8 @@ export class Products {
   @DeleteDateColumn()
   deletedAt: Date | null;
 
+  @OneToMany(() => ProductImage, (image) => image.product, { cascade: true })
+  images: ProductImage[];
   @ManyToOne(() => Category, (category) => category.products)
   @JoinColumn({ name: 'category_id' })
   category: Category;

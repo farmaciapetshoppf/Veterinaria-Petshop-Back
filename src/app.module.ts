@@ -21,6 +21,7 @@ import { MailerModule } from './mailer/mailer.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
 import { MedicalRecordsPetModule } from './medical-records-pet/medical-records-pet.module';
+import { MapsModule } from './maps/maps.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { MedicalRecordsPetModule } from './medical-records-pet/medical-records-p
     MailerModule,
     ReviewsModule,
     MedicalRecordsPetModule,
+    MapsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
