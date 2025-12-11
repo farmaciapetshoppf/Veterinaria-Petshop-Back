@@ -274,9 +274,6 @@ export class SaleOrdersService {
         throw new NotFoundException(`Product ${productId} not found`);
       }
 
-      const currentQuantity = item.quantity;
-      const difference = newQuantity - currentQuantity;
-
       // Validar stock disponible para la nueva cantidad (sin descontar)
       if (newQuantity > 0 && product.stock < newQuantity) {
         throw new BadRequestException(
@@ -444,7 +441,7 @@ export class SaleOrdersService {
           currency_id: 'ARS',
         })),
         back_urls: backUrls,
-        notification_url: `${publicBackendUrl}/sale-orders/webhook`,
+        notification_url: `${publicBackendUrl.replace(/\/$/, '')}/sale-orders/webhook`,
         external_reference: String(cart.id),
         metadata: {
           order_id: cart.id,
