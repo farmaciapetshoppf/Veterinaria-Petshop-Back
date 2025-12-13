@@ -19,6 +19,7 @@ import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @ApiTags('Veterinarians')
 @Controller('veterinarians')
@@ -52,7 +53,7 @@ export class VeterinariansController {
     return this.veterinariansService.createVeterinarian(createVeterinarian);
   }
 
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Veterinarian)
   @ApiOperation({ summary: 'Update veterinarian profile' })
   @ApiConsumes('multipart/form-data')
