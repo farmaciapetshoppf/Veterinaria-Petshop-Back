@@ -1,33 +1,19 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
-import { SupabaseService } from './supabase/supabase.service';
 import { MailerService } from './mailer/mailer.service';
+import { SupabaseService } from './supabase/supabase.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly supabaseService: SupabaseService,
     private readonly mailerService: MailerService,
+    private readonly supabaseService: SupabaseService,
   ) {}
 
   @Get()
   getHello(): string {
     return this.appService.getHello();
-  }
-  @Get('test-supabase')
-  async testSupabase() {
-    const { data, error } = await this.supabaseService
-      .getClient()
-      .from('test_connection')
-      .select('*')
-      .limit(1);
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, data };
   }
 
   @Get('test-email')
@@ -64,10 +50,26 @@ export class AppController {
   @Get('clear-supabase-users')
   async clearSupabaseUsers() {
     try {
-      // Obtener todos los usuarios de Supabase Auth
-      const { data: { users }, error } = await this.supabaseService
-        .getClient()
-        .auth.admin.listUsers();
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!serviceRoleKey) {
+        return { 
+          success: false, 
+          message: 'SUPABASE_SERVICE_ROLE_KEY no está configurada en .env' 
+        };
+      }
+
+      // Crear cliente admin con service role key
+      const { createClient } = require('@supabase/supabase-js');
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+
+      // Obtener todos los usuarios
+      const { data: { users }, error } = await adminClient.auth.admin.listUsers();
 
       if (error) {
         return { success: false, error: error.message };
@@ -76,18 +78,19 @@ export class AppController {
       // Eliminar cada usuario
       let deleted = 0;
       let errors = 0;
+      const results: Array<{ email: string; success: boolean; error?: string }> = [];
       
       for (const user of users) {
-        const { error: deleteError } = await this.supabaseService
-          .getClient()
-          .auth.admin.deleteUser(user.id);
+        const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
         
         if (deleteError) {
           console.error(`❌ Error eliminando ${user.email}:`, deleteError.message);
           errors++;
+          results.push({ email: user.email, success: false, error: deleteError.message });
         } else {
           console.log(`✅ Usuario eliminado: ${user.email}`);
           deleted++;
+          results.push({ email: user.email, success: true });
         }
       }
 
@@ -95,7 +98,8 @@ export class AppController {
         success: true, 
         message: `Usuarios eliminados: ${deleted}, Errores: ${errors}`,
         deleted,
-        errors
+        errors,
+        details: results
       };
     } catch (error) {
       return { 

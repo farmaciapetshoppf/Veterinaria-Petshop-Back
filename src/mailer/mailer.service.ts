@@ -70,6 +70,44 @@ export class MailerService {
   }
 
   /**
+   * Enviar notificación de turno asignado al veterinario
+   */
+  async sendVeterinarianAppointmentAssigned(context: {
+    to: string;
+    veterinarianName: string;
+    date: string;
+    time: string;
+    reason: string;
+    status: string;
+    petName: string;
+    ownerName: string;
+    ownerPhone: string;
+    ownerEmail: string;
+    notes?: string;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '🩺 Nuevo Turno Asignado - Huellitas Pet',
+        template: 'veterinarian-appointment-assigned',
+        context,
+      });
+      console.log(`✅ Email de turno asignado enviado al veterinario ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '🩺 Nuevo Turno Asignado - Huellitas Pet',
+        context.to,
+        context,
+        'veterinarian-appointment-assigned'
+      );
+    } catch (error) {
+      console.error('❌ Error enviando email de turno asignado al veterinario:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Enviar recordatorio de turno
    */
   async sendAppointmentReminder(context: {

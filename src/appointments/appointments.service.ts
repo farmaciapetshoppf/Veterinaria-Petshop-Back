@@ -311,16 +311,35 @@ export class AppointmentsService {
     try {
       const appointmentDate = new Date(appointment.date);
       const dateStr = appointmentDate.toLocaleDateString('es-AR');
+      const timeStr = appointment.time instanceof Date ? appointment.time.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : String(appointment.time);
 
+      // Enviar confirmación al cliente
       await this.mailerService.sendAppointmentConfirmation({
         to: appointment.user.email,
         userName: appointment.user.name || 'Cliente',
         appointmentDate: dateStr,
-        appointmentTime: appointment.time instanceof Date ? appointment.time.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : String(appointment.time),
+        appointmentTime: timeStr,
         petName: appointment.pet?.nombre || 'N/A',
         veterinarianName: appointment.veterinarian?.name || 'N/A',
         reason: (appointment as any).reason || 'Consulta general',
       });
+
+      // Enviar notificación al veterinario
+      if (appointment.veterinarian?.email) {
+        await this.mailerService.sendVeterinarianAppointmentAssigned({
+          to: appointment.veterinarian.email,
+          veterinarianName: appointment.veterinarian.name,
+          date: dateStr,
+          time: timeStr,
+          reason: (appointment as any).reason || 'Consulta general',
+          status: String(appointment.status || 'Pendiente'),
+          petName: appointment.pet?.nombre || 'N/A',
+          ownerName: appointment.user.name || 'N/A',
+          ownerPhone: appointment.user.phone || 'No especificado',
+          ownerEmail: appointment.user.email,
+          notes: (appointment as any).notes,
+        });
+      }
     } catch (error) {
       console.error('❌ Error enviando confirmación de turno:', error);
     }
