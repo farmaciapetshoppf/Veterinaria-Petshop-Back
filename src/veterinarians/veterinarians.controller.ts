@@ -25,6 +25,12 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 @Controller('veterinarians')
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
+   
+
+  @Get('seeder')
+seeder(){
+    return this.veterinariansService.seeder();
+}
 
   @Get('seeder')
   seeder() {
