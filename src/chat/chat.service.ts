@@ -5,6 +5,8 @@ import { Conversation } from './entities/conversation.entity';
 import { Message } from './entities/message.entity';
 import { Users } from '../users/entities/user.entity';
 import { Veterinarian } from '../veterinarians/entities/veterinarian.entity';
+import { MailerService } from '../mailer/mailer.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ChatService {
@@ -17,6 +19,8 @@ export class ChatService {
     private usersRepository: Repository<Users>,
     @InjectRepository(Veterinarian)
     private veterinarianRepository: Repository<Veterinarian>,
+    private mailerService: MailerService,
+    private configService: ConfigService,
   ) {}
 
   // Obtener todas las conversaciones de un usuario con detalles de participantes
@@ -190,6 +194,43 @@ export class ChatService {
     conversation.lastMessage = data.content;
     conversation.lastMessageAt = new Date();
     await this.conversationRepository.save(conversation);
+
+    // Enviar notificación por email al destinatario
+    try {
+      // Obtener información del remitente y destinatario
+      const recipientId = conversation.participants.find(id => id !== data.senderId);
+      
+      if (recipientId) {
+        const senderInfo = await this.getParticipantsInfo([data.senderId]);
+        const recipientInfo = await this.getParticipantsInfo([recipientId]);
+
+        if (senderInfo.length > 0 && recipientInfo.length > 0) {
+          const sender = senderInfo[0];
+          const recipient = recipientInfo[0];
+          
+          // Preparar preview del mensaje (primeros 100 caracteres)
+          const messagePreview = data.content.length > 100 
+            ? data.content.substring(0, 100) + '...'
+            : data.content;
+
+          // URL del frontend para ver la conversación
+          const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3002';
+          const conversationUrl = `${frontendUrl}/messages/${data.conversationId}`;
+
+          // Enviar email de notificación
+          await this.mailerService.sendNewMessageNotification({
+            to: recipient.email,
+            recipientName: recipient.name,
+            senderName: sender.name,
+            messagePreview,
+            conversationUrl,
+          });
+        }
+      }
+    } catch (error) {
+      // No lanzar error para no interrumpir el envío del mensaje
+      console.error('Error enviando notificación por email:', error);
+    }
 
     return savedMessage;
   }

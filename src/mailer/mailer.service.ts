@@ -496,4 +496,33 @@ export class MailerService {
       throw error;
     }
   }
+
+  /**
+   * Enviar notificación de mensaje nuevo en chat
+   */
+  async sendNewMessageNotification(context: {
+    to: string;
+    recipientName: string;
+    senderName: string;
+    messagePreview: string;
+    conversationUrl: string;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '💬 Tienes un mensaje nuevo - Huellitas Pet',
+        template: 'new-message',
+        context: {
+          recipientName: context.recipientName,
+          senderName: context.senderName,
+          messagePreview: context.messagePreview,
+          conversationUrl: context.conversationUrl,
+        },
+      });
+      console.log(`✅ Notificación de mensaje enviada a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando notificación de mensaje:', error);
+      throw error;
+    }
+  }
 }
