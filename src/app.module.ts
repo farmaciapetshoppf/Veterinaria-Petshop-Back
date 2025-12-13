@@ -22,6 +22,7 @@ import { UploadModule } from './upload/upload.module';
 import { MedicalRecordsPetModule } from './medical-records-pet/medical-records-pet.module';
 import { ChatModule } from './chat/chat.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { MapsModule } from './maps/maps.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { SupabaseModule } from './supabase/supabase.module';
     ReviewsModule,
     MedicalRecordsPetModule,
     ChatModule,
+    MapsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
