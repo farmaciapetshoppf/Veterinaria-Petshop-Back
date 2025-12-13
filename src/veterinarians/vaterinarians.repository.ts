@@ -100,7 +100,8 @@ export class VeterinariansRepository {
   }
 
   async create(createVeterinarianDto: CreateVeterinarianDto) {
-    const tempPassword = this.generateTempPassword();
+    // Usar contraseña del frontend si viene, sino generar una
+    const tempPassword = createVeterinarianDto.temporaryPassword || this.generateTempPassword();
     // Seguimos generando el hash para nuestra base de datos
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 

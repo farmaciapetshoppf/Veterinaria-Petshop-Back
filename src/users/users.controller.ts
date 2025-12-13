@@ -8,6 +8,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Put,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Role } from 'src/auth/enum/roles.enum';
@@ -21,11 +22,15 @@ import {
 } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from './entities/user.entity';
+import { SupabaseService } from 'src/supabase/supabase.service';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly supabaseService: SupabaseService,
+  ) {}
 
   @HttpCode(200)
   @ApiOperation({ summary: 'Get all users' })

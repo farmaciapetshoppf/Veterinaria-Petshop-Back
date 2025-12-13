@@ -16,15 +16,12 @@ export class VeterinariansSeeder {
   ) {}
 
   async seed() {
-    // ⚠️ SEEDER DESHABILITADO - Descomentar para desarrollo local
-    return;
+    const count = await this.veterinarianRepository.count();
     
-    // const count = await this.veterinarianRepository.count();
-    // 
-    // if (count > 0) {
-    //   console.log('🩺 Veterinarios ya cargados, saltando seeder');
-    //   return;
-    // }
+    if (count > 0) {
+      console.log('🩺 Veterinarios ya cargados, saltando seeder');
+      return;
+    }
 
     const veterinarians = [
       {

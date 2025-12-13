@@ -26,20 +26,17 @@ export class UsersSeeder implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    // ⚠️ SEEDER DESHABILITADO - Descomentar para desarrollo local
-    return;
-    
-    // // Primero cargar veterinarios
-    // await this.veterinariansSeeder.seed();
+    // Primero cargar veterinarios
+    await this.veterinariansSeeder.seed();
 
-    // // Verificar si ya hay usuarios en la base de datos
-    // const existingUsers = await this.usersService.getUsers();
-    // if (existingUsers && existingUsers.length > 0) {
-    //   console.log('⏭️  Usuarios ya cargados, saltando seeder');
-    //   return;
-    // }
+    // Verificar si ya hay usuarios en la base de datos
+    const existingUsers = await this.usersService.getUsers();
+    if (existingUsers && existingUsers.length > 0) {
+      console.log('⏭️  Usuarios ya cargados, saltando seeder');
+      return;
+    }
 
-    // console.log('🌱 Iniciando seeder de usuarios...');
+    console.log('🌱 Iniciando seeder de usuarios...');
 
     // Obtener veterinarios para asignar turnos
     const veterinarians = await this.veterinarianRepository.find();
