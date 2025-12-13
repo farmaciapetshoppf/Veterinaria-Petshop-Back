@@ -15,11 +15,11 @@ export class MedicalRecordsPet {
   id: string;
 
   // Relación con la mascota
-  @ManyToOne(() => Pet, { nullable: false, eager: true })
+  @ManyToOne(() => Pet, { nullable: false })
   pet: Pet;
 
   // Relación con el veterinario que realizó la consulta
-  @ManyToOne(() => Veterinarian, { nullable: false, eager: true })
+  @ManyToOne(() => Veterinarian, { nullable: false })
   veterinarian: Veterinarian;
 
   // Diagnóstico

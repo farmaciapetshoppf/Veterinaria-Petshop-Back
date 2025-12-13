@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fbbf24 0%, #ea995f 100%);
+      padding: 40px 20px;
+    }
+    .email-wrapper {
+      max-width: 700px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .header {
+      background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .header .subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .section {
+      margin: 30px 0;
+    }
+    .section-title {
+      color: #f97316;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #fed7aa;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: #fff7ed;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      border-left: 4px solid #f97316;
+    }
+    .stat-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: #f97316;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: #c2410c;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .item-list {
+      background: #fff7ed;
+      border-radius: 12px;
+      padding: 20px;
+      border-left: 4px solid #f97316;
+    }
+    .item {
+      padding: 15px;
+      background: white;
+      margin: 10px 0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .item-info {
+      flex: 1;
+    }
+    .item-title {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 5px;
+    }
+    .item-details {
+      font-size: 13px;
+      color: #64748b;
+    }
+    .item-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .badge-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94a3b8;
+      font-style: italic;
+    }
+    .paw-divider {
+      text-align: center;
+      margin: 30px 0;
+      font-size: 30px;
+      letter-spacing: 10px;
+      opacity: 0.6;
+    }
+    .footer {
+      background: #fff7ed;
+      padding: 30px;
+      text-align: center;
+      border-top: 2px solid #fed7aa;
+    }
+    .footer p {
+      color: #c2410c;
+      font-size: 13px;
+      line-height: 1.8;
+      margin: 5px 0;
+    }
+    .brand {
+      color: #f97316;
+      font-weight: 700;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="header">
+      <h1>📊 Reporte Diario - Administración</h1>
+      <div class="subtitle">{{date}}</div>
+    </div>
+    
+    <div class="content">
+      <p style="color: #475569; line-height: 1.8; margin-bottom: 25px;">
+        Hola <strong>{{adminName}}</strong>, aquí está el resumen de actividad del día:
+      </p>
+
+      <!-- Estadísticas Rápidas -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">{{totalAppointments}}</div>
+          <div class="stat-label">Turnos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{lowStockProducts}}</div>
+          <div class="stat-label">Stock Bajo</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{newVeterinarians}}</div>
+          <div class="stat-label">Vets Nuevos</div>
+        </div>
+      </div>
+
+      <div class="paw-divider">🐾 🐾 🐾</div>
+
+      <!-- Turnos del Día -->
+      <div class="section">
+        <div class="section-title">
+          <span>📅</span>
+          <span>Turnos Agendados Hoy</span>
+        </div>
+        
+        {{#if appointments}}
+        {{#if appointments.[0]}}
+        <div class="item-list">
+          {{#each appointments}}
+          <div class="item">
+            <div class="item-info">
+              <div class="item-title">{{petName}} - {{ownerName}}</div>
+              <div class="item-details">
+                🩺 {{veterinarianName}} • 🕐 {{time}} • {{reason}}
+              </div>
+            </div>
+            <span class="item-badge badge-success">{{status}}</span>
+          </div>
+          {{/each}}
+        </div>
+        {{else}}
+        <div class="empty-state">
+          No hay turnos agendados para hoy
+        </div>
+        {{/if}}
+        {{else}}
+        <div class="empty-state">
+          No hay turnos agendados para hoy
+        </div>
+        {{/if}}
+      </div>
+
+      <div class="paw-divider">🐾 🐾 🐾</div>
+
+      <!-- Productos con Bajo Stock -->
+      <div class="section">
+        <div class="section-title">
+          <span>⚠️</span>
+          <span>Productos con Stock Bajo</span>
+        </div>
+        
+        {{#if products}}
+        {{#if products.[0]}}
+        <div class="item-list">
+          {{#each products}}
+          <div class="item">
+            <div class="item-info">
+              <div class="item-title">{{name}}</div>
+              <div class="item-details">
+                📦 Stock actual: {{stock}} unidades
+              </div>
+            </div>
+            <span class="item-badge {{#if critical}}badge-danger{{else}}badge-warning{{/if}}">
+              {{#if critical}}CRÍTICO{{else}}BAJO{{/if}}
+            </span>
+          </div>
+          {{/each}}
+        </div>
+        {{else}}
+        <div class="empty-state">
+          Todos los productos tienen stock suficiente ✅
+        </div>
+        {{/if}}
+        {{else}}
+        <div class="empty-state">
+          Todos los productos tienen stock suficiente ✅
+        </div>
+        {{/if}}
+      </div>
+
+      <div class="paw-divider">🐾 🐾 🐾</div>
+
+      <!-- Veterinarios Nuevos -->
+      <div class="section">
+        <div class="section-title">
+          <span>👨‍⚕️</span>
+          <span>Veterinarios Agregados Recientemente</span>
+        </div>
+        
+        {{#if veterinarians}}
+        {{#if veterinarians.[0]}}
+        <div class="item-list">
+          {{#each veterinarians}}
+          <div class="item">
+            <div class="item-info">
+              <div class="item-title">{{name}}</div>
+              <div class="item-details">
+                📧 {{email}} • 📱 {{phone}} • 🏥 Matrícula: {{matricula}}
+              </div>
+            </div>
+            <span class="item-badge badge-success">ACTIVO</span>
+          </div>
+          {{/each}}
+        </div>
+        {{else}}
+        <div class="empty-state">
+          No hay veterinarios nuevos
+        </div>
+        {{/if}}
+        {{else}}
+        <div class="empty-state">
+          No hay veterinarios nuevos
+        </div>
+        {{/if}}
+      </div>
+
+      <div class="paw-divider">🐾 🐾 🐾</div>
+
+      <p style="text-align: center; color: #f97316; font-weight: 600; font-size: 16px;">
+        ¡Que tengas un excelente día! 🐾
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>Este es un correo automático generado por el sistema de administración.</p>
+      <p class="brand">Huellitas Pet 🐾</p>
+      <p style="font-size: 12px; color: #c2410c;">Panel de Administración</p>
+    </div>
+  </div>
+</body>
+</html>

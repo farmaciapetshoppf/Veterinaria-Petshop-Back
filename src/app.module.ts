@@ -15,12 +15,13 @@ import { CategoriesModule } from './categories/categories.module';
 import { BranchesModule } from './branches/branches.module';
 import { SaleOrdersModule } from './sale-orders/sale-orders.module';
 import { AuthModule } from './auth/auth.module';
-import { SupabaseModule } from './supabase/supabase.module';
 import { ProductsService } from './products/products.service';
 import { MailerModule } from './mailer/mailer.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
 import { MedicalRecordsPetModule } from './medical-records-pet/medical-records-pet.module';
+import { ChatModule } from './chat/chat.module';
+import { SupabaseModule } from './supabase/supabase.module';
 import { MapsModule } from './maps/maps.module';
 
 @Module({
@@ -46,6 +47,7 @@ import { MapsModule } from './maps/maps.module';
     MailerModule,
     ReviewsModule,
     MedicalRecordsPetModule,
+    ChatModule,
     MapsModule,
   ],
   controllers: [AppController],

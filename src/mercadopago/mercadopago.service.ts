@@ -28,21 +28,23 @@ export class MercadoPagoService {
       console.log('Using frontendUrl:', frontendUrl);
       console.log('Using apiUrl:', apiUrl);
 
-      // Consolidar items duplicados (mismo producto)
-      const consolidatedItems = items.reduce((acc, item) => {
-        const existingItem = acc.find(i => i.product.id === item.product.id);
-        if (existingItem) {
-          // Si el producto ya existe, sumar la cantidad
-          existingItem.quantity += item.quantity;
-        } else {
-          // Si no existe, agregarlo
-          acc.push({ ...item });
-        }
-        return acc;
-      }, []);
+      // ❌ CONSOLIDACIÓN DESHABILITADA - Permite múltiples items del mismo producto
+      // const consolidatedItems = items.reduce((acc, item) => {
+      //   const existingItem = acc.find(i => i.product.id === item.product.id);
+      //   if (existingItem) {
+      //     // Si el producto ya existe, sumar la cantidad
+      //     existingItem.quantity += item.quantity;
+      //   } else {
+      //     // Si no existe, agregarlo
+      //     acc.push({ ...item });
+      //   }
+      //   return acc;
+      // }, []);
 
-      console.log('📦 Items originales:', items.length);
-      console.log('📦 Items consolidados:', consolidatedItems.length);
+      // ✅ CÓDIGO CORRECTO: Usa los items tal cual vienen del carrito
+      const consolidatedItems = items;
+
+      console.log('📦 Items en la preferencia:', consolidatedItems.length);
 
       const preferenceData: any = {
         items: consolidatedItems.map((item, index) => ({

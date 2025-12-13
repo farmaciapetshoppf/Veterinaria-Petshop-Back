@@ -147,28 +147,50 @@ export class AuthService {
         secure: false,
         sameSite: 'lax' as const,
         path: '/',
-        maxAge: 3600 * 1000,
+        maxAge: 24 * 3600 * 1000, // 24 horas
         domain: 'localhost',
       });
 
-      const responsePayload: any = {
-        /* id: userType === 'veterinarian' ? user.supabaseUserId : user.id, */
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || null,
-        address: user.address || null,
-        role: user.role || userType,
-        user: user.user,
-        country: user.country,
-        city: user.city,
-        isDeleted: user.isDeleted,
-        deletedAt: user.deletedAt,
-        pets: user.pets || [],
-      };
+      let responsePayload: any;
 
       if (userType === 'veterinarian') {
-        // Agregar campos específicos para veterinarios
+        // Para veterinarios: devolver solo campos que existen en la entidad
+        responsePayload = {
+          id: user.supabaseUserId || user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+          address: '',
+          role: 'veterinarian',
+          user: user.email, // Usar email como fallback
+          country: '',
+          city: '',
+          isDeleted: false,
+          deletedAt: null,
+          pets: [],
+          // Agregar flag para que el frontend sepa que debe cambiar contraseña
+          requirePasswordChange: user.requirePasswordChange || false,
+        };
+      } else {
+        // Para usuarios regulares: usar todos los campos normalmente
+        responsePayload = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || null,
+          address: user.address || null,
+          role: user.role || userType,
+          user: user.user,
+          country: user.country,
+          city: user.city,
+          isDeleted: user.isDeleted,
+          deletedAt: user.deletedAt,
+          pets: user.pets || [],
+        };
+      }
+
+      // Agregar campos específicos para veterinarios si aplica
+      if (userType === 'veterinarian') {
         responsePayload.matricula = user.matricula;
         responsePayload.description = user.description;
         responsePayload.time = user.time;
@@ -177,7 +199,7 @@ export class AuthService {
 
       return {
         ...responsePayload,
-        token: data.session.access_token, // 👈 así llega al frontend
+        token: data.session.access_token,
       };
     } catch (error) {
       if (error instanceof HttpException) {

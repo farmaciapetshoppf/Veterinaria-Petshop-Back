@@ -1,4 +1,5 @@
 [
+ 
   {
     "name": "Dra. Laura Sánchez Gómez",
     "email": "laura.sanchez@vetclinic.com",
@@ -29,18 +30,18 @@
     "isActive": true,
     "role": "Veterinarian"
   },
-
   {
-    "name": "Dra. Camila Núñez Herrera",
-    "email": "camila.nunez@vetclinic.com",
-    "matricula": "VET-10006",
-    "description": "Experta en nutrición animal y planes de alimentación personalizados.",
-    "phone": "+5491123456786",
-    "time": "2025-03-15",
-    "isActive": true,
+    "name": "Dr. Andrés Molina Ruiz",
+    "email": "andres.molina@vetclinic.com",
+    "matricula": "VET-10005",
+    "description": "Veterinario clínico con enfoque en medicina preventiva y vacunación.",
+    "phone": "+5491123456785",
+    "time": "2025-02-01",
+    "isActive": false,
     "role": "Veterinarian"
   },
  
+
   {
     "name": "Dra. Valentina Ortiz Luna",
     "email": "valentina.ortiz@vetclinic.com",
