@@ -1,0 +1,54 @@
+[
+  {
+    "name": "Dra. Laura Sánchez Gómez",
+    "email": "laura.sanchez@vetclinic.com",
+    "matricula": "VET-10002",
+    "description": "Especialista en cirugía veterinaria y traumatología en mascotas.",
+    "phone": "+5491123456782",
+    "time": "2025-02-10",
+    "isActive": true,
+    "role": "Veterinarian"
+  },
+  {
+    "name": "Dr. Martín López Fernández",
+    "email": "martin.lopez@vetclinic.com",
+    "matricula": "VET-10003",
+    "description": "Experto en diagnóstico por imágenes y radiología veterinaria.",
+    "phone": "+5491123456783",
+    "time": "2025-03-05",
+    "isActive": true,
+    "role": "Veterinarian"
+  },
+  {
+    "name": "Dra. Sofía Ramírez Torres",
+    "email": "sofia.ramirez@vetclinic.com",
+    "matricula": "VET-10004",
+    "description": "Especialista en dermatología animal y enfermedades alérgicas.",
+    "phone": "+5491123456784",
+    "time": "2025-01-25",
+    "isActive": true,
+    "role": "Veterinarian"
+  },
+
+  {
+    "name": "Dra. Camila Núñez Herrera",
+    "email": "camila.nunez@vetclinic.com",
+    "matricula": "VET-10006",
+    "description": "Experta en nutrición animal y planes de alimentación personalizados.",
+    "phone": "+5491123456786",
+    "time": "2025-03-15",
+    "isActive": true,
+    "role": "Veterinarian"
+  },
+ 
+  {
+    "name": "Dra. Valentina Ortiz Luna",
+    "email": "valentina.ortiz@vetclinic.com",
+    "matricula": "VET-10008",
+    "description": "Veterinaria dedicada a la rehabilitación y fisioterapia animal.",
+    "phone": "+5491123456788",
+    "time": "2025-02-20",
+    "isActive": true,
+    "role": "Veterinarian"
+  }
+]

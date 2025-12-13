@@ -21,6 +21,12 @@ import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
 @Controller('veterinarians')
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
+   
+
+  @Get('seeder')
+seeder(){
+    return this.veterinariansService.seeder();
+}
 
   @ApiOperation({ summary: 'Get all veterinarians (optionally filter active)' })
   @Get()
