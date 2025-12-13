@@ -9,12 +9,16 @@ import { Users } from '../users/entities/user.entity';
 import { Veterinarian } from '../veterinarians/entities/veterinarian.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { SupabaseModule } from 'src/supabase/supabase.module';
+import { UsersModule } from 'src/users/users.module';
+import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Conversation, Message, Users, Veterinarian]),
     SupabaseModule,
     AuthModule,
+    UsersModule,
+    VeterinariansModule,
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway],
