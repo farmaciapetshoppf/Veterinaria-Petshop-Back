@@ -20,6 +20,7 @@ import { Users } from 'src/users/entities/user.entity';
 import { Products } from 'src/products/entities/product.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { MercadoPagoService } from 'src/mercadopago/mercadopago.service';
+import { StripeService } from 'src/stripe/stripe.service';
 
 @Injectable()
 export class SaleOrdersService {
@@ -48,20 +49,23 @@ export class SaleOrdersService {
     private readonly configService: ConfigService,
     private readonly mercadoPagoService: MercadoPagoService,
     private readonly mailerService: MailerService,
+    private readonly stripeService: StripeService,
   ) {
     // Inicializar MercadoPago
-    const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
+    const accessToken = this.configService.get<string>(
+      'MERCADOPAGO_ACCESS_TOKEN',
+    );
     if (accessToken) {
-      const client = new MercadoPagoConfig({ 
+      const client = new MercadoPagoConfig({
         accessToken,
-        options: { timeout: 5000 }
+        options: { timeout: 5000 },
       });
       this.mercadoPagoClient = new Preference(client);
     }
   }
 
   // ==================== CARRITO ACTIVO ====================
-  
+
   /**
    * Agregar producto al carrito activo del usuario
    * - Busca o crea carrito ACTIVE
@@ -72,9 +76,9 @@ export class SaleOrdersService {
     return this.dataSource.transaction(async (manager) => {
       // Buscar carrito activo del usuario
       let cart = await manager.findOne(SaleOrder, {
-        where: { 
-          buyer: { id: userId }, 
-          status: SaleOrderStatus.ACTIVE
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
         },
         relations: ['items', 'items.product'],
       });
@@ -99,7 +103,9 @@ export class SaleOrdersService {
 
       // Validar que el carrito no estÃ© vencido
       if (cart.expiresAt && new Date() > cart.expiresAt) {
-        throw new BadRequestException('El carrito ha expirado. Se crearÃ¡ uno nuevo.');
+        throw new BadRequestException(
+          'El carrito ha expirado. Se crearÃ¡ uno nuevo.',
+        );
       }
 
       // Buscar el producto
@@ -118,17 +124,26 @@ export class SaleOrdersService {
       }
 
       // Verificar si el producto ya estÃ¡ en el carrito
-      const existingItem = cart.items?.find(item => item.product.id === productId);
-      
-      console.log(`🛒 addToCart - Usuario: ${userId}, Producto: ${product.name} (${productId}), Cantidad: ${quantity}`);
-      console.log(`📦 Items actuales en carrito:`, cart.items?.map(i => `${i.product.name} x${i.quantity}`));
+      const existingItem = cart.items?.find(
+        (item) => item.product.id === productId,
+      );
+
+      console.log(
+        `🛒 addToCart - Usuario: ${userId}, Producto: ${product.name} (${productId}), Cantidad: ${quantity}`,
+      );
+      console.log(
+        `📦 Items actuales en carrito:`,
+        cart.items?.map((i) => `${i.product.name} x${i.quantity}`),
+      );
 
       if (existingItem) {
-        console.log(`♻️ Item YA existe en carrito, actualizando cantidad: ${existingItem.quantity} → ${existingItem.quantity + quantity}`);
-        
+        console.log(
+          `♻️ Item YA existe en carrito, actualizando cantidad: ${existingItem.quantity} → ${existingItem.quantity + quantity}`,
+        );
+
         // Actualizar cantidad existente
         const newTotalQty = existingItem.quantity + quantity;
-        
+
         // Validar que hay stock para la nueva cantidad total
         if (product.stock < newTotalQty) {
           throw new BadRequestException(
@@ -141,7 +156,7 @@ export class SaleOrdersService {
         await manager.save(SaleOrderProduct, existingItem);
       } else {
         console.log(`➕ Nuevo item, agregando al carrito`);
-        
+
         // Agregar nuevo item al carrito
         // Descontar stock inmediatamente
         product.stock -= quantity;
@@ -183,9 +198,9 @@ export class SaleOrdersService {
    */
   async getActiveCart(userId: string) {
     const cart = await this.saleOrderRepository.findOne({
-      where: { 
-        buyer: { id: userId }, 
-        status: SaleOrderStatus.ACTIVE
+      where: {
+        buyer: { id: userId },
+        status: SaleOrderStatus.ACTIVE,
       },
       relations: ['items', 'items.product', 'buyer'],
     });
@@ -204,7 +219,7 @@ export class SaleOrdersService {
     // 🔧 DEDUPLICAR items con el mismo producto (fix para llamadas duplicadas del front)
     const productMap = new Map<string, SaleOrderProduct>();
     const duplicates: SaleOrderProduct[] = [];
-    
+
     for (const item of cart.items) {
       const productId = item.product.id;
       if (productMap.has(productId)) {
@@ -212,7 +227,9 @@ export class SaleOrdersService {
         const existing = productMap.get(productId)!;
         existing.quantity += item.quantity;
         duplicates.push(item);
-        console.log(`🔧 Duplicado detectado: ${item.product.name} (qty: ${item.quantity})`);
+        console.log(
+          `🔧 Duplicado detectado: ${item.product.name} (qty: ${item.quantity})`,
+        );
       } else {
         productMap.set(productId, item);
       }
@@ -220,25 +237,29 @@ export class SaleOrdersService {
 
     // Eliminar duplicados de la BD si se encontraron
     if (duplicates.length > 0) {
-      console.log(`🗑️ Eliminando ${duplicates.length} items duplicados del carrito`);
+      console.log(
+        `🗑️ Eliminando ${duplicates.length} items duplicados del carrito`,
+      );
       await this.saleOrderProductRepository.remove(duplicates);
-      
+
       // Actualizar items consolidados
       const consolidated = Array.from(productMap.values());
       for (const item of consolidated) {
         await this.saleOrderProductRepository.save(item);
       }
-      
+
       cart.items = consolidated;
-      
+
       // Recalcular total
       cart.total = cart.items.reduce(
         (sum, item) => sum + Number(item.unitPrice) * item.quantity,
         0,
       );
       await this.saleOrderRepository.save(cart);
-      
-      console.log(`✅ Carrito consolidado: ${cart.items.length} items únicos, total: $${cart.total}`);
+
+      console.log(
+        `✅ Carrito consolidado: ${cart.items.length} items únicos, total: $${cart.total}`,
+      );
     }
 
     return { message: 'Carrito activo', data: cart };
@@ -251,9 +272,9 @@ export class SaleOrdersService {
   async updateCartItem(userId: string, productId: string, newQuantity: number) {
     return this.dataSource.transaction(async (manager) => {
       const cart = await manager.findOne(SaleOrder, {
-        where: { 
-          buyer: { id: userId }, 
-          status: SaleOrderStatus.ACTIVE
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
         },
         relations: ['items', 'items.product'],
       });
@@ -262,7 +283,7 @@ export class SaleOrdersService {
         throw new NotFoundException('No hay carrito activo');
       }
 
-      const item = cart.items.find(i => i.product.id === productId);
+      const item = cart.items.find((i) => i.product.id === productId);
       if (!item) {
         throw new NotFoundException('Producto no encontrado en el carrito');
       }
@@ -325,9 +346,9 @@ export class SaleOrdersService {
   async clearCart(userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const cart = await manager.findOne(SaleOrder, {
-        where: { 
-          buyer: { id: userId }, 
-          status: SaleOrderStatus.ACTIVE
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
         },
         relations: ['items', 'items.product'],
       });
@@ -348,33 +369,43 @@ export class SaleOrdersService {
    */
   async getOrderHistory(userId: string) {
     const orders = await this.saleOrderRepository.find({
-      where: { 
+      where: {
         buyer: { id: userId },
-        status: SaleOrderStatus.PAID
+        status: SaleOrderStatus.PAID,
       },
       relations: ['items', 'items.product'],
       order: { createdAt: 'DESC' },
     });
 
-    return { 
-      message: 'Historial de compras', 
-      data: orders 
+    return {
+      message: 'Historial de compras',
+      data: orders,
     };
   }
 
   /**
    * Checkout: Crear preferencia de MercadoPago
    */
-  async checkout(userId: string, checkoutDto: { success_url: string; failure_url: string; pending_url: string; auto_return?: 'approved' | 'all' }) {
+  async checkout(
+    userId: string,
+    checkoutDto: {
+      success_url: string;
+      failure_url: string;
+      pending_url: string;
+      auto_return?: 'approved' | 'all';
+    },
+  ) {
     if (!this.mercadoPagoClient) {
-      throw new BadRequestException('MercadoPago no estÃ¡ configurado. Verifica MERCADOPAGO_ACCESS_TOKEN en .env');
+      throw new BadRequestException(
+        'MercadoPago no estÃ¡ configurado. Verifica MERCADOPAGO_ACCESS_TOKEN en .env',
+      );
     }
 
     // 1. Obtener carrito activo
     const cart = await this.saleOrderRepository.findOne({
-      where: { 
-        buyer: { id: userId }, 
-        status: SaleOrderStatus.ACTIVE
+      where: {
+        buyer: { id: userId },
+        status: SaleOrderStatus.ACTIVE,
       },
       relations: ['items', 'items.product', 'buyer'],
     });
@@ -396,23 +427,38 @@ export class SaleOrdersService {
     try {
       // Configuración del backend
       const ngrokUrl = this.configService.get<string>('NGROK_URL');
-      const publicBackendUrl = ngrokUrl || 
+      const publicBackendUrl =
+        ngrokUrl ||
         this.configService.get<string>('BACKEND_PUBLIC_URL') ||
         this.configService.get<string>('API_URL') ||
         'http://localhost:3000';
-      const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
+      const accessToken = this.configService.get<string>(
+        'MERCADOPAGO_ACCESS_TOKEN',
+      );
 
       if (!accessToken) {
         throw new BadRequestException('Token de MercadoPago no configurado');
       }
 
-      this.logToFile('📍 Backend configurado:', { publicBackendUrl, notificationUrl: `${publicBackendUrl}/sale-orders/webhook` });
-      this.logToFile('🔑 Access Token (prefijo):', accessToken?.substring(0, 20) + '...');
+      this.logToFile('📍 Backend configurado:', {
+        publicBackendUrl,
+        notificationUrl: `${publicBackendUrl}/sale-orders/webhook`,
+      });
+      this.logToFile(
+        '🔑 Access Token (prefijo):',
+        accessToken?.substring(0, 20) + '...',
+      );
       this.logToFile('📥 CheckoutDto recibido desde el frontend:', checkoutDto);
 
       // Validar que el frontend envíe las URLs (son obligatorias)
-      if (!checkoutDto?.success_url || !checkoutDto?.failure_url || !checkoutDto?.pending_url) {
-        throw new BadRequestException('Las URLs de retorno (success_url, failure_url, pending_url) son obligatorias en el body');
+      if (
+        !checkoutDto?.success_url ||
+        !checkoutDto?.failure_url ||
+        !checkoutDto?.pending_url
+      ) {
+        throw new BadRequestException(
+          'Las URLs de retorno (success_url, failure_url, pending_url) son obligatorias en el body',
+        );
       }
 
       // Usar SOLO las URLs que vienen del frontend (sin fallback)
@@ -421,19 +467,19 @@ export class SaleOrdersService {
         failure: checkoutDto.failure_url,
         pending: checkoutDto.pending_url,
       };
-      
+
       this.logToFile('🔗 Back URLs recibidas del frontend:', backUrls);
 
       // 3. Crear preferencia usando el SDK de MercadoPago
-      const client = new MercadoPagoConfig({ 
+      const client = new MercadoPagoConfig({
         accessToken: accessToken,
-        options: { timeout: 5000 }
+        options: { timeout: 5000 },
       });
-      
+
       const preference = new Preference(client);
 
       const preferenceBody: any = {
-        items: cart.items.map(item => ({
+        items: cart.items.map((item) => ({
           id: String(item.product.id),
           title: item.product.name,
           quantity: item.quantity,
@@ -482,8 +528,12 @@ export class SaleOrdersService {
     } catch (error) {
       console.error('❌ Error creando preferencia de MercadoPago:', error);
       const err = error as any;
-      const errorMessage = err?.response?.data || err?.message || 'Error desconocido';
-      console.error('Detalles del error:', JSON.stringify(errorMessage, null, 2));
+      const errorMessage =
+        err?.response?.data || err?.message || 'Error desconocido';
+      console.error(
+        'Detalles del error:',
+        JSON.stringify(errorMessage, null, 2),
+      );
       throw new BadRequestException('Error al generar preferencia de pago');
     }
   }
@@ -492,11 +542,14 @@ export class SaleOrdersService {
    * Webhook de MercadoPago para recibir notificaciones de pago
    */
   async handleWebhook(body: any) {
-    console.log('🔔 Webhook recibido de MercadoPago:', JSON.stringify(body, null, 2));
+    console.log(
+      '🔔 Webhook recibido de MercadoPago:',
+      JSON.stringify(body, null, 2),
+    );
 
     try {
       const topic = body.type || body.topic;
-      
+
       // Manejar merchant_order
       if (topic === 'merchant_order') {
         const merchantOrderId = body.data?.id || body['data.id'] || body.id;
@@ -506,8 +559,10 @@ export class SaleOrdersService {
         }
 
         console.log('📦 Procesando merchant_order:', merchantOrderId);
-        
-        const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
+
+        const accessToken = this.configService.get<string>(
+          'MERCADOPAGO_ACCESS_TOKEN',
+        );
         const merchantOrderResponse = await axios.get(
           `https://api.mercadolibre.com/merchant_orders/${merchantOrderId}`,
           {
@@ -518,7 +573,10 @@ export class SaleOrdersService {
         );
 
         const merchantOrder = merchantOrderResponse.data;
-        console.log('📋 Merchant Order:', JSON.stringify(merchantOrder, null, 2));
+        console.log(
+          '📋 Merchant Order:',
+          JSON.stringify(merchantOrder, null, 2),
+        );
 
         const orderId = merchantOrder.external_reference;
         if (!orderId) {
@@ -536,23 +594,30 @@ export class SaleOrdersService {
         }
 
         // Verificar si todos los pagos están aprobados
-        const allPaid = merchantOrder.payments?.every((p: any) => p.status === 'approved');
-        
+        const allPaid = merchantOrder.payments?.every(
+          (p: any) => p.status === 'approved',
+        );
+
         if (allPaid && merchantOrder.payments.length > 0) {
           order.status = SaleOrderStatus.PAID;
           order.mercadoPagoStatus = 'approved';
           await this.saleOrderRepository.save(order);
           console.log(`✅ Orden ${order.id} marcada como PAID`);
         } else {
-          console.log(`⏳ Orden ${order.id} tiene pagos pendientes o rechazados`);
+          console.log(
+            `⏳ Orden ${order.id} tiene pagos pendientes o rechazados`,
+          );
         }
 
         return { message: 'Webhook merchant_order procesado' };
       }
-      
+
       // Manejar payment
       if (topic !== 'payment') {
-        console.log('ℹ️ Evento ignorado (topic no es payment ni merchant_order):', topic);
+        console.log(
+          'ℹ️ Evento ignorado (topic no es payment ni merchant_order):',
+          topic,
+        );
         return { message: 'Evento ignorado' };
       }
 
@@ -562,9 +627,13 @@ export class SaleOrdersService {
         return { message: 'Webhook recibido pero sin paymentId' };
       }
 
-      const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
+      const accessToken = this.configService.get<string>(
+        'MERCADOPAGO_ACCESS_TOKEN',
+      );
       if (!accessToken) {
-        throw new BadRequestException('MERCADOPAGO_ACCESS_TOKEN no configurado');
+        throw new BadRequestException(
+          'MERCADOPAGO_ACCESS_TOKEN no configurado',
+        );
       }
 
       let payment;
@@ -580,7 +649,9 @@ export class SaleOrdersService {
         payment = paymentResponse.data;
       } catch (error: any) {
         if (error.response?.status === 404) {
-          console.warn(`⚠️ Payment ${paymentId} no encontrado (probablemente sandbox/test)`);
+          console.warn(
+            `⚠️ Payment ${paymentId} no encontrado (probablemente sandbox/test)`,
+          );
           return { message: 'Payment no encontrado' };
         }
         throw error;
@@ -597,7 +668,9 @@ export class SaleOrdersService {
       });
 
       if (!order) {
-        console.warn(`Orden ${orderId} no encontrada para payment ${paymentId}`);
+        console.warn(
+          `Orden ${orderId} no encontrada para payment ${paymentId}`,
+        );
         return { message: 'Orden no encontrada' };
       }
 
@@ -616,7 +689,9 @@ export class SaleOrdersService {
       order.status = statusMap[payment.status] || order.status;
 
       await this.saleOrderRepository.save(order);
-      console.log(`Orden ${order.id} actualizada a estado: ${order.status} (MP: ${payment.status})`);
+      console.log(
+        `Orden ${order.id} actualizada a estado: ${order.status} (MP: ${payment.status})`,
+      );
 
       return { message: 'Webhook procesado correctamente' };
     } catch (error) {
@@ -651,8 +726,10 @@ export class SaleOrdersService {
    */
   @Cron(CronExpression.EVERY_2_HOURS)
   async cancelExpiredCarts() {
-    console.log('ðŸ• Ejecutando tarea programada: Cancelar carritos vencidos...');
-    
+    console.log(
+      'ðŸ• Ejecutando tarea programada: Cancelar carritos vencidos...',
+    );
+
     const expiredCarts = await this.saleOrderRepository.find({
       where: {
         status: SaleOrderStatus.ACTIVE,
@@ -670,8 +747,10 @@ export class SaleOrdersService {
       }
     }
 
-    console.log(`âœ… Tarea completada: ${cancelled.length} carritos cancelados`);
-    
+    console.log(
+      `âœ… Tarea completada: ${cancelled.length} carritos cancelados`,
+    );
+
     return {
       message: `${cancelled.length} carritos vencidos cancelados`,
       data: cancelled,
@@ -761,8 +840,12 @@ export class SaleOrdersService {
 
       // Generar preferencia de MercadoPago
       try {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3002';
-        const backendUrl = this.configService.get<string>('BACKEND_URL') || 'http://localhost:3000';
+        const frontendUrl =
+          this.configService.get<string>('FRONTEND_URL') ||
+          'http://localhost:3002';
+        const backendUrl =
+          this.configService.get<string>('BACKEND_URL') ||
+          'http://localhost:3000';
 
         const preference = await this.mercadoPagoClient.create({
           body: {
@@ -805,9 +888,7 @@ export class SaleOrdersService {
         };
       } catch (error) {
         console.error('❌ Error creating MercadoPago preference:', error);
-        throw new BadRequestException(
-          'Error al generar preferencia de pago',
-        );
+        throw new BadRequestException('Error al generar preferencia de pago');
       }
     });
   }
@@ -842,7 +923,7 @@ export class SaleOrdersService {
   }
 
   // ==================== MÃ‰TODO DE PRUEBA ====================
-  
+
   /**
    * Actualizar estado de una orden manualmente (para testing)
    */
@@ -863,16 +944,168 @@ export class SaleOrdersService {
       data: order,
     };
   }
+
+  /**
+   * Checkout con Stripe: Crear sesión de pago
+   */
+  async checkoutWithStripe(
+    userId: string,
+    checkoutDto: {
+      success_url: string;
+      cancel_url: string;
+    },
+  ) {
+    // 1. Obtener carrito activo
+    const cart = await this.saleOrderRepository.findOne({
+      where: {
+        buyer: { id: userId },
+        status: SaleOrderStatus.ACTIVE,
+      },
+      relations: ['items', 'items.product', 'buyer'],
+    });
+
+    if (!cart) {
+      throw new NotFoundException('No hay carrito activo para procesar');
+    }
+
+    if (!cart.items || cart.items.length === 0) {
+      throw new BadRequestException('El carrito está vacío');
+    }
+
+    // 2. Verificar que no esté vencido
+    if (cart.expiresAt && new Date() > cart.expiresAt) {
+      await this.cancelExpiredCart(cart.id);
+      throw new BadRequestException('El carrito ha expirado');
+    }
+
+    try {
+      // Validar que el frontend envíe las URLs (son obligatorias)
+      if (!checkoutDto?.success_url || !checkoutDto?.cancel_url) {
+        throw new BadRequestException(
+          'Las URLs de retorno (success_url, cancel_url) son obligatorias en el body',
+        );
+      }
+
+      // Crear sesión de checkout con Stripe
+      const session = await this.stripeService.createCheckoutSession(
+        cart.items,
+        cart.id,
+        cart.buyer?.email || 'cliente@ejemplo.com',
+        checkoutDto.success_url,
+        checkoutDto.cancel_url,
+      );
+
+      // Guardar ID de sesión en el carrito y cambiar estado a PENDING
+      cart.stripeSessionId = session.id;
+      cart.status = SaleOrderStatus.PENDING;
+      await this.saleOrderRepository.save(cart);
+
+      return {
+        message: 'Sesión de pago creada exitosamente',
+        data: {
+          sessionId: session.id,
+          checkoutUrl: session.url,
+        },
+      };
+    } catch (error) {
+      console.error('❌ Error creando sesión de Stripe:', error);
+      throw new BadRequestException('Error al generar sesión de pago');
+    }
+  }
+
+  /**
+   * Procesar webhook de Stripe
+   */
+  async handleStripeWebhook(event: any) {
+    console.log('🔔 Webhook de Stripe recibido:', event.type);
+
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object;
+          const orderId =
+            session.metadata?.order_id || session.client_reference_id;
+
+          if (!orderId) {
+            console.warn('⚠️ Sesión sin ID de orden');
+            return { message: 'Sesión sin ID de orden' };
+          }
+
+          const order = await this.saleOrderRepository.findOne({
+            where: { id: orderId },
+          });
+
+          if (!order) {
+            console.warn(`⚠️ Orden ${orderId} no encontrada`);
+            return { message: 'Orden no encontrada' };
+          }
+
+          // Actualizar estado de la orden
+          order.status = SaleOrderStatus.PAID;
+          order.stripeStatus = 'completed';
+          await this.saleOrderRepository.save(order);
+
+          console.log(`✅ Orden ${order.id} marcada como PAID (Stripe)`);
+          break;
+        }
+        case 'payment_intent.succeeded': {
+          const paymentIntent = event.data.object;
+          const orderId = paymentIntent.metadata?.order_id;
+
+          if (!orderId) {
+            console.warn('⚠️ PaymentIntent sin ID de orden');
+            return { message: 'PaymentIntent sin ID de orden' };
+          }
+
+          const order = await this.saleOrderRepository.findOne({
+            where: { id: orderId },
+          });
+
+          if (!order) {
+            console.warn(`⚠️ Orden ${orderId} no encontrada`);
+            return { message: 'Orden no encontrada' };
+          }
+
+          // Actualizar estado de la orden
+          order.status = SaleOrderStatus.PAID;
+          order.stripePaymentIntentId = paymentIntent.id;
+          order.stripeStatus = 'succeeded';
+          await this.saleOrderRepository.save(order);
+
+          console.log(
+            `✅ Orden ${order.id} marcada como PAID (Stripe PaymentIntent)`,
+          );
+          break;
+        }
+        case 'payment_intent.payment_failed': {
+          const paymentIntent = event.data.object;
+          const orderId = paymentIntent.metadata?.order_id;
+
+          if (!orderId) return { message: 'PaymentIntent sin ID de orden' };
+
+          const order = await this.saleOrderRepository.findOne({
+            where: { id: orderId },
+          });
+
+          if (!order) return { message: 'Orden no encontrada' };
+
+          // Actualizar estado de la orden
+          order.status = SaleOrderStatus.CANCELLED;
+          order.stripePaymentIntentId = paymentIntent.id;
+          order.stripeStatus = 'failed';
+          await this.saleOrderRepository.save(order);
+
+          console.log(
+            `❌ Orden ${order.id} marcada como CANCELLED (Stripe PaymentIntent failed)`,
+          );
+          break;
+        }
+      }
+
+      return { message: 'Webhook procesado correctamente' };
+    } catch (error) {
+      console.error('Error procesando webhook de Stripe:', error);
+      throw new BadRequestException('Error procesando webhook de Stripe');
+    }
+  }
 }
-
-
-
-
-
-
-
-
-
-
-
-

@@ -22,6 +22,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
 import { MedicalRecordsPetModule } from './medical-records-pet/medical-records-pet.module';
 import { MapsModule } from './maps/maps.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { MapsModule } from './maps/maps.module';
     ReviewsModule,
     MedicalRecordsPetModule,
     MapsModule,
+    StripeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
