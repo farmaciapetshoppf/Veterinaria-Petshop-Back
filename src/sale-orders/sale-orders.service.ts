@@ -1033,6 +1033,7 @@ export class SaleOrdersService {
 
           const order = await this.saleOrderRepository.findOne({
             where: { id: orderId },
+            relations: ['items'], // Asegúrate de cargar las relaciones necesarias
           });
 
           if (!order) {
@@ -1046,6 +1047,21 @@ export class SaleOrdersService {
           await this.saleOrderRepository.save(order);
 
           console.log(`✅ Orden ${order.id} marcada como PAID (Stripe)`);
+
+          // Enviar correo de confirmación
+          await this.mailerService.sendPurchaseConfirmation({
+            to: session.customer_email,
+            userName: order.buyer.name, // Ajusta según tus datos
+            orderId: order.id,
+            items: order.items.map((item) => ({
+              productName: item.product.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice.toFixed(2),
+              subtotal: (item.quantity * item.unitPrice).toFixed(2),
+            })),
+            total: order.total.toFixed(2),
+          });
+
           break;
         }
         case 'payment_intent.succeeded': {
@@ -1059,6 +1075,7 @@ export class SaleOrdersService {
 
           const order = await this.saleOrderRepository.findOne({
             where: { id: orderId },
+            relations: ['items'],
           });
 
           if (!order) {
@@ -1075,6 +1092,21 @@ export class SaleOrdersService {
           console.log(
             `✅ Orden ${order.id} marcada como PAID (Stripe PaymentIntent)`,
           );
+
+          // Enviar correo de confirmación
+          await this.mailerService.sendPurchaseConfirmation({
+            to: paymentIntent.receipt_email,
+            userName: order.buyer.name,
+            orderId: order.id,
+            items: order.items.map((item) => ({
+              productName: item.product.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice.toFixed(2),
+              subtotal: (item.quantity * item.unitPrice).toFixed(2),
+            })),
+            total: order.total.toFixed(2),
+          });
+
           break;
         }
         case 'payment_intent.payment_failed': {
