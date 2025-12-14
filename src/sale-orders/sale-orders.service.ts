@@ -844,7 +844,7 @@ export class SaleOrdersService {
           this.configService.get<string>('FRONTEND_URL') ||
           'http://localhost:3002';
         const backendUrl =
-          this.configService.get<string>('BACKEND_URL') ||
+          this.configService.get<string>('NEXT_PUBLIC_API_URL') ||
           'http://localhost:3000';
 
         const preference = await this.mercadoPagoClient.create({
