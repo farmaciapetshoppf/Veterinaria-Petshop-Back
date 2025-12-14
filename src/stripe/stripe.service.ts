@@ -11,7 +11,7 @@ export class StripeService {
   constructor() {
     // Inicializar cliente de Stripe
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-      apiVersion: '2025-11-17.clover',
+      apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
     });
   }
 
@@ -38,13 +38,13 @@ export class StripeService {
       // Crear líneas de productos para Stripe
       const lineItems = items.map((item) => ({
         price_data: {
-          currency: 'ars',
+          currency: 'usd',
           product_data: {
             name: item.product.name,
             description: item.product.description || undefined,
             images: item.product.imageUrl ? [item.product.imageUrl] : undefined,
           },
-          unit_amount: Math.round(Number(item.unitPrice) * 100), // Stripe usa centavos
+          unit_amount: Math.round((Number(item.unitPrice) / 1436) * 100), // Aproximadamente 1436 ARS = 1 USD
         },
         quantity: item.quantity,
       }));

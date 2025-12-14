@@ -76,6 +76,7 @@ export class StripeController {
         successUrl,
         cancelUrl,
       );
+      console.log('Stripe session:', session);
       return {
         message: 'Sesión de checkout creada exitosamente',
         session,
