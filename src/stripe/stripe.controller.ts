@@ -10,6 +10,7 @@ import { Request } from 'express';
 import { StripeService } from './stripe.service';
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
 import { SaleOrdersService } from 'src/sale-orders/sale-orders.service';
+import { MailerService } from 'src/mailer/mailer.service';
 
 @ApiTags('Stripe')
 @Controller('stripe')
@@ -17,6 +18,7 @@ export class StripeController {
   constructor(
     private readonly stripeService: StripeService,
     private readonly saleOrdersService: SaleOrdersService,
+    private readonly mailerService: MailerService,
   ) {}
 
   @ApiOperation({
@@ -150,52 +152,91 @@ export class StripeController {
 
       console.log('🔔 Webhook de Stripe recibido:', event.type);
 
+      // Extraer order_id y definir el estado según el tipo de evento
+      let orderId: string | undefined;
+      let newStatus: string | undefined;
+      let customerEmail: string | null | undefined;
+
       switch (event.type) {
         case 'checkout.session.completed': {
           const session = event.data.object;
           console.log('✅ Checkout completado:', session.id);
-
-          if (session.metadata && session.metadata.order_id) {
-            await this.saleOrdersService.updateOrderStatus(
-              session.metadata.order_id,
-              'PAID',
-            );
-          } else {
-            console.warn('No se encontró order_id en metadata');
-          }
+          orderId = session.metadata?.order_id;
+          newStatus = 'PAID';
+          customerEmail = session.customer_details?.email;
           break;
         }
         case 'payment_intent.succeeded': {
           const paymentIntent = event.data.object;
           console.log('✅ Pago exitoso:', paymentIntent.id);
-
-          if (paymentIntent.metadata && paymentIntent.metadata.order_id) {
-            await this.saleOrdersService.updateOrderStatus(
-              paymentIntent.metadata.order_id,
-              'PAID',
-            );
-          } else {
-            console.warn('No se encontró order_id en metadata');
-          }
+          orderId = paymentIntent.metadata?.order_id;
+          newStatus = 'PAID';
+          customerEmail = paymentIntent.receipt_email;
           break;
         }
         case 'payment_intent.payment_failed': {
           const paymentIntent = event.data.object;
           console.log('❌ Pago fallido:', paymentIntent.id);
-
-          if (paymentIntent.metadata && paymentIntent.metadata.order_id) {
-            await this.saleOrdersService.updateOrderStatus(
-              paymentIntent.metadata.order_id,
-              'CANCELLED',
-            );
-          } else {
-            console.warn('No se encontró order_id en metadata');
-          }
+          orderId = paymentIntent.metadata?.order_id;
+          newStatus = 'CANCELLED';
           break;
         }
         default:
           console.log(`Unhandled event type ${event.type}`);
       }
+
+      // Procesar la actualización si tenemos un orderId y un estado
+      if (orderId && newStatus) {
+        await this.saleOrdersService.updateOrderStatus(orderId, newStatus);
+
+        // Enviar correo de confirmación si el estado es PAID
+        if (newStatus === 'PAID') {
+          try {
+            const order = await this.saleOrdersService.getOrderDetails(orderId);
+
+            if (order) {
+              // Verificar que tenemos un email válido
+              const emailTo = customerEmail || order.buyer?.email;
+
+              if (emailTo) {
+                await this.mailerService.sendPurchaseConfirmation({
+                  to: emailTo,
+                  userName: order.buyer?.name || 'Cliente',
+                  orderId: order.id,
+                  items: order.items.map((item) => ({
+                    productName: item.product.name,
+                    quantity: item.quantity,
+                    unitPrice: Number(item.unitPrice).toFixed(2),
+                    subtotal: (Number(item.unitPrice) * item.quantity).toFixed(
+                      2,
+                    ),
+                  })),
+                  total: Number(order.total).toFixed(2),
+                });
+                console.log('📧 Correo de confirmación enviado a:', emailTo);
+              } else {
+                console.warn(
+                  '⚠️ No se pudo enviar el correo: dirección de email no disponible',
+                );
+              }
+            } else {
+              console.warn(
+                `⚠️ No se encontró la orden ${orderId} para enviar correo`,
+              );
+            }
+          } catch (emailError) {
+            console.error(
+              '❌ Error enviando correo de confirmación:',
+              emailError,
+            );
+          }
+        }
+      } else if (newStatus) {
+        console.warn('⚠️ No se encontró order_id en metadata');
+      }
+
+      // Retornar 200 para que Stripe no reintente
+      return { received: true };
     } catch (error) {
       console.error('Error procesando webhook:', error);
     }
