@@ -15,14 +15,20 @@ import { CategoriesModule } from './categories/categories.module';
 import { BranchesModule } from './branches/branches.module';
 import { SaleOrdersModule } from './sale-orders/sale-orders.module';
 import { AuthModule } from './auth/auth.module';
-import { SupabaseModule } from './supabase/supabase.module';
 import { ProductsService } from './products/products.service';
+import { AppointmentsAnalyticsSeeder } from './appointments/seed/appointments-analytics.seeder';
+import { VeterinariansSeeder } from './veterinarians/seed/veterinarians.seed';
+import { SaleOrdersAnalyticsSeeder } from './sale-orders/seed/sale-orders-analytics.seeder';
 import { MailerModule } from './mailer/mailer.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
 import { MedicalRecordsPetModule } from './medical-records-pet/medical-records-pet.module';
+import { ChatModule } from './chat/chat.module';
+import { SupabaseModule } from './supabase/supabase.module';
 import { MapsModule } from './maps/maps.module';
 import { StripeModule } from './stripe/stripe.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { GeneralMedicationsModule } from './general-medications/general-medications.module';
 
 @Module({
   imports: [
@@ -47,17 +53,57 @@ import { StripeModule } from './stripe/stripe.module';
     MailerModule,
     ReviewsModule,
     MedicalRecordsPetModule,
+    ChatModule,
     MapsModule,
     StripeModule,
+    AnalyticsModule,
+    GeneralMedicationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements OnApplicationBootstrap {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly veterinariansSeeder: VeterinariansSeeder,
+    private readonly appointmentsSeeder: AppointmentsAnalyticsSeeder,
+    private readonly saleOrdersSeeder: SaleOrdersAnalyticsSeeder,
+  ) {}
   async onApplicationBootstrap() {
     console.log('Aplicación inicializada correctamente');
     await this.productsService.seeder();
     console.log('Productos cargados');
+
+    // Esperar un momento para que los seeders previos terminen
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Ejecutar seeder de veterinarios automáticamente
+    console.log('🩺 Verificando veterinarios...');
+    const existingVets = await this.veterinariansSeeder.getCount();
+    if (existingVets < 6) {
+      console.log('👨‍⚕️ Cargando veterinarios...');
+      await this.veterinariansSeeder.seed();
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } else {
+      console.log(`✅ Ya existen ${existingVets} veterinarios`);
+    }
+
+    // Ejecutar seeder de turnos automáticamente
+    console.log('🩺 Cargando turnos de analytics...');
+    const appointmentsResult = await this.appointmentsSeeder.seed();
+    if (appointmentsResult) {
+      console.log(
+        `✅ ${appointmentsResult.appointments} turnos y ${appointmentsResult.medicalRecords} registros médicos creados`,
+      );
+    }
+
+    // Ejecutar seeder de compras automáticamente
+    console.log('🛒 Cargando órdenes de compra para analytics...');
+    const salesResult = await this.saleOrdersSeeder.seed();
+    if (salesResult) {
+      console.log(
+        `✅ ${salesResult.orders} órdenes creadas - Ingresos: $${salesResult.revenue.toFixed(2)}`,
+      );
+    }
   }
 }

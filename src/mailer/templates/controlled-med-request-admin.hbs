@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Solicitud de Medicamento Controlado</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; border-radius: 10px 10px 0 0; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">🩺 Huellitas Pet</h1>
+                            <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">Solicitud de Medicamento Controlado</p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 22px;">Hola Administrador,</h2>
+                            
+                            <p style="color: #666666; line-height: 1.6; margin: 0 0 25px 0; font-size: 15px;">
+                                Se ha recibido una nueva solicitud de medicamento controlado de un veterinario:
+                            </p>
+
+                            <!-- Alert Box -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff3cd; border-left: 4px solid {{urgencyColor}}; border-radius: 5px; margin-bottom: 25px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="margin: 0; color: #856404; font-weight: bold; font-size: 16px;">
+                                            ⚠️ Urgencia: <span style="color: {{urgencyColor}}; text-transform: uppercase;">{{urgency}}</span>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Veterinarian Info -->
+                            <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                                <h3 style="color: #333333; margin: 0 0 15px 0; font-size: 18px;">👨‍⚕️ Información del Veterinario</h3>
+                                <table width="100%" cellpadding="5" cellspacing="0">
+                                    <tr>
+                                        <td style="color: #666666; font-weight: bold; width: 40%;">Nombre:</td>
+                                        <td style="color: #333333;">{{veterinarianName}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #666666; font-weight: bold;">Email:</td>
+                                        <td style="color: #333333;">{{veterinarianEmail}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #666666; font-weight: bold;">Matrícula:</td>
+                                        <td style="color: #333333;">{{veterinarianLicense}}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Medication Info -->
+                            <div style="background-color: #e7f3ff; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                                <h3 style="color: #333333; margin: 0 0 15px 0; font-size: 18px;">💊 Detalles del Medicamento</h3>
+                                <table width="100%" cellpadding="5" cellspacing="0">
+                                    <tr>
+                                        <td style="color: #666666; font-weight: bold; width: 40%;">Medicamento:</td>
+                                        <td style="color: #333333; font-weight: bold;">{{medication}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #666666; font-weight: bold;">Cantidad:</td>
+                                        <td style="color: #333333;">{{quantity}} unidades</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #666666; font-weight: bold;">Fecha Solicitud:</td>
+                                        <td style="color: #333333;">{{requestDate}}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Justification -->
+                            <div style="background-color: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+                                <h3 style="color: #333333; margin: 0 0 10px 0; font-size: 18px;">📝 Justificación</h3>
+                                <p style="color: #666666; line-height: 1.6; margin: 0; font-size: 14px;">
+                                    {{justification}}
+                                </p>
+                            </div>
+
+                            <!-- Action Button -->
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="{{adminPanelUrl}}" style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 25px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                                    Ver en Panel de Admin
+                                </a>
+                            </div>
+
+                            <p style="color: #999999; font-size: 13px; line-height: 1.5; margin: 30px 0 0 0; text-align: center; font-style: italic;">
+                                Por favor, revisa y procesa esta solicitud lo antes posible, especialmente si la urgencia es alta.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-radius: 0 0 10px 10px;">
+                            <p style="margin: 0; color: #999999; font-size: 12px;">
+                                © 2025 Huellitas Pet - Sistema de Gestión Veterinaria
+                            </p>
+                            <p style="margin: 10px 0 0 0; color: #999999; font-size: 12px;">
+                                Este es un correo automático, por favor no responder.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

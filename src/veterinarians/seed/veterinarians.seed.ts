@@ -15,46 +15,68 @@ export class VeterinariansSeeder {
     private readonly mailerService: MailerService,
   ) {}
 
+  async getCount(): Promise<number> {
+    return await this.veterinarianRepository.count();
+  }
+
   async seed() {
-    // ⚠️ SEEDER DESHABILITADO - Descomentar para desarrollo local
-    return;
+    // Cargar veterinarios del JSON
+    const veterinariansJson = require('./veterinarian.json');
     
-    // const count = await this.veterinarianRepository.count();
-    // 
-    // if (count > 0) {
-    //   console.log('🩺 Veterinarios ya cargados, saltando seeder');
-    //   return;
-    // }
+    // Verificar cuáles ya existen
+    const existingEmails = (await this.veterinarianRepository.find()).map(v => v.email);
+    const veterinariansToCreate = veterinariansJson.filter(
+      (vet: any) => !existingEmails.includes(vet.email)
+    );
+    
+    if (veterinariansToCreate.length === 0) {
+      console.log('🩺 Todos los veterinarios ya están cargados');
+      return;
+    }
 
-    const veterinarians = [
-      {
-        name: 'Abigail Brea',
-        email: 'abiiibreazuuu@gmail.com',
-        matricula: 'VET-2018-001',
-        description: 'Especialista en cirugía veterinaria con más de 10 años de experiencia. Me apasiona cuidar de tus mascotas y brindarles la mejor atención médica.',
-        phone: '11-2345-6789',
-        horario_atencion: new Date('2025-12-11T09:00:00'),
-        profileImageUrl: 'https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/veterinarians/1765297533360_pngtree-no-image-available-icon-flatvector-illustration-blank-avatar-modern-vector-png-image_40962406.jpg',
-      },
-      {
-        name: 'Adrián Espíndola',
-        email: 'adrianmespindola@gmail.com',
-        matricula: 'VET-2019-002',
-        description: 'Veterinario especializado en animales exóticos y felinos. Dedico mi carrera a mejorar la calidad de vida de nuestros amigos peludos.',
-        phone: '11-3456-7890',
-        horario_atencion: new Date('2025-12-11T14:00:00'),
-        profileImageUrl: 'https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/veterinarians/1765297533360_pngtree-no-image-available-icon-flatvector-illustration-blank-avatar-modern-vector-png-image_40962406.jpg',
-      },
-    ];
+    console.log(`👨‍⚕️ Creando ${veterinariansToCreate.length} veterinarios nuevos...`);
+    
+    const defaultProfileImage = 'https://hxjxhchzberrthphpsvo.supabase.co/storage/v1/object/public/veterinarians/1765297533360_pngtree-no-image-available-icon-flatvector-illustration-blank-avatar-modern-vector-png-image_40962406.jpg';
+    
+    const veterinarians = veterinariansToCreate.map((vet: any) => ({
+      name: vet.name,
+      email: vet.email,
+      matricula: vet.matricula,
+      description: vet.description,
+      phone: vet.phone,
+      horario_atencion: new Date(vet.horario_atencion),
+      profileImageUrl: defaultProfileImage,
+    }));
 
-    // Generar contraseña temporal aleatoria
+    // Generar contraseña temporal aleatoria con requisitos garantizados
     const generateTempPassword = () => {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
-      let password = '';
-      for (let i = 0; i < 12; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+      const numbers = '0123456789';
+      const special = '!@#$%&*';
+      const allChars = uppercase + lowercase + numbers + special;
+      
+      // Array con caracteres garantizados: 2 de cada tipo + 2 aleatorios
+      const guaranteedChars = [
+        uppercase[Math.floor(Math.random() * uppercase.length)],
+        uppercase[Math.floor(Math.random() * uppercase.length)],
+        lowercase[Math.floor(Math.random() * lowercase.length)],
+        lowercase[Math.floor(Math.random() * lowercase.length)],
+        numbers[Math.floor(Math.random() * numbers.length)],
+        numbers[Math.floor(Math.random() * numbers.length)],
+        special[Math.floor(Math.random() * special.length)],
+        special[Math.floor(Math.random() * special.length)],
+        allChars[Math.floor(Math.random() * allChars.length)],
+        allChars[Math.floor(Math.random() * allChars.length)],
+      ];
+      
+      // Fisher-Yates shuffle
+      for (let i = guaranteedChars.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [guaranteedChars[i], guaranteedChars[j]] = [guaranteedChars[j], guaranteedChars[i]];
       }
-      return password;
+      
+      return guaranteedChars.join('') + '!!';
     };
 
     for (const vetData of veterinarians) {

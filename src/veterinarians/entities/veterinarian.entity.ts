@@ -59,4 +59,23 @@ export class Veterinarian {
 
   @Column({ type: 'boolean', default: true })
   requirePasswordChange: boolean;
+
+  @Column({ 
+    type: 'jsonb', 
+    nullable: true,
+    comment: 'Lista de medicamentos controlados solicitados por el veterinario. Solo visible para veterinarios y administradores.'
+  })
+  medicamentosControlados?: Array<{
+    nombre: string;
+    cantidad: number;
+    urgencia: 'baja' | 'media' | 'alta';
+    justificacion?: string;
+    fechaSolicitud: string;
+    estado: 'pendiente' | 'aprobado' | 'rechazado' | 'entregado' | 'cancelado';
+    veterinarioNombre?: string;
+    veterinarioEmail?: string;
+    veterinarioMatricula?: string;
+    comentarioAdmin?: string;
+    fechaRespuesta?: string;
+  }>;
 }

@@ -12,6 +12,7 @@ import { Branch } from 'src/branches/entities/branch.entity';
 import { MercadoPagoModule } from 'src/mercadopago/mercadopago.module';
 import { MailerModule } from 'src/mailer/mailer.module';
 import { StripeModule } from 'src/stripe/stripe.module';
+import { SaleOrdersAnalyticsSeeder } from './seed/sale-orders-analytics.seeder';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { StripeModule } from 'src/stripe/stripe.module';
     forwardRef(() => StripeModule),
   ],
   controllers: [SaleOrdersController],
-  providers: [SaleOrdersService],
-  exports: [SaleOrdersService],
+  providers: [SaleOrdersService, SaleOrdersAnalyticsSeeder],
+  exports: [SaleOrdersService, SaleOrdersAnalyticsSeeder],
 })
 export class SaleOrdersModule {}

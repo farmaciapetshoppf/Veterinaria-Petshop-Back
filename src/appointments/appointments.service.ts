@@ -57,7 +57,9 @@ export class AppointmentsService {
           time: dto.time as any,
           status: true,
         },
-        relations: ['veterinarian'],
+        relations: {
+          veterinarian: true,
+        },
       });
 
       if (existing) {
@@ -83,7 +85,11 @@ export class AppointmentsService {
     // Cargar las relaciones completas para el email
     const appointmentWithRelations = await this.appointmentsRepository.findOne({
       where: { id: savedAppointment.id },
-      relations: ['user', 'pet', 'veterinarian'],
+      relations: {
+        user: true,
+        pet: true,
+        veterinarian: true,
+      },
     });
 
     if (
@@ -109,8 +115,16 @@ export class AppointmentsService {
 
   async findAll() {
     const appointments = await this.appointmentsRepository.find({
-      relations: ['pet', 'pet.owner', 'veterinarian'],
+      relations: {
+        pet: {
+          owner: true,
+        },
+        veterinarian: true,
+      },
     });
+    
+    console.log(`📊 Total de turnos en base de datos: ${appointments.length}`);
+    
     appointments.forEach((a) => {
       if (a.veterinarian && (a.veterinarian as any).password) {
         delete (a.veterinarian as any).password;
@@ -122,7 +136,12 @@ export class AppointmentsService {
   async findOne(id: string) {
     const appointment = await this.appointmentsRepository.findOne({
       where: { id: String(id) },
-      relations: ['pet', 'pet.owner', 'veterinarian'],
+      relations: {
+        pet: {
+          owner: true,
+        },
+        veterinarian: true,
+      },
       withDeleted: false,
     });
 
@@ -262,7 +281,11 @@ export class AppointmentsService {
       where: {
         date: Between(tomorrow, dayAfterTomorrow),
       },
-      relations: ['user', 'pet', 'veterinarian'],
+      relations: {
+        user: true,
+        pet: true,
+        veterinarian: true,
+      },
     });
 
     console.log(`📅 Turnos para mañana: ${appointments.length}`);
@@ -311,16 +334,36 @@ export class AppointmentsService {
     try {
       const appointmentDate = new Date(appointment.date);
       const dateStr = appointmentDate.toLocaleDateString('es-AR');
+      const timeStr = appointment.time instanceof Date ? appointment.time.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : String(appointment.time);
 
+      // Enviar confirmación al cliente
       await this.mailerService.sendAppointmentConfirmation({
         to: appointment.user.email,
         userName: appointment.user.name || 'Cliente',
         appointmentDate: dateStr,
-        appointmentTime: appointment.time instanceof Date ? appointment.time.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : String(appointment.time),
+        appointmentTime: timeStr,
         petName: appointment.pet?.nombre || 'N/A',
         veterinarianName: appointment.veterinarian?.name || 'N/A',
         reason: (appointment as any).reason || 'Consulta general',
+        veterinarianId: appointment.veterinarian?.id || '',
       });
+
+      // Enviar notificación al veterinario
+      if (appointment.veterinarian?.email) {
+        await this.mailerService.sendVeterinarianAppointmentAssigned({
+          to: appointment.veterinarian.email,
+          veterinarianName: appointment.veterinarian.name,
+          date: dateStr,
+          time: timeStr,
+          reason: (appointment as any).reason || 'Consulta general',
+          status: String(appointment.status || 'Pendiente'),
+          petName: appointment.pet?.nombre || 'N/A',
+          ownerName: appointment.user.name || 'N/A',
+          ownerPhone: appointment.user.phone || 'No especificado',
+          ownerEmail: appointment.user.email,
+          notes: (appointment as any).notes,
+        });
+      }
     } catch (error) {
       console.error('❌ Error enviando confirmación de turno:', error);
     }

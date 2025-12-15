@@ -1,4 +1,4 @@
-﻿import {
+import {
   Injectable,
   NotFoundException,
   BadRequestException,
@@ -14,6 +14,7 @@ import * as path from 'path';
 import { MailerService } from 'src/mailer/mailer.service';
 import { CreateSaleOrderDto } from './dto/create-sale-order.dto';
 import { UpdateSaleOrderDto } from './dto/update-sale-order.dto';
+import { CalculateShippingDto } from './dto/calculate-shipping.dto';
 import { SaleOrder, SaleOrderStatus } from './entities/sale-order.entity';
 import { SaleOrderProduct } from './entities/sale-order-product.entity';
 import { Users } from 'src/users/entities/user.entity';
@@ -80,7 +81,7 @@ export class SaleOrdersService {
           buyer: { id: userId },
           status: SaleOrderStatus.ACTIVE,
         },
-        relations: ['items', 'items.product'],
+        relations: { items: { product: true } },
       });
 
       const buyer = await manager.findOne(Users, { where: { id: userId } });
@@ -101,10 +102,10 @@ export class SaleOrdersService {
         cart = await manager.save(SaleOrder, cart);
       }
 
-      // Validar que el carrito no estÃ© vencido
+      // Validar que el carrito no esté vencido
       if (cart.expiresAt && new Date() > cart.expiresAt) {
         throw new BadRequestException(
-          'El carrito ha expirado. Se crearÃ¡ uno nuevo.',
+          'El carrito ha expirado. Se creará uno nuevo.',
         );
       }
 
@@ -123,22 +124,22 @@ export class SaleOrdersService {
         );
       }
 
-      // Verificar si el producto ya estÃ¡ en el carrito
+      // Verificar si el producto ya está en el carrito
       const existingItem = cart.items?.find(
         (item) => item.product.id === productId,
       );
 
       console.log(
-        `🛒 addToCart - Usuario: ${userId}, Producto: ${product.name} (${productId}), Cantidad: ${quantity}`,
+        `?? addToCart - Usuario: ${userId}, Producto: ${product.name} (${productId}), Cantidad: ${quantity}`,
       );
       console.log(
-        `📦 Items actuales en carrito:`,
+        `?? Items actuales en carrito:`,
         cart.items?.map((i) => `${i.product.name} x${i.quantity}`),
       );
 
       if (existingItem) {
         console.log(
-          `♻️ Item YA existe en carrito, actualizando cantidad: ${existingItem.quantity} → ${existingItem.quantity + quantity}`,
+          `?? Item YA existe en carrito, actualizando cantidad: ${existingItem.quantity} ? ${existingItem.quantity + quantity}`,
         );
 
         // Actualizar cantidad existente
@@ -147,7 +148,7 @@ export class SaleOrdersService {
         // Validar que hay stock para la nueva cantidad total
         if (product.stock < newTotalQty) {
           throw new BadRequestException(
-            `Stock insuficiente. Ya tenÃ©s ${existingItem.quantity} en el carrito. Disponible: ${product.stock}`,
+            `Stock insuficiente. Ya tenés ${existingItem.quantity} en el carrito. Disponible: ${product.stock}`,
           );
         }
 
@@ -155,7 +156,7 @@ export class SaleOrdersService {
         existingItem.quantity = newTotalQty;
         await manager.save(SaleOrderProduct, existingItem);
       } else {
-        console.log(`➕ Nuevo item, agregando al carrito`);
+        console.log(`? Nuevo item, agregando al carrito`);
 
         // Agregar nuevo item al carrito
         // Descontar stock inmediatamente
@@ -175,7 +176,7 @@ export class SaleOrdersService {
       // Recalcular total del carrito
       const updatedCart = await manager.findOne(SaleOrder, {
         where: { id: cart.id },
-        relations: ['items', 'items.product'],
+        relations: { items: { product: true } },
       });
 
       if (updatedCart) {
@@ -202,21 +203,21 @@ export class SaleOrdersService {
         buyer: { id: userId },
         status: SaleOrderStatus.ACTIVE,
       },
-      relations: ['items', 'items.product', 'buyer'],
+      relations: { items: { product: true }, buyer: true },
     });
 
     if (!cart) {
       return { message: 'No hay carrito activo', data: null };
     }
 
-    // Verificar si expirÃ³
+    // Verificar si expiró
     if (cart.expiresAt && new Date() > cart.expiresAt) {
       // Cancelar y restaurar stock
       await this.cancelExpiredCart(cart.id);
       return { message: 'El carrito ha expirado', data: null };
     }
 
-    // 🔧 DEDUPLICAR items con el mismo producto (fix para llamadas duplicadas del front)
+    // ?? DEDUPLICAR items con el mismo producto (fix para llamadas duplicadas del front)
     const productMap = new Map<string, SaleOrderProduct>();
     const duplicates: SaleOrderProduct[] = [];
 
@@ -228,7 +229,7 @@ export class SaleOrdersService {
         existing.quantity += item.quantity;
         duplicates.push(item);
         console.log(
-          `🔧 Duplicado detectado: ${item.product.name} (qty: ${item.quantity})`,
+          `?? Duplicado detectado: ${item.product.name} (qty: ${item.quantity})`,
         );
       } else {
         productMap.set(productId, item);
@@ -238,7 +239,7 @@ export class SaleOrdersService {
     // Eliminar duplicados de la BD si se encontraron
     if (duplicates.length > 0) {
       console.log(
-        `🗑️ Eliminando ${duplicates.length} items duplicados del carrito`,
+        `??? Eliminando ${duplicates.length} items duplicados del carrito`,
       );
       await this.saleOrderProductRepository.remove(duplicates);
 
@@ -258,7 +259,7 @@ export class SaleOrdersService {
       await this.saleOrderRepository.save(cart);
 
       console.log(
-        `✅ Carrito consolidado: ${cart.items.length} items únicos, total: $${cart.total}`,
+        `? Carrito consolidado: ${cart.items.length} items �nicos, total: $${cart.total}`,
       );
     }
 
@@ -276,7 +277,7 @@ export class SaleOrdersService {
           buyer: { id: userId },
           status: SaleOrderStatus.ACTIVE,
         },
-        relations: ['items', 'items.product'],
+        relations: { items: { product: true } },
       });
 
       if (!cart) {
@@ -314,7 +315,7 @@ export class SaleOrdersService {
       // Recalcular total
       const updatedCart = await manager.findOne(SaleOrder, {
         where: { id: cart.id },
-        relations: ['items', 'items.product'],
+        relations: { items: { product: true } },
       });
 
       if (updatedCart) {
@@ -341,7 +342,7 @@ export class SaleOrdersService {
 
   /**
    * Vaciar carrito completo
-   * Stock NO se restaura porque nunca se descontó
+   * Stock NO se restaura porque nunca se descont�
    */
   async clearCart(userId: string) {
     return this.dataSource.transaction(async (manager) => {
@@ -350,7 +351,7 @@ export class SaleOrdersService {
           buyer: { id: userId },
           status: SaleOrderStatus.ACTIVE,
         },
-        relations: ['items', 'items.product'],
+        relations: { items: { product: true } },
       });
 
       if (!cart) {
@@ -365,7 +366,7 @@ export class SaleOrdersService {
   }
 
   /**
-   * Obtener historial de Ã³rdenes pagadas del usuario
+   * Obtener historial de órdenes pagadas del usuario
    */
   async getOrderHistory(userId: string) {
     const orders = await this.saleOrderRepository.find({
@@ -373,7 +374,7 @@ export class SaleOrdersService {
         buyer: { id: userId },
         status: SaleOrderStatus.PAID,
       },
-      relations: ['items', 'items.product'],
+      relations: { items: { product: true } },
       order: { createdAt: 'DESC' },
     });
 
@@ -397,7 +398,7 @@ export class SaleOrdersService {
   ) {
     if (!this.mercadoPagoClient) {
       throw new BadRequestException(
-        'MercadoPago no estÃ¡ configurado. Verifica MERCADOPAGO_ACCESS_TOKEN en .env',
+        'MercadoPago no está configurado. Verifica MERCADOPAGO_ACCESS_TOKEN en .env',
       );
     }
 
@@ -407,7 +408,7 @@ export class SaleOrdersService {
         buyer: { id: userId },
         status: SaleOrderStatus.ACTIVE,
       },
-      relations: ['items', 'items.product', 'buyer'],
+      relations: { items: { product: true }, buyer: true },
     });
 
     if (!cart) {
@@ -415,17 +416,17 @@ export class SaleOrdersService {
     }
 
     if (!cart.items || cart.items.length === 0) {
-      throw new BadRequestException('El carrito estÃ¡ vacÃ­o');
+      throw new BadRequestException('El carrito está vacío');
     }
 
-    // 2. Verificar que no estÃ© vencido
+    // 2. Verificar que no esté vencido
     if (cart.expiresAt && new Date() > cart.expiresAt) {
       await this.cancelExpiredCart(cart.id);
       throw new BadRequestException('El carrito ha expirado');
     }
 
     try {
-      // Configuración del backend
+      // Configuraci�n del backend
       const ngrokUrl = this.configService.get<string>('NGROK_URL');
       const publicBackendUrl =
         ngrokUrl ||
@@ -440,17 +441,17 @@ export class SaleOrdersService {
         throw new BadRequestException('Token de MercadoPago no configurado');
       }
 
-      this.logToFile('📍 Backend configurado:', {
+      this.logToFile('?? Backend configurado:', {
         publicBackendUrl,
         notificationUrl: `${publicBackendUrl}/sale-orders/webhook`,
       });
       this.logToFile(
-        '🔑 Access Token (prefijo):',
+        '?? Access Token (prefijo):',
         accessToken?.substring(0, 20) + '...',
       );
-      this.logToFile('📥 CheckoutDto recibido desde el frontend:', checkoutDto);
+      this.logToFile('?? CheckoutDto recibido desde el frontend:', checkoutDto);
 
-      // Validar que el frontend envíe las URLs (son obligatorias)
+      // Validar que el frontend env�e las URLs (son obligatorias)
       if (
         !checkoutDto?.success_url ||
         !checkoutDto?.failure_url ||
@@ -468,7 +469,7 @@ export class SaleOrdersService {
         pending: checkoutDto.pending_url,
       };
 
-      this.logToFile('🔗 Back URLs recibidas del frontend:', backUrls);
+      this.logToFile('?? Back URLs recibidas del frontend:', backUrls);
 
       // 3. Crear preferencia usando el SDK de MercadoPago
       const client = new MercadoPagoConfig({
@@ -501,16 +502,16 @@ export class SaleOrdersService {
       // Agregar auto_return solo si se proporciona
       if (checkoutDto?.auto_return) {
         preferenceBody.auto_return = checkoutDto.auto_return;
-        this.logToFile('🔄 Auto return habilitado:', checkoutDto.auto_return);
+        this.logToFile('?? Auto return habilitado:', checkoutDto.auto_return);
       }
 
       const preferenceData = { body: preferenceBody };
 
-      this.logToFile('📤 Datos que se enviarán al SDK:', preferenceData);
+      this.logToFile('?? Datos que se enviar�n al SDK:', preferenceData);
 
       const result = await preference.create(preferenceData);
 
-      this.logToFile('✅ Respuesta COMPLETA de MercadoPago:', result);
+      this.logToFile('? Respuesta COMPLETA de MercadoPago:', result);
 
       // 5. Guardar ID de preferencia en el carrito y cambiar estado a PENDING
       cart.mercadoPagoId = result.id;
@@ -521,12 +522,12 @@ export class SaleOrdersService {
         message: 'Preferencia de pago creada exitosamente',
         data: {
           preferenceId: result.id,
-          initPoint: result.init_point, // Este es el link de PRODUCCIÓN
+          initPoint: result.init_point, // Este es el link de PRODUCCI�N
           sandboxInitPoint: result.sandbox_init_point, // Este es solo para testing
         },
       };
     } catch (error) {
-      console.error('❌ Error creando preferencia de MercadoPago:', error);
+      console.error('? Error creando preferencia de MercadoPago:', error);
       const err = error as any;
       const errorMessage =
         err?.response?.data || err?.message || 'Error desconocido';
@@ -543,7 +544,7 @@ export class SaleOrdersService {
    */
   async handleWebhook(body: any) {
     console.log(
-      '🔔 Webhook recibido de MercadoPago:',
+      '?? Webhook recibido de MercadoPago:',
       JSON.stringify(body, null, 2),
     );
 
@@ -554,11 +555,11 @@ export class SaleOrdersService {
       if (topic === 'merchant_order') {
         const merchantOrderId = body.data?.id || body['data.id'] || body.id;
         if (!merchantOrderId) {
-          console.warn('⚠️ Webhook merchant_order sin ID');
+          console.warn('?? Webhook merchant_order sin ID');
           return { message: 'Webhook recibido sin merchant_order ID' };
         }
 
-        console.log('📦 Procesando merchant_order:', merchantOrderId);
+        console.log('?? Procesando merchant_order:', merchantOrderId);
 
         const accessToken = this.configService.get<string>(
           'MERCADOPAGO_ACCESS_TOKEN',
@@ -574,13 +575,13 @@ export class SaleOrdersService {
 
         const merchantOrder = merchantOrderResponse.data;
         console.log(
-          '📋 Merchant Order:',
+          '?? Merchant Order:',
           JSON.stringify(merchantOrder, null, 2),
         );
 
         const orderId = merchantOrder.external_reference;
         if (!orderId) {
-          console.warn('⚠️ Merchant order sin external_reference');
+          console.warn('?? Merchant order sin external_reference');
           return { message: 'Merchant order sin external_reference' };
         }
 
@@ -589,11 +590,11 @@ export class SaleOrdersService {
         });
 
         if (!order) {
-          console.warn(`⚠️ Orden ${orderId} no encontrada`);
+          console.warn(`?? Orden ${orderId} no encontrada`);
           return { message: 'Orden no encontrada' };
         }
 
-        // Verificar si todos los pagos están aprobados
+        // Verificar si todos los pagos est�n aprobados
         const allPaid = merchantOrder.payments?.every(
           (p: any) => p.status === 'approved',
         );
@@ -602,10 +603,10 @@ export class SaleOrdersService {
           order.status = SaleOrderStatus.PAID;
           order.mercadoPagoStatus = 'approved';
           await this.saleOrderRepository.save(order);
-          console.log(`✅ Orden ${order.id} marcada como PAID`);
+          console.log(`? Orden ${order.id} marcada como PAID`);
         } else {
           console.log(
-            `⏳ Orden ${order.id} tiene pagos pendientes o rechazados`,
+            `? Orden ${order.id} tiene pagos pendientes o rechazados`,
           );
         }
 
@@ -615,7 +616,7 @@ export class SaleOrdersService {
       // Manejar payment
       if (topic !== 'payment') {
         console.log(
-          'ℹ️ Evento ignorado (topic no es payment ni merchant_order):',
+          '?? Evento ignorado (topic no es payment ni merchant_order):',
           topic,
         );
         return { message: 'Evento ignorado' };
@@ -623,7 +624,7 @@ export class SaleOrdersService {
 
       const paymentId = body.data?.id || body['data.id'];
       if (!paymentId) {
-        console.warn('⚠️ Webhook sin paymentId');
+        console.warn('?? Webhook sin paymentId');
         return { message: 'Webhook recibido pero sin paymentId' };
       }
 
@@ -650,7 +651,7 @@ export class SaleOrdersService {
       } catch (error: any) {
         if (error.response?.status === 404) {
           console.warn(
-            `⚠️ Payment ${paymentId} no encontrado (probablemente sandbox/test)`,
+            `?? Payment ${paymentId} no encontrado (probablemente sandbox/test)`,
           );
           return { message: 'Payment no encontrado' };
         }
@@ -707,7 +708,7 @@ export class SaleOrdersService {
     return this.dataSource.transaction(async (manager) => {
       const cart = await manager.findOne(SaleOrder, {
         where: { id: cartId },
-        relations: ['items', 'items.product'],
+        relations: { items: { product: true } },
       });
 
       if (!cart) return;
@@ -722,19 +723,19 @@ export class SaleOrdersService {
 
   /**
    * Tarea programada: Cancelar carritos vencidos
-   * Se ejecuta automÃ¡ticamente cada 2 horas
+   * Se ejecuta automáticamente cada 2 horas
    */
   @Cron(CronExpression.EVERY_2_HOURS)
   async cancelExpiredCarts() {
     console.log(
-      'ðŸ• Ejecutando tarea programada: Cancelar carritos vencidos...',
+      '🕐 Ejecutando tarea programada: Cancelar carritos vencidos...',
     );
 
     const expiredCarts = await this.saleOrderRepository.find({
       where: {
         status: SaleOrderStatus.ACTIVE,
       },
-      relations: ['items', 'items.product'],
+      relations: { items: { product: true } },
     });
 
     const now = new Date();
@@ -747,9 +748,7 @@ export class SaleOrdersService {
       }
     }
 
-    console.log(
-      `âœ… Tarea completada: ${cancelled.length} carritos cancelados`,
-    );
+    console.log(`✅ Tarea completada: ${cancelled.length} carritos cancelados`);
 
     return {
       message: `${cancelled.length} carritos vencidos cancelados`,
@@ -757,8 +756,8 @@ export class SaleOrdersService {
     };
   }
 
-  // ==================== MÃ‰TODO ORIGINAL (DEPRECADO) ====================
-  // Este mÃ©todo ya no se usa porque ahora el flujo es: addToCart â†’ checkout â†’ pago
+  // ==================== MÉTODO ORIGINAL (DEPRECADO) ====================
+  // Este método ya no se usa porque ahora el flujo es: addToCart → checkout → pago
   async create(dto: CreateSaleOrderDto) {
     return this.dataSource.transaction(async (manager) => {
       // Validar comprador (buyer)
@@ -865,7 +864,7 @@ export class SaleOrdersService {
           },
         });
 
-        console.log('✅ MercadoPago preference created:', {
+        console.log('? MercadoPago preference created:', {
           preferenceId: preference.id,
           initPoint: preference.init_point,
           sandboxInitPoint: preference.sandbox_init_point,
@@ -874,7 +873,7 @@ export class SaleOrdersService {
         // Load full order with relations for response
         const fullOrder = await manager.findOne(SaleOrder, {
           where: { id: saved.id },
-          relations: ['buyer', 'branch', 'items', 'items.product'],
+          relations: { buyer: true, branch: true, items: { product: true } },
         });
 
         return {
@@ -887,7 +886,7 @@ export class SaleOrdersService {
           },
         };
       } catch (error) {
-        console.error('❌ Error creating MercadoPago preference:', error);
+        console.error('? Error creating MercadoPago preference:', error);
         throw new BadRequestException('Error al generar preferencia de pago');
       }
     });
@@ -895,7 +894,7 @@ export class SaleOrdersService {
 
   async findAll() {
     const orders = await this.saleOrderRepository.find({
-      relations: ['buyer', 'branch', 'items', 'items.product'],
+      relations: { buyer: true, branch: true, items: { product: true } },
       order: { createdAt: 'DESC' },
     });
     return { message: 'Sale orders retrieved', data: orders };
@@ -904,7 +903,7 @@ export class SaleOrdersService {
   async findOne(id: number) {
     const order = await this.saleOrderRepository.findOne({
       where: { id: String(id) },
-      relations: ['buyer', 'branch', 'items', 'items.product'],
+      relations: { buyer: true, branch: true, items: { product: true } },
     });
     if (!order) throw new NotFoundException(`Sale order ${id} not found`);
     return { message: `Sale order ${id} retrieved`, data: order };
@@ -922,7 +921,7 @@ export class SaleOrdersService {
     throw new NotFoundException(`Sale order ${id} not found`);
   }
 
-  // ==================== MÃ‰TODO DE PRUEBA ====================
+  // ==================== MÉTODO DE PRUEBA ====================
 
   /**
    * Actualizar estado de una orden manualmente (para testing)
@@ -1139,5 +1138,205 @@ export class SaleOrdersService {
       console.error('Error procesando webhook de Stripe:', error);
       throw new BadRequestException('Error procesando webhook de Stripe');
     }
+  }
+  // ==================== CALCULAR COSTO DE ENV�O ====================
+
+  /**
+   * Calcular costo de env�o basado en c�digo postal O coordenadas GPS
+   *
+   * M�todo 1 (c�digo postal): L�gica por zonas predefinidas
+   * M�todo 2 (lat/lng): C�lculo por distancia real usando MapTiler API
+   *
+   * Tarifas por distancia (basadas en Correo Argentino):
+   * - 0-10 km: $1500 (entrega en 24-48hs)
+   * - 10-30 km: $2500 (entrega en 2-3 d�as)
+   * - 30-100 km: $4000 (entrega en 3-5 d�as)
+   * - 100-300 km: $6000 (entrega en 5-7 d�as)
+   * - +300 km: $8000 (entrega en 7-10 d�as)
+   */
+  async calculateShipping(dto: CalculateShippingDto) {
+    // Si se proporcionan coordenadas, calcular por distancia real
+    if (dto.latitude !== undefined && dto.longitude !== undefined) {
+      return this.calculateShippingByDistance(dto.latitude, dto.longitude);
+    }
+
+    // Si solo se proporciona c�digo postal, usar m�todo por zonas
+    if (dto.postalCode) {
+      return this.calculateShippingByPostalCode(dto.postalCode);
+    }
+
+    throw new BadRequestException(
+      'Debe proporcionar c�digo postal o coordenadas (latitude, longitude)',
+    );
+  }
+
+  /**
+   * Calcular env�o por c�digo postal (m�todo simplificado por zonas)
+   */
+  private calculateShippingByPostalCode(postalCodeStr: string) {
+    const postalCode = parseInt(postalCodeStr, 10);
+
+    if (isNaN(postalCode) || postalCode < 1000 || postalCode > 9999) {
+      throw new BadRequestException(
+        'C�digo postal inv�lido. Debe ser un n�mero de 4 d�gitos.',
+      );
+    }
+
+    let shippingCost: number;
+    let zone: string;
+    let deliveryTime: string;
+
+    // Determinar zona y costo
+    if (postalCode >= 1001 && postalCode <= 1439) {
+      zone = 'CABA';
+      shippingCost = 1500;
+      deliveryTime = '24-48 horas';
+    } else if (postalCode >= 1600 && postalCode <= 1900) {
+      zone = 'GBA (Gran Buenos Aires)';
+      shippingCost = 2000;
+      deliveryTime = '2-3 d�as h�biles';
+    } else if (postalCode >= 2000 && postalCode <= 7999) {
+      zone = 'Interior Buenos Aires';
+      shippingCost = 3000;
+      deliveryTime = '3-5 d�as h�biles';
+    } else {
+      zone = 'Resto del pa�s';
+      shippingCost = 5000;
+      deliveryTime = '5-7 d�as h�biles';
+    }
+
+    return {
+      method: 'postal_code',
+      postalCode: postalCodeStr,
+      zone,
+      shippingCost,
+      deliveryTime,
+      currency: 'ARS',
+      message: 'Costo de env�o calculado por zona postal',
+    };
+  }
+
+  /**
+   * Calcular env�o por distancia real usando f�rmula de Haversine
+   * (distancia en l�nea recta entre dos puntos GPS)
+   */
+  private async calculateShippingByDistance(
+    clientLat: number,
+    clientLng: number,
+  ) {
+    try {
+      // Obtener coordenadas del local desde variables de entorno
+      const localLatStr = this.configService.get<string>('LOCAL_LATITUD');
+      const localLngStr = this.configService.get<string>('LOCAL_LONGITUD');
+
+      if (!localLatStr || !localLngStr) {
+        throw new BadRequestException(
+          'Configuraci�n de ubicaci�n del local incompleta',
+        );
+      }
+
+      const localLat = parseFloat(localLatStr);
+      const localLng = parseFloat(localLngStr);
+
+      // Calcular distancia usando f�rmula de Haversine (distancia en l�nea recta)
+      const distanceInKm = this.calculateHaversineDistance(
+        localLat,
+        localLng,
+        clientLat,
+        clientLng,
+      );
+
+      const distanceInMeters = distanceInKm * 1000;
+
+      // Estimar duraci�n aproximada (asumiendo 40 km/h promedio en ciudad, 60 km/h en ruta)
+      const avgSpeed = distanceInKm < 30 ? 40 : 60; // km/h
+      const durationInMinutes = Math.round((distanceInKm / avgSpeed) * 60);
+
+      // Calcular costo y tiempo de entrega basado en distancia
+      let shippingCost: number;
+      let deliveryTime: string;
+      let zone: string;
+
+      if (distanceInMeters <= 10000) {
+        // 0-10 km
+        zone = 'Zona cercana (0-10 km)';
+        shippingCost = 1500;
+        deliveryTime = '24-48 horas';
+      } else if (distanceInMeters <= 30000) {
+        // 10-30 km
+        zone = 'Zona metropolitana (10-30 km)';
+        shippingCost = 2500;
+        deliveryTime = '2-3 d�as h�biles';
+      } else if (distanceInMeters <= 100000) {
+        // 30-100 km
+        zone = 'Zona provincial (30-100 km)';
+        shippingCost = 4000;
+        deliveryTime = '3-5 d�as h�biles';
+      } else if (distanceInMeters <= 300000) {
+        // 100-300 km
+        zone = 'Zona regional (100-300 km)';
+        shippingCost = 6000;
+        deliveryTime = '5-7 d�as h�biles';
+      } else {
+        // +300 km
+        zone = 'Zona nacional (+300 km)';
+        shippingCost = 8000;
+        deliveryTime = '7-10 d�as h�biles';
+      }
+
+      return {
+        method: 'gps_distance',
+        latitude: clientLat,
+        longitude: clientLng,
+        distance: `${distanceInKm.toFixed(2)} km`,
+        distanceInMeters: Math.round(distanceInMeters),
+        estimatedDuration: `${durationInMinutes} minutos`,
+        zone,
+        shippingCost,
+        deliveryTime,
+        currency: 'ARS',
+        message: 'Costo de env�o calculado por distancia GPS',
+      };
+    } catch (error) {
+      console.error('Error calculando env�o por distancia:', error);
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new BadRequestException(
+        'Error al calcular la distancia. Verifique las coordenadas proporcionadas.',
+      );
+    }
+  }
+
+  private calculateHaversineDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = this.degreesToRadians(lat2 - lat1);
+    const dLon = this.degreesToRadians(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.degreesToRadians(lat1)) *
+        Math.cos(this.degreesToRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distancia en km
+
+    return distance;
+  }
+
+  /**
+   * Convertir grados a radianes
+   */
+  private degreesToRadians(degrees: number): number {
+    return degrees * (Math.PI / 180);
   }
 }
