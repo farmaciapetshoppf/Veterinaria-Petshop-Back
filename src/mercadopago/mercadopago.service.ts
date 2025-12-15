@@ -19,33 +19,63 @@ export class MercadoPagoService {
    */
   async createPreference(items: any[], orderId: string, buyerEmail: string) {
     try {
-      const preference = await this.preference.create({
-        body: {
-          items: items.map((item, index) => ({
-            id: item.product.id || `item-${index}`,
-            title: item.product.name,
-            quantity: item.quantity,
-            unit_price: Number(item.unitPrice),
-            currency_id: 'ARS',
-          })),
-          back_urls: {
-            success: `${process.env.FRONTEND_URL}/checkout/success`,
-            failure: `${process.env.FRONTEND_URL}/checkout/failure`,
-            pending: `${process.env.FRONTEND_URL}/checkout/pending`,
-          },
-          auto_return: 'approved',
-          notification_url: `${process.env.API_URL}/sale-orders/webhook`,
-          external_reference: orderId, // ID de la orden para identificarla en el webhook
-          payer: {
-            email: buyerEmail,
-          },
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
+      const apiUrl = process.env.API_URL || 'http://localhost:3000';
+
+      console.log('🔧 Debug - Environment Variables:');
+      console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+      console.log('API_URL:', process.env.API_URL);
+      console.log('Using frontendUrl:', frontendUrl);
+      console.log('Using apiUrl:', apiUrl);
+
+      // ❌ CONSOLIDACIÓN DESHABILITADA - Permite múltiples items del mismo producto
+      // const consolidatedItems = items.reduce((acc, item) => {
+      //   const existingItem = acc.find(i => i.product.id === item.product.id);
+      //   if (existingItem) {
+      //     // Si el producto ya existe, sumar la cantidad
+      //     existingItem.quantity += item.quantity;
+      //   } else {
+      //     // Si no existe, agregarlo
+      //     acc.push({ ...item });
+      //   }
+      //   return acc;
+      // }, []);
+
+      // ✅ CÓDIGO CORRECTO: Usa los items tal cual vienen del carrito
+      const consolidatedItems = items;
+
+      console.log('📦 Items en la preferencia:', consolidatedItems.length);
+
+      const preferenceData: any = {
+        items: consolidatedItems.map((item, index) => ({
+          id: item.product.id || `item-${index}`,
+          title: item.product.name,
+          quantity: item.quantity,
+          unit_price: Number(item.unitPrice),
+          currency_id: 'ARS',
+        })),
+        back_urls: {
+          success: `${frontendUrl}/checkout/success`,
+          failure: `${frontendUrl}/checkout/failure`,
+          pending: `${frontendUrl}/checkout/pending`,
         },
+        notification_url: `${apiUrl}/sale-orders/webhook`,
+        external_reference: orderId,
+        payer: {
+          email: buyerEmail,
+        },
+      };
+
+      console.log('📦 Preference data:', JSON.stringify(preferenceData, null, 2));
+
+      const preference = await this.preference.create({
+        body: preferenceData,
       });
 
       return {
         id: preference.id,
-        init_point: preference.init_point, // URL para redirigir al usuario
-        sandbox_init_point: preference.sandbox_init_point, // URL de sandbox para testing
+        init_point: preference.init_point,
+        sandbox_init_point: preference.sandbox_init_point,
       };
     } catch (error) {
       console.error('Error creating MercadoPago preference:', error);

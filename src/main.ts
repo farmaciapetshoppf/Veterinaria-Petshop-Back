@@ -4,23 +4,56 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ExcludePasswordInterceptor } from './password-exclude/password-exclude.interceptor';
 import cookieParser from 'cookie-parser';
+import { captureRawBody } from './stripe/middleware/rawBody.middleware';
+import express from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
 
   app.use(cookieParser());
+
+  // Middleware para procesar webhooks de Stripe
+  app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
+
+  // Para todas las demás rutas, usar el procesamiento normal
+  app.use((req, res, next) => {
+    if (req.originalUrl !== '/stripe/webhook') {
+      express.json()(req, res, next);
+    } else {
+      next();
+    }
+  });
+
+  // Aplicar cookieParser para todas las rutas excepto webhook
+  app.use((req, res, next) => {
+    if (req.originalUrl !== '/stripe/webhook') {
+      cookieParser()(req, res, next);
+    } else {
+      next();
+    }
+  });
 
   // CORS - Configuración para permitir cookies entre dominios
   app.enableCors({
     origin: [
       process.env.API_URL,
+      process.env.NGROK_URL,
       process.env.FRONTEND_URL,
       'http://localhost:3002',
       'http://localhost:3000',
-    ],
+      'https://darcy-semisuccess-ashleigh.ngrok-free.dev',
+    ]
+      .filter(Boolean)
+      .map((url) => (url?.endsWith('/') ? url.slice(0, -1) : url)),
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true, // ✅ Crucial para que las cookies funcionen
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cookie'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'Cookie',
+      'stripe-signature',
+    ],
     exposedHeaders: ['Set-Cookie'],
   });
 

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 5px; }
+    .content { background: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th { background: #4CAF50; color: white; padding: 10px; text-align: left; }
+    td { padding: 10px; border-bottom: 1px solid #ddd; }
+    .total { font-size: 18px; font-weight: bold; color: #4CAF50; text-align: right; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Compra Confirmada - Huellitas Pet</h1>
+    </div>
+    <div class="content">
+      <p>Hola <strong>{{userName}}</strong>,</p>
+      <p>¡Gracias por tu compra! Tu pago ha sido <strong style="color: #4CAF50;">aprobado exitosamente</strong>.</p>
+      
+      <h3>Detalle de tu compra:</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th style="text-align: center;">Cantidad</th>
+            <th style="text-align: right;">Precio Unit.</th>
+            <th style="text-align: right;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each items}}
+          <tr>
+            <td>{{this.productName}}</td>
+            <td style="text-align: center;">{{this.quantity}}</td>
+            <td style="text-align: right;">${{this.unitPrice}}</td>
+            <td style="text-align: right;">${{this.subtotal}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      
+      <div class="total">
+        Total: ${{total}}
+      </div>
+      
+      <p style="margin-top: 30px;">Tu pedido será procesado y te contactaremos pronto para coordinar la entrega.</p>
+      <p><strong>Número de orden:</strong> {{orderId}}</p>
+    </div>
+    <div class="footer">
+      <p>Este es un correo automático. Por favor no respondas a este mensaje.</p>
+      <p>Huellitas Pet 🐾 - Cuidamos de los que más querés</p>
+    </div>
+  </div>
+</body>
+</html>

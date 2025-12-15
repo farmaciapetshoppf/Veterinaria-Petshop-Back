@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+      padding: 40px 20px;
+    }
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .paw-pattern {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-size: 80px;
+      opacity: 0.1;
+      transform: rotate(-15deg);
+      color: #f97316;
+    }
+    .header {
+      background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '🐾';
+      position: absolute;
+      font-size: 120px;
+      opacity: 0.15;
+      top: -20px;
+      left: -30px;
+      transform: rotate(-25deg);
+    }
+    .header::after {
+      content: '🐾';
+      position: absolute;
+      font-size: 100px;
+      opacity: 0.15;
+      bottom: -20px;
+      right: -20px;
+      transform: rotate(15deg);
+    }
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+    .header .icon {
+      font-size: 50px;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .content {
+      padding: 40px 30px;
+      position: relative;
+    }
+    .greeting {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .success-badge {
+      background: #10b981;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      display: inline-block;
+      font-weight: 600;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .details-card {
+      background: #fff7ed;
+      border-radius: 12px;
+      padding: 25px;
+      border-left: 4px solid #f97316;
+      margin: 20px 0;
+      box-shadow: 0 2px 8px rgba(249,115,22,0.1);
+    }
+    .detail-row {
+      display: flex;
+      padding: 12px 0;
+      border-bottom: 1px solid #fed7aa;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #c2410c;
+      min-width: 140px;
+      font-size: 14px;
+    }
+    .detail-value {
+      color: #1e293b;
+      font-weight: 500;
+      font-size: 15px;
+    }
+    .info-box {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin: 25px 0;
+    }
+    .info-box p {
+      color: #92400e;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .paw-divider {
+      text-align: center;
+      margin: 30px 0;
+      font-size: 30px;
+      letter-spacing: 10px;
+      opacity: 0.6;
+    }
+    .paw-icon {
+      font-size: 40px;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .footer {
+      background: #fff7ed;
+      padding: 30px;
+      text-align: center;
+      border-top: 2px solid #fed7aa;
+      position: relative;
+    }
+    .footer::before {
+      content: '🐾';
+      position: absolute;
+      font-size: 60px;
+      opacity: 0.1;
+      top: 10px;
+      left: 20px;
+      color: #f97316;
+    }
+    .footer::after {
+      content: '🐾';
+      position: absolute;
+      font-size: 60px;
+      opacity: 0.1;
+      bottom: 10px;
+      right: 20px;
+      color: #f97316;
+    }
+    .footer p {
+      color: #c2410c;
+      font-size: 13px;
+      line-height: 1.8;
+      margin: 5px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .brand {
+      color: #f97316;
+      font-weight: 700;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <span class="paw-pattern">🐾</span>
+    
+    <div class="header">
+      <div class="icon">✅</div>
+      <h1>¡Turno Confirmado!</h1>
+    </div>
+    
+    <div class="content">
+      <div class="greeting">
+        Hola <strong>{{userName}}</strong>,
+      </div>
+      
+      <div class="success-badge">
+        ✓ Confirmación exitosa
+      </div>
+      
+      <p style="color: #475569; line-height: 1.8; margin-bottom: 25px;">
+        Tu turno ha sido agendado correctamente. A continuación encontrarás todos los detalles de tu cita:
+      </p>
+      
+      <div class="paw-divider">🐾 🐾 🐾</div>
+      
+      <div class="details-card">
+        <div class="detail-row">
+          <span class="detail-label">📅 Fecha:</span>
+          <span class="detail-value">{{appointmentDate}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">🕐 Horario:</span>
+          <span class="detail-value">{{appointmentTime}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">🐾 Mascota:</span>
+          <span class="detail-value">{{petName}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">👨‍⚕️ Veterinario/a:</span>
+          <span class="detail-value">{{veterinarianName}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">📋 Motivo:</span>
+          <span class="detail-value">{{reason}}</span>
+        </div>
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{{appointmentsUrl}}" class="cta-button" style="display: inline-block; background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%); color: white; padding: 14px 30px; text-decoration: none; border-radius: 30px; font-weight: 600; margin: 10px 5px; box-shadow: 0 4px 15px rgba(249,115,22,0.3); transition: transform 0.2s;">
+          📅 Ver Mis Turnos
+        </a>
+        <a href="{{chatUrl}}" class="cta-button" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 30px; text-decoration: none; border-radius: 30px; font-weight: 600; margin: 10px 5px; box-shadow: 0 4px 15px rgba(16,185,129,0.3); transition: transform 0.2s;">
+          💬 Mandar Mensaje
+        </a>
+      </div>
+
+      <div class="info-box">
+        <p>
+          <strong>💡 Recordatorio:</strong> Te enviaremos una notificación 24 horas antes de tu cita. 
+          Por favor, llegá 10 minutos antes del horario programado.
+        </p>
+      </div>
+      
+      <div class="paw-divider">🐾 🐾 🐾</div>
+      
+      <div class="paw-icon">🐶 🐱 🐰</div>
+      
+      <p style="text-align: center; color: #f97316; font-weight: 600; font-size: 16px;">
+        ¡Te esperamos!
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+      <p class="brand">Huellitas Pet 🐾</p>
+      <p style="font-size: 12px; color: #c2410c;">Cuidamos de los que más querés</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -6,11 +6,13 @@ import {
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
-import { Repository } from 'typeorm';
+import { Repository, MoreThanOrEqual, LessThan, Between } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Appointments } from './entities/appointment.entity';
 import { Users } from 'src/users/entities/user.entity';
 import { Pet } from 'src/pets/entities/pet.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { MailerService } from 'src/mailer/mailer.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -26,6 +28,8 @@ export class AppointmentsService {
 
     @InjectRepository(Veterinarian)
     private readonly vetsRepo: Repository<Veterinarian>,
+
+    private readonly mailerService: MailerService,
   ) {}
 
   async create(dto: CreateAppointmentDto) {
@@ -53,7 +57,9 @@ export class AppointmentsService {
           time: dto.time as any,
           status: true,
         },
-        relations: ['veterinarian'],
+        relations: {
+          veterinarian: true,
+        },
       });
 
       if (existing) {
@@ -74,25 +80,51 @@ export class AppointmentsService {
     };
 
     const appointment = this.appointmentsRepository.create(appointmentData);
-    await this.appointmentsRepository.save(appointment);
+    const savedAppointment = await this.appointmentsRepository.save(appointment);
+
+    // Cargar las relaciones completas para el email
+    const appointmentWithRelations = await this.appointmentsRepository.findOne({
+      where: { id: savedAppointment.id },
+      relations: {
+        user: true,
+        pet: true,
+        veterinarian: true,
+      },
+    });
 
     if (
-      appointment.veterinarian &&
-      (appointment.veterinarian as any).password
+      appointmentWithRelations &&
+      appointmentWithRelations.veterinarian &&
+      (appointmentWithRelations.veterinarian as any).password
     ) {
-      delete (appointment.veterinarian as any).password;
+      delete (appointmentWithRelations.veterinarian as any).password;
+    }
+
+    // Enviar email de confirmación de forma asíncrona (no bloquear la respuesta)
+    if (appointmentWithRelations) {
+      this.sendAppointmentConfirmation(appointmentWithRelations).catch((err) =>
+        console.error('Error enviando email de confirmación:', err),
+      );
     }
 
     return {
       message: 'Appointment created successfully',
-      data: appointment,
+      data: appointmentWithRelations,
     };
   }
 
   async findAll() {
     const appointments = await this.appointmentsRepository.find({
-      relations: ['pet', 'pet.owner', 'veterinarian'],
+      relations: {
+        pet: {
+          owner: true,
+        },
+        veterinarian: true,
+      },
     });
+    
+    console.log(`📊 Total de turnos en base de datos: ${appointments.length}`);
+    
     appointments.forEach((a) => {
       if (a.veterinarian && (a.veterinarian as any).password) {
         delete (a.veterinarian as any).password;
@@ -104,29 +136,61 @@ export class AppointmentsService {
   async findOne(id: string) {
     const appointment = await this.appointmentsRepository.findOne({
       where: { id: String(id) },
-      relations: ['pet', 'pet.owner', 'veterinarian'],
+      relations: {
+        pet: {
+          owner: true,
+        },
+        veterinarian: true,
+      },
+      withDeleted: false,
     });
+
     if (!appointment) return null;
+
     if (
       appointment.veterinarian &&
       (appointment.veterinarian as any).password
     ) {
       delete (appointment.veterinarian as any).password;
     }
+
     return appointment;
   }
 
   async update(id: string, updateAppointmentDto: UpdateAppointmentDto) {
-    await this.appointmentsRepository.update(id, updateAppointmentDto as any);
+    const existingAppointment = await this.findOne(id);
+
+    if (!existingAppointment) {
+      throw new NotFoundException(`Appointment ${id} not found`);
+    }
+
+    await this.appointmentsRepository.update(id, {
+      ...(updateAppointmentDto.date && { date: updateAppointmentDto.date }),
+      ...(updateAppointmentDto.time && { time: updateAppointmentDto.time }),
+      ...(updateAppointmentDto.detail !== undefined && {
+        detail: updateAppointmentDto.detail,
+      }),
+      ...(updateAppointmentDto.status !== undefined && {
+        status: updateAppointmentDto.status,
+      }),
+    });
+
     const updated = await this.findOne(id);
-    return { message: `Appointment ${id} updated`, data: updated };
+    return { message: `Appointment ${id} updated`, updated };
   }
 
   async remove(id: string) {
-    const result = await this.appointmentsRepository.delete(id);
-    if (result.affected && result.affected > 0)
-      return { message: `Appointment ${id} removed` };
-    return { message: `Appointment ${id} not found` };
+    const appointment = await this.appointmentsRepository.findOne({
+      where: { id },
+      withDeleted: false,
+    });
+
+    if (!appointment) {
+      return { message: `Appointment ${id} not found` };
+    }
+
+    await this.appointmentsRepository.softDelete(id);
+    return { message: `Appointment ${id} removed` };
   }
 
   async getAvailability(vetId: string, date: string) {
@@ -192,5 +256,116 @@ export class AppointmentsService {
       veterinarianId: vetId,
       slots,
     };
+  }
+
+  // ==================== CRON JOBS ====================
+
+  /**
+   * Enviar recordatorios de turnos 24 horas antes
+   * Se ejecuta todos los días a las 9:00 AM
+   */
+  @Cron('0 9 * * *')
+  async sendAppointmentReminders() {
+    console.log('🔔 Ejecutando cron: Recordatorios de turnos');
+
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    const dayAfterTomorrow = new Date(tomorrow);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
+    // Buscar turnos para mañana
+    const appointments = await this.appointmentsRepository.find({
+      where: {
+        date: Between(tomorrow, dayAfterTomorrow),
+      },
+      relations: {
+        user: true,
+        pet: true,
+        veterinarian: true,
+      },
+    });
+
+    console.log(`📅 Turnos para mañana: ${appointments.length}`);
+
+    for (const appointment of appointments) {
+      if (!appointment.user?.email) {
+        console.log(`⚠️ Turno ${appointment.id} sin email de usuario`);
+        continue;
+      }
+
+      try {
+        const appointmentDate = new Date(appointment.date);
+        const dateStr = appointmentDate.toLocaleDateString('es-AR');
+
+        await this.mailerService.sendAppointmentReminder({
+          to: appointment.user.email,
+          userName: appointment.user.name || 'Cliente',
+          appointmentDate: dateStr,
+          appointmentTime: appointment.time instanceof Date ? appointment.time.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : String(appointment.time),
+          petName: appointment.pet?.nombre || 'N/A',
+          veterinarianName: appointment.veterinarian?.name || 'N/A',
+          reason: (appointment as any).reason || 'Consulta general',
+        });
+
+        console.log(`✅ Recordatorio enviado a ${appointment.user.email}`);
+      } catch (error) {
+        console.error(
+          `❌ Error enviando recordatorio para turno ${appointment.id}:`,
+          error,
+        );
+      }
+    }
+
+    console.log('✅ Cron de recordatorios completado');
+  }
+
+  /**
+   * Enviar email de confirmación cuando se crea un turno
+   */
+  async sendAppointmentConfirmation(appointment: Appointments) {
+    if (!appointment.user?.email) {
+      console.log('⚠️ No se puede enviar confirmación: usuario sin email');
+      return;
+    }
+
+    try {
+      const appointmentDate = new Date(appointment.date);
+      const dateStr = appointmentDate.toLocaleDateString('es-AR');
+      const timeStr = appointment.time instanceof Date ? appointment.time.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : String(appointment.time);
+
+      // Enviar confirmación al cliente
+      await this.mailerService.sendAppointmentConfirmation({
+        to: appointment.user.email,
+        userName: appointment.user.name || 'Cliente',
+        appointmentDate: dateStr,
+        appointmentTime: timeStr,
+        petName: appointment.pet?.nombre || 'N/A',
+        veterinarianName: appointment.veterinarian?.name || 'N/A',
+        reason: (appointment as any).reason || 'Consulta general',
+        veterinarianId: appointment.veterinarian?.id || '',
+      });
+
+      // Enviar notificación al veterinario
+      if (appointment.veterinarian?.email) {
+        await this.mailerService.sendVeterinarianAppointmentAssigned({
+          to: appointment.veterinarian.email,
+          veterinarianName: appointment.veterinarian.name,
+          date: dateStr,
+          time: timeStr,
+          reason: (appointment as any).reason || 'Consulta general',
+          status: String(appointment.status || 'Pendiente'),
+          petName: appointment.pet?.nombre || 'N/A',
+          ownerName: appointment.user.name || 'N/A',
+          ownerPhone: appointment.user.phone || 'No especificado',
+          ownerEmail: appointment.user.email,
+          notes: (appointment as any).notes,
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error enviando confirmación de turno:', error);
+    }
   }
 }

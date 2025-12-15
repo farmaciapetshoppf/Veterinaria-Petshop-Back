@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { SaleOrdersService } from './sale-orders.service';
 import { SaleOrdersController } from './sale-orders.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,6 +10,9 @@ import { Products } from 'src/products/entities/product.entity';
 import { Users } from 'src/users/entities/user.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { MercadoPagoModule } from 'src/mercadopago/mercadopago.module';
+import { MailerModule } from 'src/mailer/mailer.module';
+import { StripeModule } from 'src/stripe/stripe.module';
+import { SaleOrdersAnalyticsSeeder } from './seed/sale-orders-analytics.seeder';
 
 @Module({
   imports: [
@@ -23,8 +26,11 @@ import { MercadoPagoModule } from 'src/mercadopago/mercadopago.module';
     ProductsModule,
     UsersModule,
     MercadoPagoModule,
+    MailerModule,
+    forwardRef(() => StripeModule),
   ],
   controllers: [SaleOrdersController],
-  providers: [SaleOrdersService],
+  providers: [SaleOrdersService, SaleOrdersAnalyticsSeeder],
+  exports: [SaleOrdersService, SaleOrdersAnalyticsSeeder],
 })
 export class SaleOrdersModule {}

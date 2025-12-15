@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,10 +11,21 @@ import { Appointments } from 'src/appointments/entities/appointment.entity';
 import { StorageService } from 'src/supabase/storage.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { UsersSeeder } from './seed/users.seeder';
+import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
+import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
+import { MailerModule } from 'src/mailer/mailer.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Users, Pet, SaleOrder, Appointments]),
+    TypeOrmModule.forFeature([
+      Users,
+      Pet,
+      SaleOrder,
+      Appointments,
+      Veterinarian,
+    ]),
+    forwardRef(() => VeterinariansModule),
+    MailerModule,
     MulterModule.register({
       limits: {
         fileSize: 50 * 1024 * 1024, // Limitar el tamaño a 50MB
@@ -22,7 +33,13 @@ import { UsersSeeder } from './seed/users.seeder';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, UsersRepository, SupabaseService, StorageService, UsersSeeder],
+  providers: [
+    UsersService,
+    UsersRepository,
+    SupabaseService,
+    StorageService,
+    UsersSeeder,
+  ],
   exports: [UsersService],
 })
 export class UsersModule {}

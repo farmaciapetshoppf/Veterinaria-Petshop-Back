@@ -54,7 +54,10 @@ export class ProductsService {
 
   async findAll() {
     const products = await this.productsRepository.find({
-      relations: ['category'],
+      relations: {
+        category: true,
+        images: true,
+      },
     });
     return { message: 'Products retrieved', data: products };
   }
@@ -62,7 +65,10 @@ export class ProductsService {
   async findOne(id: string) {
     const product = await this.productsRepository.findOne({
       where: { id },
-      relations: ['category'],
+      relations: {
+        category: true,
+        images: true,
+      },
     });
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -73,7 +79,9 @@ export class ProductsService {
   async update(id: string, updateProductDto: UpdateProductDto) {
     const product = await this.productsRepository.findOneOrFail({
       where: { id },
-      relations: ['category'],
+      relations: {
+        category: true,
+      },
     });
 
     if (updateProductDto.categoryId) {

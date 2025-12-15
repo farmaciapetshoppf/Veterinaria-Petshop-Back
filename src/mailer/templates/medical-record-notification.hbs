@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #9C27B0; color: white; padding: 20px; text-align: center; border-radius: 5px; }
+    .content { background: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px; }
+    .section { background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #9C27B0; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+    .highlight { color: #9C27B0; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Registro Médico - Huellitas Pet</h1>
+    </div>
+    <div class="content">
+      <p>Hola <strong>{{ownerName}}</strong>,</p>
+      <p>El Dr./Dra. <span class="highlight">{{veterinarianName}}</span> ha registrado la consulta de <strong>{{petName}}</strong>:</p>
+      
+      <div class="section">
+        <h3>📝 Diagnóstico</h3>
+        <p>{{diagnosis}}</p>
+      </div>
+      
+      <div class="section">
+        <h3>💊 Tratamiento</h3>
+        <p>{{treatment}}</p>
+      </div>
+      
+      {{#if medications}}
+      <div class="section">
+        <h3>💉 Medicamentos</h3>
+        <p>{{medications}}</p>
+      </div>
+      {{/if}}
+      
+      {{#if vaccinations}}
+      <div class="section">
+        <h3>🩺 Vacunas Aplicadas</h3>
+        <p>{{vaccinations}}</p>
+      </div>
+      {{/if}}
+      
+      {{#if weight}}
+      <p><strong>Peso:</strong> {{weight}} kg</p>
+      {{/if}}
+      
+      {{#if temperature}}
+      <p><strong>Temperatura:</strong> {{temperature}} °C</p>
+      {{/if}}
+      
+      {{#if nextAppointment}}
+      <div class="section">
+        <h3>📅 Próxima Cita</h3>
+        <p>{{nextAppointment}}</p>
+      </div>
+      {{/if}}
+      
+      {{#if observations}}
+      <div class="section">
+        <h3>📌 Observaciones</h3>
+        <p>{{observations}}</p>
+      </div>
+      {{/if}}
+      
+      <p style="margin-top: 20px;">Podés consultar el historial médico completo de {{petName}} en tu perfil.</p>
+    </div>
+    <div class="footer">
+      <p>Este es un correo automático. Por favor no respondas a este mensaje.</p>
+      <p>Huellitas Pet 🐾 - Cuidamos de los que más querés</p>
+    </div>
+  </div>
+</body>
+</html>

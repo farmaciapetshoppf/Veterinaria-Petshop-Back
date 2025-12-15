@@ -84,11 +84,13 @@ export class CategoriesController {
     return this.categoriesService.findAll();
   }
 
+  @ApiOperation({ summary: 'Get all categories (basic info)' })
   @Get('basic')
   findAllBasic() {
     return this.categoriesService.findAllBasic();
   }
 
+  @ApiOperation({ summary: 'Get category by ID' })
   @Get(':id')
   findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.findOne(id);

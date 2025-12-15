@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { Appointments } from 'src/appointments/entities/appointment.entity';
+import { MedicalRecordsPet } from 'src/medical-records-pet/entities/medical-records-pet.entity';
 import { Role } from 'src/auth/enum/roles.enum';
 
 @Entity('veterinarians')
@@ -25,6 +26,9 @@ export class Veterinarian {
   @Column({ type: 'date', nullable: false })
   time: Date;
 
+  @Column({ type: 'timestamp', nullable: true })
+  horario_atencion: Date;
+
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
@@ -49,4 +53,29 @@ export class Veterinarian {
 
   @OneToMany(() => Appointments, (appointment) => appointment.veterinarian)
   appointments?: Appointments[];
+
+  @OneToMany(() => MedicalRecordsPet, (record) => record.veterinarian)
+  medicalRecords?: MedicalRecordsPet[];
+
+  @Column({ type: 'boolean', default: true })
+  requirePasswordChange: boolean;
+
+  @Column({ 
+    type: 'jsonb', 
+    nullable: true,
+    comment: 'Lista de medicamentos controlados solicitados por el veterinario. Solo visible para veterinarios y administradores.'
+  })
+  medicamentosControlados?: Array<{
+    nombre: string;
+    cantidad: number;
+    urgencia: 'baja' | 'media' | 'alta';
+    justificacion?: string;
+    fechaSolicitud: string;
+    estado: 'pendiente' | 'aprobado' | 'rechazado' | 'entregado' | 'cancelado';
+    veterinarioNombre?: string;
+    veterinarioEmail?: string;
+    veterinarioMatricula?: string;
+    comentarioAdmin?: string;
+    fechaRespuesta?: string;
+  }>;
 }

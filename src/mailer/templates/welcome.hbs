@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+      padding: 40px 20px;
+    }
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .header {
+      background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .greeting {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    {{#if temporaryPassword}}
+    .password-box {
+      background: #fff7ed;
+      border-left: 4px solid #f97316;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 25px 0;
+    }
+    .password-box h3 {
+      color: #c2410c;
+      margin-bottom: 10px;
+    }
+    .password-code {
+      background: white;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 2px;
+      color: #f97316;
+      border: 2px dashed #fed7aa;
+    }
+    .warning {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 14px;
+      color: #92400e;
+    }
+    {{/if}}
+    .features {
+      margin: 30px 0;
+    }
+    .feature {
+      background: #fff7ed;
+      padding: 15px 20px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border-left: 4px solid #f97316;
+    }
+    .feature strong {
+      color: #c2410c;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .coupon {
+      background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+      color: white;
+      padding: 25px;
+      text-align: center;
+      border-radius: 12px;
+      margin: 25px 0;
+      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+    }
+    .coupon-code {
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      margin: 10px 0;
+    }
+    .paw-divider {
+      text-align: center;
+      margin: 30px 0;
+      font-size: 30px;
+      letter-spacing: 10px;
+      opacity: 0.6;
+    }
+    .footer {
+      background: #fff7ed;
+      padding: 30px;
+      text-align: center;
+      border-top: 2px solid #fed7aa;
+    }
+    .footer p {
+      color: #c2410c;
+      font-size: 13px;
+      line-height: 1.8;
+      margin: 5px 0;
+    }
+    .brand {
+      color: #f97316;
+      font-weight: 700;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="header">
+      <h1>🎉 ¡Bienvenido a Huellitas Pet!</h1>
+    </div>
+    
+    <div class="content">
+      <div class="greeting">
+        Hola <strong>{{userName}}</strong>,
+      </div>
+      
+      <p style="color: #475569; line-height: 1.8; margin-bottom: 25px;">
+        ¡Nos alegra mucho tenerte en nuestra familia! 🐾
+      </p>
+
+      {{#if temporaryPassword}}
+      <div class="password-box">
+        <h3>🔑 Tu Contraseña Temporal</h3>
+        <p style="margin: 10px 0; color: #92400e;">Para acceder a tu cuenta de veterinario, utilizá esta contraseña:</p>
+        <div class="password-code">
+          {{temporaryPassword}}
+        </div>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Importante:</strong> Por razones de seguridad, te recomendamos cambiar esta contraseña desde tu perfil una vez que ingreses al sistema.
+      </div>
+      {{/if}}
+
+      <div class="paw-divider">🐾 🐾 🐾</div>
+      
+      <p style="color: #475569; margin-bottom: 20px;">
+        En Huellitas Pet encontrarás todo lo que necesitás para cuidar a tus mascotas:
+      </p>
+      
+      <div class="features">
+        <div class="feature">
+          <strong>🏥 Atención Veterinaria</strong>
+          Reservá turnos con nuestros profesionales
+        </div>
+        <div class="feature">
+          <strong>🛍️ Productos de Calidad</strong>
+          Alimentos, juguetes y accesorios
+        </div>
+        <div class="feature">
+          <strong>📋 Historial Médico</strong>
+          Seguimiento completo de la salud de tus mascotas
+        </div>
+      </div>
+
+      {{#unless temporaryPassword}}
+      <div class="coupon">
+        <div style="font-size: 40px; margin-bottom: 10px;">🎁</div>
+        <div class="coupon-code">BIENVENIDO15</div>
+        <div style="font-size: 16px; margin-top: 10px;">15% OFF en tu primera compra</div>
+      </div>
+      {{/unless}}
+      
+      <div class="paw-divider">🐾 🐾 🐾</div>
+      
+      <p style="text-align: center; color: #f97316; font-weight: 600; font-size: 16px;">
+        ¡Empezá a disfrutar de todos nuestros servicios!
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+      <p class="brand">Huellitas Pet 🐾</p>
+      <p style="font-size: 12px; color: #c2410c;">Cuidamos de los que más querés</p>
+    </div>
+  </div>
+</body>
+</html>

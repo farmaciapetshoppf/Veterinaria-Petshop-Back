@@ -7,7 +7,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Delete,
+  Put,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -27,27 +27,27 @@ export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Crear una nueva reseña' })
+  @ApiOperation({ summary: 'Create new review' })
   @ApiBody({ type: CreateReviewDto })
   @ApiResponse({
     status: 201,
-    description: 'Reseña creada exitosamente',
+    description: 'Review created successfully',
     type: Review,
   })
-  @ApiResponse({ status: 400, description: 'Petición inválida' })
+  @ApiResponse({ status: 400, description: 'Invalid petition' })
   @ApiResponse({
     status: 404,
-    description: 'Veterinario o usuario no encontrado',
+    description: 'Veterinarian or user not found',
   })
   create(@Body() dto: CreateReviewDto) {
     return this.reviewsService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Obtener todas las reseñas' })
+  @ApiOperation({ summary: 'Obtain all reviews' })
   @ApiResponse({
     status: 200,
-    description: 'Lista de reseñas obtenida correctamente',
+    description: 'Review list retrieved successfully',
     type: [Review],
   })
   findAll() {
@@ -55,7 +55,7 @@ export class ReviewsController {
   }
 
   @Get('veterinarian/:id')
-  @ApiOperation({ summary: 'Obtener reseñas por veterinario' })
+  @ApiOperation({ summary: 'Find review by ID' })
   @ApiParam({
     name: 'id',
     description: 'ID del veterinario',
@@ -64,16 +64,16 @@ export class ReviewsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Reseñas del veterinario obtenidas correctamente',
+    description: 'Reviews retrieved successfully',
     type: [Review],
   })
-  @ApiResponse({ status: 400, description: 'ID inválido' })
+  @ApiResponse({ status: 400, description: 'Invalid ID' })
   findByVeterinarian(@Param('id', ParseUUIDPipe) id: string) {
     return this.reviewsService.findByVeterinarian(id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar una reseña' })
+  @ApiOperation({ summary: 'Update a review' })
   @ApiParam({
     name: 'id',
     description: 'ID de la reseña',
@@ -83,26 +83,26 @@ export class ReviewsController {
   @ApiBody({ type: UpdateReviewDto })
   @ApiResponse({
     status: 200,
-    description: 'Reseña actualizada correctamente',
+    description: 'Review updated successfully',
     type: Review,
   })
-  @ApiResponse({ status: 400, description: 'Petición inválida' })
-  @ApiResponse({ status: 404, description: 'Reseña no encontrada' })
+  @ApiResponse({ status: 400, description: 'Invalid petition' })
+  @ApiResponse({ status: 404, description: 'Review not found' })
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateReviewDto) {
     return this.reviewsService.update(id, dto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Eliminar una reseña' })
+  @Put(':id')
+  @ApiOperation({ summary: 'Soft delete by ID' })
   @ApiParam({
     name: 'id',
     description: 'ID de la reseña',
     type: 'string',
     format: 'uuid',
   })
-  @ApiResponse({ status: 200, description: 'Reseña eliminada correctamente' })
-  @ApiResponse({ status: 400, description: 'ID inválido' })
-  @ApiResponse({ status: 404, description: 'Reseña no encontrada' })
+  @ApiResponse({ status: 200, description: 'Review deleted successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid ID' })
+  @ApiResponse({ status: 404, description: 'Review not found' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.reviewsService.remove(id);
   }

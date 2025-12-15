@@ -42,7 +42,9 @@ export class CategoriesService {
 
   async findAll() {
     return this.categoryRepo.find({
-      relations: ['products'],
+      relations: {
+        products: true,
+      },
       withDeleted: false, // Esto es opcional, ya que es el comportamiento por defecto
     });
   }

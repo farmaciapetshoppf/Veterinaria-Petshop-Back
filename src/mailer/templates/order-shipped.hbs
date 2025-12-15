@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #00BCD4; color: white; padding: 20px; text-align: center; border-radius: 5px; }
+    .content { background: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px; }
+    .tracking { background: white; padding: 20px; text-align: center; border: 2px dashed #00BCD4; border-radius: 5px; margin: 20px 0; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th { background: #00BCD4; color: white; padding: 10px; text-align: left; }
+    td { padding: 10px; border-bottom: 1px solid #ddd; background: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📦 Tu pedido está en camino!</h1>
+    </div>
+    <div class="content">
+      <p>Hola <strong>{{userName}}</strong>,</p>
+      <p>¡Buenas noticias! Tu pedido <strong>#{{orderId}}</strong> ya fue despachado.</p>
+      
+      {{#if trackingNumber}}
+      <div class="tracking">
+        <p><strong>Número de seguimiento:</strong></p>
+        <h2 style="color: #00BCD4; margin: 10px 0;">{{trackingNumber}}</h2>
+        {{#if trackingUrl}}
+        <p><a href="{{trackingUrl}}" style="color: #00BCD4;">Rastrear envío</a></p>
+        {{/if}}
+      </div>
+      {{/if}}
+      
+      <h3>Productos enviados:</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th style="text-align: center;">Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each items}}
+          <tr>
+            <td>{{this.productName}}</td>
+            <td style="text-align: center;">{{this.quantity}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      
+      <p><strong>Dirección de entrega:</strong><br>{{shippingAddress}}</p>
+      <p style="margin-top: 20px;">Estimamos que llegará en {{estimatedDelivery}}.</p>
+    </div>
+    <div class="footer">
+      <p>Este es un correo automático. Por favor no respondas a este mensaje.</p>
+      <p>Huellitas Pet 🐾 - Cuidamos de los que más querés</p>
+    </div>
+  </div>
+</body>
+</html>

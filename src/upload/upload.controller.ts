@@ -42,7 +42,7 @@ export class UploadController {
   constructor(private storageService: StorageService) {}
 
   @Post('image')
-  @ApiOperation({ summary: 'Subir una imagen a la base de datos de supabase' })
+  @ApiOperation({ summary: 'Upload image to supabase DDBB' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -90,7 +90,7 @@ export class UploadController {
   }
 
   @Delete('image/:path')
-  @ApiOperation({ summary: 'Borrar una imagen de supabase' })
+  @ApiOperation({ summary: 'Delete image from supabase' })
   @ApiParam({
     name: 'path',
     description: 'Ruta de la imagen a eliminar (e.g., 1638276543123_image.jpg)',
@@ -114,7 +114,7 @@ export class UploadController {
   }
 
   @Get('images')
-  @ApiOperation({ summary: 'Listar todas las imagenes' })
+  @ApiOperation({ summary: 'List all images' })
   @ApiResponse({
     status: 200,
     description: 'Listar todas las imagenes',
@@ -135,7 +135,7 @@ export class UploadController {
   }
 
   @Get('images/:folder')
-  @ApiOperation({ summary: 'Lista de imagenes en una carpeta especifica' })
+  @ApiOperation({ summary: 'List images by folder' })
   @ApiParam({
     name: 'folder',
     description: 'Ruta de la carpeta',

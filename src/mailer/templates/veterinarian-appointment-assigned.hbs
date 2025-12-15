@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo Turno Asignado</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      padding: 40px 20px;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(251, 146, 60, 0.15);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+      padding: 40px 30px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .header h1 {
+      color: white;
+      font-size: 28px;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header p {
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 16px;
+    }
+    
+    .icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+    }
+    
+    .content {
+      padding: 40px 30px;
+    }
+    
+    .greeting {
+      font-size: 18px;
+      color: #1f2937;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    
+    .message {
+      color: #4b5563;
+      line-height: 1.8;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    
+    .appointment-card {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%);
+      border-radius: 15px;
+      padding: 25px;
+      margin: 25px 0;
+      border-left: 5px solid #f97316;
+    }
+    
+    .appointment-title {
+      font-size: 20px;
+      color: #92400e;
+      margin-bottom: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .detail-row {
+      display: flex;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(251, 146, 60, 0.2);
+    }
+    
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-label {
+      font-weight: 600;
+      color: #92400e;
+      min-width: 120px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .detail-value {
+      color: #78350f;
+      flex: 1;
+    }
+    
+    .pet-info {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      border: 2px solid #fbbf24;
+    }
+    
+    .pet-header {
+      font-size: 18px;
+      color: #f97316;
+      margin-bottom: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      background: #dcfce7;
+      color: #166534;
+    }
+    
+    .notes-section {
+      background: #fffbeb;
+      border-left: 4px solid #fbbf24;
+      padding: 20px;
+      margin: 25px 0;
+      border-radius: 8px;
+    }
+    
+    .notes-title {
+      font-weight: 600;
+      color: #92400e;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    
+    .notes-content {
+      color: #78350f;
+      line-height: 1.6;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 14px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      text-align: center;
+      flex: 1;
+      min-width: 150px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(251, 146, 60, 0.3);
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: #f97316;
+      border: 2px solid #f97316;
+    }
+    
+    .paw-divider {
+      text-align: center;
+      font-size: 24px;
+      margin: 30px 0;
+      color: #fbbf24;
+    }
+    
+    .footer {
+      background: #fef3c7;
+      padding: 30px;
+      text-align: center;
+      border-top: 3px solid #fbbf24;
+    }
+    
+    .footer p {
+      color: #92400e;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+    
+    .footer-icon {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        border-radius: 0;
+      }
+      
+      .header, .content, .footer {
+        padding: 25px 20px;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+      
+      .detail-row {
+        flex-direction: column;
+        gap: 5px;
+      }
+      
+      .detail-label {
+        min-width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="icon">🩺</div>
+      <h1>Nuevo Turno Asignado</h1>
+      <p>Has sido asignado a una nueva consulta veterinaria</p>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <p class="greeting">Hola Dr./Dra. {{veterinarianName}},</p>
+      
+      <p class="message">
+        Se te ha asignado un nuevo turno para atención veterinaria. A continuación encontrarás todos los detalles de la consulta programada.
+      </p>
+
+      <!-- Appointment Card -->
+      <div class="appointment-card">
+        <div class="appointment-title">
+          <span>📅</span>
+          <span>Detalles del Turno</span>
+        </div>
+        
+        <div class="detail-row">
+          <div class="detail-label">
+            <span>📆</span>
+            <span>Fecha:</span>
+          </div>
+          <div class="detail-value">{{date}}</div>
+        </div>
+        
+        <div class="detail-row">
+          <div class="detail-label">
+            <span>🕐</span>
+            <span>Hora:</span>
+          </div>
+          <div class="detail-value">{{time}}</div>
+        </div>
+        
+        <div class="detail-row">
+          <div class="detail-label">
+            <span>📋</span>
+            <span>Motivo:</span>
+          </div>
+          <div class="detail-value">{{reason}}</div>
+        </div>
+        
+        <div class="detail-row">
+          <div class="detail-label">
+            <span>✅</span>
+            <span>Estado:</span>
+          </div>
+          <div class="detail-value">
+            <span class="status-badge">{{status}}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pet Information -->
+      <div class="pet-info">
+        <div class="pet-header">
+          <span>🐾</span>
+          <span>Información del Paciente</span>
+        </div>
+        
+        <div class="detail-row">
+          <div class="detail-label">
+            <span>🐶</span>
+            <span>Mascota:</span>
+          </div>
+          <div class="detail-value">{{petName}}</div>
+        </div>
+        
+        <div class="detail-row">
+          <div class="detail-label">
+            <span>👤</span>
+            <span>Dueño:</span>
+          </div>
+          <div class="detail-value">{{ownerName}}</div>
+        </div>
+        
+        <div class="detail-row">
+          <div class="detail-label">
+            <span>📱</span>
+            <span>Teléfono:</span>
+          </div>
+          <div class="detail-value">{{ownerPhone}}</div>
+        </div>
+        
+        <div class="detail-row">
+          <div class="detail-label">
+            <span>📧</span>
+            <span>Email:</span>
+          </div>
+          <div class="detail-value">{{ownerEmail}}</div>
+        </div>
+      </div>
+
+      {{#if notes}}
+      <div class="notes-section">
+        <div class="notes-title">📝 Notas adicionales:</div>
+        <div class="notes-content">{{notes}}</div>
+      </div>
+      {{/if}}
+
+      <div class="paw-divider">🐾 🐾 🐾</div>
+
+      <p class="message">
+        <strong>Recordatorio:</strong> Por favor, revisá tu agenda y asegurate de estar disponible en el horario indicado. Si tenés algún inconveniente, comunicate con la administración lo antes posible.
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <a href="#" class="btn btn-primary">Ver Mi Agenda</a>
+        <a href="#" class="btn btn-secondary">Contactar Cliente</a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-icon">🐾</div>
+      <p><strong>Veterinaria Petshop</strong></p>
+      <p>Sistema de Gestión Veterinaria</p>
+      <p style="margin-top: 15px; font-size: 12px; color: #78350f;">
+        Este es un correo automático, por favor no respondas a este mensaje.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

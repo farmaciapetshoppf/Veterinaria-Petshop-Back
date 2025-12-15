@@ -8,6 +8,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Put,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Role } from 'src/auth/enum/roles.enum';
@@ -21,14 +22,18 @@ import {
 } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from './entities/user.entity';
+import { SupabaseService } from 'src/supabase/supabase.service';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly supabaseService: SupabaseService,
+  ) {}
 
   @HttpCode(200)
-  @ApiOperation({ summary: 'Obtener lista de usuarios' })
+  @ApiOperation({ summary: 'Get all users' })
   @Get()
   async getUsers() {
     const data = await this.usersService.getUsers();
@@ -36,7 +41,7 @@ export class UsersController {
   }
 
   @HttpCode(200)
-  @ApiOperation({ summary: 'Obtener usuarios por id' })
+  @ApiOperation({ summary: 'Get user by ID' })
   @ApiParam({
     name: 'id',
     type: String,
@@ -50,7 +55,7 @@ export class UsersController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: 'Actualizar usuario por ID incluyendo imagen de perfil opcional',
+    summary: 'Update user by ID',
   })
   @ApiParam({
     name: 'id',
@@ -122,6 +127,7 @@ export class UsersController {
     return this.usersService.deleteUser(id);
   }
 
+  @ApiOperation({ summary: 'Get pets of a user' })
   @Get(':id/pets')
   getUserPets(@Param('id') id: string) {
     return this.usersService.getUserPets(id);
