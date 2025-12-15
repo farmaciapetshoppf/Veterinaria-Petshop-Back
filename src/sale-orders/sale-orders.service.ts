@@ -1339,4 +1339,23 @@ export class SaleOrdersService {
   private degreesToRadians(degrees: number): number {
     return degrees * (Math.PI / 180);
   }
+
+  async getOrderDetails(orderId: string) {
+    try {
+      const order = await this.saleOrderRepository.findOne({
+        where: { id: orderId },
+        relations: ['items', 'items.product', 'buyer'],
+      });
+
+      if (!order) {
+        console.warn(`Orden ${orderId} no encontrada para enviar correo`);
+        return null;
+      }
+
+      return order;
+    } catch (error) {
+      console.error('Error obteniendo detalles de la orden:', error);
+      return null;
+    }
+  }
 }
