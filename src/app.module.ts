@@ -18,6 +18,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProductsService } from './products/products.service';
 import { AppointmentsAnalyticsSeeder } from './appointments/seed/appointments-analytics.seeder';
 import { VeterinariansSeeder } from './veterinarians/seed/veterinarians.seed';
+import { SaleOrdersAnalyticsSeeder } from './sale-orders/seed/sale-orders-analytics.seeder';
 import { MailerModule } from './mailer/mailer.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
@@ -26,6 +27,7 @@ import { ChatModule } from './chat/chat.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { MapsModule } from './maps/maps.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { GeneralMedicationsModule } from './general-medications/general-medications.module';
 
 @Module({
   imports: [
@@ -53,6 +55,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ChatModule,
     MapsModule,
     AnalyticsModule,
+    GeneralMedicationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -62,6 +65,7 @@ export class AppModule implements OnApplicationBootstrap {
     private readonly productsService: ProductsService,
     private readonly veterinariansSeeder: VeterinariansSeeder,
     private readonly appointmentsSeeder: AppointmentsAnalyticsSeeder,
+    private readonly saleOrdersSeeder: SaleOrdersAnalyticsSeeder,
   ) {}
   async onApplicationBootstrap() {
     console.log('Aplicación inicializada correctamente');
@@ -84,9 +88,16 @@ export class AppModule implements OnApplicationBootstrap {
     
     // Ejecutar seeder de turnos automáticamente
     console.log('🩺 Cargando turnos de analytics...');
-    const result = await this.appointmentsSeeder.seed();
-    if (result) {
-      console.log(`✅ ${result.appointments} turnos y ${result.medicalRecords} registros médicos creados`);
+    const appointmentsResult = await this.appointmentsSeeder.seed();
+    if (appointmentsResult) {
+      console.log(`✅ ${appointmentsResult.appointments} turnos y ${appointmentsResult.medicalRecords} registros médicos creados`);
+    }
+
+    // Ejecutar seeder de compras automáticamente
+    console.log('🛒 Cargando órdenes de compra para analytics...');
+    const salesResult = await this.saleOrdersSeeder.seed();
+    if (salesResult) {
+      console.log(`✅ ${salesResult.orders} órdenes creadas - Ingresos: $${salesResult.revenue.toFixed(2)}`);
     }
   }
 }

@@ -165,7 +165,7 @@ export class VeterinariansController {
     },
   })
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian)
+  @Roles(Role.Veterinarian, Role.Admin)
   @ApiBearerAuth()
   @Get('controlled-medications/catalog')
   getControlledMedicationsCatalog() {
