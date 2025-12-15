@@ -35,27 +35,26 @@ export class MaptilerService {
             const response = await fetch(url);
 
             if (!response.ok) {
-                // Captura errores de la API externa (400, 404, etc.)
-                const errorText = await response.text();
-                // En lugar de usar el statusText de fetch, usamos el cuerpo para más detalle
-                throw new Error(`MapTiler API Error: ${response.status} - ${errorText.substring(0, 100)}...`); 
+                // MapTiler no disponible - retornar respuesta amigable sin lanzar error
+                console.log(`ℹ️ MapTiler no disponible (${response.status}). El cálculo de envío usa distancia GPS directa.`);
+                return {
+                    error: 'MapTiler no disponible',
+                    message: 'El servicio de rutas de MapTiler no está disponible. Se usa cálculo de distancia GPS directa.',
+                    status: response.status,
+                    fallback: 'gps_distance'
+                };
             }
             
             return response.json();
         } catch(error) {
-            // ** SOLUCIÓN AL ERROR 'unknown' **
-            let errorMessage = 'Error desconocido en la comunicación con MapTiler.';
+            // Retornar respuesta amigable en lugar de lanzar error
+            console.log(`ℹ️ MapTiler no disponible. El cálculo de envío usa distancia GPS directa.`);
             
-            // 1. Verificación para asegurar que 'error' es un objeto de Error o tiene un mensaje
-            if (error instanceof Error) {
-                errorMessage = error.message;
-            } else if (typeof error === 'object' && error !== null && 'message' in error) {
-                // Maneja objetos que se parecen a errores pero no son instancias de Error (común en JS)
-                errorMessage = (error as { message: string }).message;
-            }
-
-            // 2. Lanzar la excepción de NestJS con el mensaje seguro
-            throw new InternalServerErrorException(`Fallo en el proxy de MapTiler: ${errorMessage}`);
+            return {
+                error: 'MapTiler no disponible',
+                message: 'El servicio de rutas de MapTiler no está disponible. Se usa cálculo de distancia GPS directa (Haversine).',
+                fallback: 'gps_distance'
+            };
         }
     }
 }

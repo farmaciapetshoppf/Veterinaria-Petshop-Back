@@ -1,392 +1,242 @@
 [
   {
-    "name": "Dog Chow Adultos",
-    "price": 2500,
-    "stock": 30,
+    "name": "Dog Chow Adultos 20kg",
+    "description": "Alimento completo para perros adultos de todas las razas",
+    "price": 28500,
+    "stock": 45,
     "category": "Alimentos",
-    "imgUrl": "https://example.com/dogchow.jpg"
-  },
-
-  {
-    "name": "Cat Chow Adultos",
-    "price": 2200,
-    "stock": 25,
-    "category": "Alimentos",
-    "imgUrl": "https://example.com/catchow.jpg"
-  },
-
-  {
-    "name": "Pedigree Junior",
-    "price": 2300,
-    "stock": 20,
-    "category": "Alimentos",
-    "imgUrl": "https://example.com/pedigree.jpg"
-  },
-
-  {
-    "name": "Royal Canin Urinary",
-    "price": 4500,
-    "stock": 15,
-    "category": "Alimentos",
-    "imgUrl": "https://example.com/royalcanin.jpg"
-  },
-
-  {
-    "name": "Whiskas Selección Carne",
-    "price": 1800,
-    "stock": 35,
-    "category": "Alimentos",
-    "imgUrl": "https://example.com/whiskas.jpg"
-  },
-
-  {
-    "name": "Antiparasitario Perros",
-    "price": 1900,
-    "stock": 20,
-    "category": "Salud",
-    "imgUrl": "https://example.com/parasitario.jpg"
-  },
-
-  {
-    "name": "Antipulgas Gatos",
-    "price": 2100,
-    "stock": 18,
-    "category": "Salud",
-    "imgUrl": "https://example.com/pulgas.jpg"
-  },
-
-  {
-    "name": "Vitaminas para Cachorros",
-    "price": 1600,
-    "stock": 25,
-    "category": "Salud",
-    "imgUrl": "https://example.com/vitaminas.jpg"
+    "imgUrl": "https://i.imgur.com/dogchow.png"
   },
   {
-    "name": "Protector Hepático",
-    "price": 2700,
-    "stock": 10,
-    "category": "Salud",
-    "imgUrl": "https://example.com/hepatico.jpg"
-  },
-  {
-    "name": "Calcio para Mascotas",
-    "price": 1500,
-    "stock": 22,
-    "category": "Salud",
-    "imgUrl": "https://example.com/calcio.jpg"
-  },
-
-  {
-    "name": "Shampoo Antipulgas",
-    "price": 1400,
-    "stock": 20,
-    "category": "Higiene",
-    "imgUrl": "https://example.com/shampoo.jpg"
-  },
-  {
-    "name": "Cepillo para Perros",
-    "price": 900,
-    "stock": 30,
-    "category": "Higiene",
-    "imgUrl": "https://example.com/cepillo.jpg"
-  },
-  {
-    "name": "Arena Sanitaria",
-    "price": 1200,
-    "stock": 40,
-    "category": "Higiene",
-    "imgUrl": "https://example.com/arena.jpg"
-  },
-  {
-    "name": "Toallitas Húmedas",
-    "price": 800,
-    "stock": 35,
-    "category": "Higiene",
-    "imgUrl": "https://example.com/toallitas.jpg"
-  },
-  {
-    "name": "Desinfectante Veterinario",
-    "price": 1700,
-    "stock": 15,
-    "category": "Higiene",
-    "imgUrl": "https://example.com/desinfectante.jpg"
-  },
-
-  {
-    "name": "Cama Mediana",
-    "price": 5500,
-    "stock": 10,
-    "category": "Accesorios",
-    "imgUrl": "https://example.com/cama.jpg"
-  },
-  {
-    "name": "Transportadora",
-    "price": 8200,
-    "stock": 8,
-    "category": "Accesorios",
-    "imgUrl": "https://example.com/transportadora.jpg"
-  },
-  {
-    "name": "Plato Antideslizante",
-    "price": 650,
-    "stock": 30,
-    "category": "Accesorios",
-    "imgUrl": "https://example.com/plato.jpg"
-  },
-  {
-    "name": "Collar Reflectivo",
-    "price": 950,
-    "stock": 22,
-    "category": "Accesorios",
-    "imgUrl": "https://example.com/collar.jpg"
-  },
-  {
-    "name": "Arnés Ajustable",
-    "price": 1800,
-    "stock": 18,
-    "category": "Accesorios",
-    "imgUrl": "https://example.com/arnes.jpg"
-  },
-
-  {
-    "name": "Pelota de Goma",
-    "price": 500,
-    "stock": 40,
-    "category": "Juguetes",
-    "imgUrl": "https://example.com/pelota.jpg"
-  },
-  {
-    "name": "Hueso de Goma",
-    "price": 700,
-    "stock": 35,
-    "category": "Juguetes",
-    "imgUrl": "https://example.com/hueso.jpg"
-  },
-  {
-    "name": "Ratón de Juguete",
-    "price": 300,
-    "stock": 50,
-    "category": "Juguetes",
-    "imgUrl": "https://example.com/raton.jpg"
-  },
-  {
-    "name": "Rascador Básico",
-    "price": 3200,
+    "name": "Royal Canin Mini Adult 7.5kg",
+    "description": "Alimento premium para razas pequeñas adultas",
+    "price": 45000,
     "stock": 12,
-    "category": "Juguetes",
-    "imgUrl": "https://example.com/rascador.jpg"
+    "category": "Alimentos",
+    "imgUrl": "https://i.imgur.com/royalcanin.png"
   },
   {
-    "name": "Cuerda Mordedora",
-    "price": 600,
+    "name": "Excellent Cachorro 15kg",
+    "description": "Nutrición completa para cachorros en desarrollo",
+    "price": 32000,
+    "stock": 3,
+    "category": "Alimentos",
+    "imgUrl": "https://i.imgur.com/excellent.png"
+  },
+  {
+    "name": "Pro Plan Sensitive Skin 15kg",
+    "description": "Fórmula especial para perros con piel sensible",
+    "price": 48000,
+    "stock": 0,
+    "category": "Alimentos",
+    "imgUrl": "https://i.imgur.com/proplan.png"
+  },
+  {
+    "name": "Whiskas Carne 1kg",
+    "description": "Alimento húmedo para gatos adultos sabor carne",
+    "price": 3200,
+    "stock": 2,
+    "category": "Alimentos",
+    "imgUrl": "https://i.imgur.com/whiskas.png"
+  },
+  {
+    "name": "Cat Chow Adulto 7kg",
+    "description": "Alimento balanceado para gatos adultos",
+    "price": 18500,
+    "stock": 8,
+    "category": "Alimentos",
+    "imgUrl": "https://i.imgur.com/catchow.png"
+  },
+  {
+    "name": "Bravecto 20-40kg",
+    "description": "Antiparasitario masticable de 3 meses de protección",
+    "price": 15500,
+    "stock": 15,
+    "category": "Salud",
+    "imgUrl": "https://i.imgur.com/bravecto.png"
+  },
+  {
+    "name": "Nexgard Espectra 7.5-15kg",
+    "description": "Protección completa contra parásitos externos e internos",
+    "price": 12800,
+    "stock": 5,
+    "category": "Salud",
+    "imgUrl": "https://i.imgur.com/nexgard.png"
+  },
+  {
+    "name": "Pipeta Antipulgas Gatos",
+    "description": "Pipeta antipulgas y garrapatas para gatos",
+    "price": 4500,
+    "stock": 1,
+    "category": "Salud",
+    "imgUrl": "https://i.imgur.com/pipeta.png"
+  },
+  {
+    "name": "Vacuna Séxtuple Canina",
+    "description": "Inmunización contra 6 enfermedades virales",
+    "price": 12000,
+    "stock": 2,
+    "category": "Salud",
+    "imgUrl": "https://i.imgur.com/vacuna6.png"
+  },
+  {
+    "name": "Vacuna Antirrábica",
+    "description": "Vacuna obligatoria contra rabia",
+    "price": 3500,
+    "stock": 1,
+    "category": "Salud",
+    "imgUrl": "https://i.imgur.com/antirrabica.png"
+  },
+  {
+    "name": "Vacuna Triple Felina",
+    "description": "Protección para gatos contra 3 enfermedades",
+    "price": 9500,
+    "stock": 3,
+    "category": "Salud",
+    "imgUrl": "https://i.imgur.com/triplefelina.png"
+  },
+  {
+    "name": "Vacuna Quíntuple Canina",
+    "description": "Vacuna para cachorros - 5 enfermedades",
+    "price": 10500,
+    "stock": 0,
+    "category": "Salud",
+    "imgUrl": "https://i.imgur.com/vacuna5.png"
+  },
+  {
+    "name": "Shampoo Antipulgas 500ml",
+    "description": "Shampoo con acción antipulgas y garrapatas",
+    "price": 3800,
+    "stock": 14,
+    "category": "Higiene",
+    "imgUrl": "https://i.imgur.com/shampoo.png"
+  },
+  {
+    "name": "Cepillo Deslanador",
+    "description": "Cepillo profesional para remover pelo muerto",
+    "price": 5200,
+    "stock": 22,
+    "category": "Higiene",
+    "imgUrl": "https://i.imgur.com/cepillo.png"
+  },
+  {
+    "name": "Arena Sanitaria 10kg",
+    "description": "Arena aglutinante control de olores",
+    "price": 4500,
+    "stock": 18,
+    "category": "Higiene",
+    "imgUrl": "https://i.imgur.com/arena.png"
+  },
+  {
+    "name": "Toallitas Húmedas x50",
+    "description": "Toallitas hipoalergénicas para limpieza diaria",
+    "price": 2100,
+    "stock": 30,
+    "category": "Higiene",
+    "imgUrl": "https://i.imgur.com/toallitas.png"
+  },
+  {
+    "name": "Juguete Kong Classic",
+    "description": "Juguete indestructible para perros",
+    "price": 6500,
+    "stock": 22,
+    "category": "Juguetes",
+    "imgUrl": "https://i.imgur.com/kong.png"
+  },
+  {
+    "name": "Pelota Tenis x3",
+    "description": "Pack de 3 pelotas para jugar",
+    "price": 2800,
+    "stock": 35,
+    "category": "Juguetes",
+    "imgUrl": "https://i.imgur.com/pelota.png"
+  },
+  {
+    "name": "Ratón con Catnip",
+    "description": "Juguete para gatos con hierba gatera",
+    "price": 1500,
+    "stock": 42,
+    "category": "Juguetes",
+    "imgUrl": "https://i.imgur.com/raton.png"
+  },
+  {
+    "name": "Cuerda Mordedora 40cm",
+    "description": "Cuerda de algodón para morder y tirar",
+    "price": 3200,
     "stock": 28,
     "category": "Juguetes",
-    "imgUrl": "https://example.com/cuerda.jpg"
+    "imgUrl": "https://i.imgur.com/cuerda.png"
   },
-
   {
-    "name": "Balanceado Premium Adulto",
-    "description": "Alimento balanceado premium para perros adultos.",
+    "name": "Rascador Torre 60cm",
+    "description": "Torre rascadora con plataforma para gatos",
     "price": 18500,
-    "stock": 50,
-    "category": "Alimentos",
-    "imgUrl": "https://i.imgur.com/Food1.png"
-  },
-  {
-    "name": "Balanceado Cachorros",
-    "description": "Nutrición completa para cachorros en crecimiento.",
-    "price": 16200,
-    "stock": 45,
-    "category": "Alimentos",
-    "imgUrl": "https://i.imgur.com/Food2.png"
-  },
-  {
-    "name": "Alimento Gatos Premium",
-    "description": "Balanceado especial para gatos adultos.",
-    "price": 14800,
-    "stock": 40,
-    "category": "Alimentos",
-    "imgUrl": "https://i.imgur.com/Food3.png"
-  },
-  {
-    "name": "Snack Dental Perros",
-    "description": "Premios dentales para higiene bucal canina.",
-    "price": 3500,
-    "stock": 100,
-    "category": "Alimentos",
-    "imgUrl": "https://i.imgur.com/Food4.png"
-  },
-  {
-    "name": "Hueso Natural Rectangular",
-    "description": "Hueso natural para masticar.",
-    "price": 2200,
-    "stock": 80,
-    "category": "Alimentos",
-    "imgUrl": "https://i.imgur.com/Food5.png"
-  },
-
-  {
-    "name": "Antiparasitario Canino",
-    "description": "Protección mensual contra pulgas y garrapatas.",
-    "price": 6500,
-    "stock": 50,
-    "category": "Salud",
-    "imgUrl": "https://i.imgur.com/Health1.png"
-  },
-  {
-    "name": "Vitaminas Perros Senior",
-    "description": "Complemento vitamínico para perros mayores.",
-    "price": 5200,
-    "stock": 40,
-    "category": "Salud",
-    "imgUrl": "https://i.imgur.com/Health2.png"
-  },
-  {
-    "name": "Calmante Natural Gatos",
-    "description": "Reduce estrés y ansiedad felina.",
-    "price": 4800,
-    "stock": 35,
-    "category": "Salud",
-    "imgUrl": "https://i.imgur.com/Health3.png"
-  },
-  {
-    "name": "Desparasitante Interno",
-    "description": "Eliminación de parásitos internos.",
-    "price": 3900,
-    "stock": 60,
-    "category": "Salud",
-    "imgUrl": "https://i.imgur.com/Health4.png"
-  },
-  {
-    "name": "Protector Articular",
-    "description": "Suplemento para fortalecer articulaciones.",
-    "price": 7200,
-    "stock": 30,
-    "category": "Salud",
-    "imgUrl": "https://i.imgur.com/Health5.png"
-  },
-
-  {
-    "name": "Shampoo Antipulgas",
-    "description": "Baño protector y perfumado.",
-    "price": 4200,
-    "stock": 60,
-    "category": "Higiene",
-    "imgUrl": "https://i.imgur.com/Hygiene1.png"
-  },
-  {
-    "name": "Acondicionador Canino",
-    "description": "Deja el pelo suave y perfumado.",
-    "price": 3900,
-    "stock": 45,
-    "category": "Higiene",
-    "imgUrl": "https://i.imgur.com/Hygiene2.png"
-  },
-  {
-    "name": "Cepillo Doble",
-    "description": "Remueve pelo muerto y nudos.",
-    "price": 2800,
-    "stock": 50,
-    "category": "Higiene",
-    "imgUrl": "https://i.imgur.com/Hygiene3.png"
-  },
-  {
-    "name": "Toallitas Húmedas",
-    "description": "Limpieza rápida sin agua.",
-    "price": 2300,
-    "stock": 70,
-    "category": "Higiene",
-    "imgUrl": "https://i.imgur.com/Hygiene4.png"
-  },
-  {
-    "name": "Limpiador de Oídos",
-    "description": "Previene infecciones auditivas.",
-    "price": 3100,
-    "stock": 50,
-    "category": "Higiene",
-    "imgUrl": "https://i.imgur.com/Hygiene5.png"
-  },
-
-  {
-    "name": "Pelota Saltarina",
-    "description": "Juguete resistente y dinámico.",
-    "price": 1900,
-    "stock": 80,
+    "stock": 6,
     "category": "Juguetes",
-    "imgUrl": "https://i.imgur.com/Toy1.png"
+    "imgUrl": "https://i.imgur.com/rascador.png"
   },
   {
-    "name": "Cuerda Mordillo",
-    "description": "Ideal para juegos de fuerza.",
-    "price": 2600,
-    "stock": 65,
-    "category": "Juguetes",
-    "imgUrl": "https://i.imgur.com/Toy2.png"
-  },
-  {
-    "name": "Ratón de Peluche",
-    "description": "Juguete interactivo para gatos.",
-    "price": 1400,
-    "stock": 90,
-    "category": "Juguetes",
-    "imgUrl": "https://i.imgur.com/Toy3.png"
-  },
-  {
-    "name": "Hueso de Goma",
-    "description": "Resistente a mordidas.",
-    "price": 2100,
-    "stock": 75,
-    "category": "Juguetes",
-    "imgUrl": "https://i.imgur.com/Toy4.png"
-  },
-  {
-    "name": "Peluche Sonajero",
-    "description": "Estimulación sensorial.",
-    "price": 2400,
-    "stock": 60,
-    "category": "Juguetes",
-    "imgUrl": "https://i.imgur.com/Toy5.png"
-  },
-
-  {
-    "name": "Collar Ajustable",
-    "description": "Cómodo y resistente.",
-    "price": 3200,
-    "stock": 70,
+    "name": "Collar Antipulgas Seresto",
+    "description": "Collar de 8 meses de protección",
+    "price": 22000,
+    "stock": 9,
     "category": "Accesorios",
-    "imgUrl": "https://i.imgur.com/Acc1.png"
+    "imgUrl": "https://i.imgur.com/seresto.png"
   },
   {
-    "name": "Correa Reforzada",
-    "description": "Ideal para paseos seguros.",
-    "price": 4500,
-    "stock": 50,
+    "name": "Correa Retráctil 5m",
+    "description": "Correa extensible para paseos",
+    "price": 8500,
+    "stock": 16,
     "category": "Accesorios",
-    "imgUrl": "https://i.imgur.com/Acc2.png"
+    "imgUrl": "https://i.imgur.com/correa.png"
   },
   {
-    "name": "Plato Antideslizante",
-    "description": "Evita derrames.",
-    "price": 2700,
-    "stock": 65,
-    "category": "Accesorios",
-    "imgUrl": "https://i.imgur.com/Acc3.png"
-  },
-  {
-    "name": "Transportadora Mediana",
-    "description": "Segura para viajes.",
+    "name": "Arnés Acolchado Talle M",
+    "description": "Arnés ergonómico con acolchado",
     "price": 12000,
-    "stock": 20,
+    "stock": 11,
     "category": "Accesorios",
-    "imgUrl": "https://i.imgur.com/Acc4.png"
+    "imgUrl": "https://i.imgur.com/arnes.png"
   },
   {
-    "name": "Cama Acolchonada",
-    "description": "Máximo confort para tu mascota.",
-    "price": 14500,
-    "stock": 25,
+    "name": "Comedero Doble Acero",
+    "description": "Comedero y bebedero antideslizante",
+    "price": 5800,
+    "stock": 24,
     "category": "Accesorios",
-    "imgUrl": "https://i.imgur.com/Acc5.png"
+    "imgUrl": "https://i.imgur.com/comedero.png"
+  },
+  {
+    "name": "Cama Ortopédica 80cm",
+    "description": "Cama de espuma viscoelástica",
+    "price": 28000,
+    "stock": 7,
+    "category": "Accesorios",
+    "imgUrl": "https://i.imgur.com/cama.png"
+  },
+  {
+    "name": "Transportadora Rígida L",
+    "description": "Transportadora IATA para viajes",
+    "price": 35000,
+    "stock": 4,
+    "category": "Accesorios",
+    "imgUrl": "https://i.imgur.com/transportadora.png"
+  },
+  {
+    "name": "Manta Térmica Autocalentable",
+    "description": "Manta que refleja calor corporal",
+    "price": 14500,
+    "stock": 13,
+    "category": "Accesorios",
+    "imgUrl": "https://i.imgur.com/manta.png"
+  },
+  {
+    "name": "Bebedero Automático 2L",
+    "description": "Fuente de agua con filtro",
+    "price": 18000,
+    "stock": 10,
+    "category": "Accesorios",
+    "imgUrl": "https://i.imgur.com/bebedero.png"
   }
 ]

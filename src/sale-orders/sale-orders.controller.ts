@@ -12,6 +12,7 @@ import { SaleOrdersService } from './sale-orders.service';
 import { CreateSaleOrderDto } from './dto/create-sale-order.dto';
 import { UpdateSaleOrderDto } from './dto/update-sale-order.dto';
 import { CheckoutDto } from './dto/checkout.dto';
+import { CalculateShippingDto } from './dto/calculate-shipping.dto';
 import { ApiOperation, ApiTags, ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Sale Orders')
@@ -280,6 +281,89 @@ export class SaleOrdersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.saleOrdersService.remove(+id);
+  }
+
+  // ==================== CÁLCULO DE ENVÍO ====================
+  
+  @ApiOperation({ 
+    summary: 'Calcular costo de envío',
+    description: `Calcula el costo de envío por dos métodos:
+    
+    **MÉTODO 1 - Código Postal (zonas):**
+    - CABA (1001-1439): $1500
+    - GBA (1600-1900): $2000
+    - Interior BA (2000-7999): $3000
+    - Resto del país (8000+): $5000
+    
+    **MÉTODO 2 - GPS (distancia real):**
+    - 0-10 km: $1500
+    - 10-30 km: $2500
+    - 30-100 km: $4000
+    - 100-300 km: $6000
+    - +300 km: $8000
+    
+    Enviar **código postal** O **coordenadas (latitude, longitude)**`
+  })
+  @ApiBody({
+    type: CalculateShippingDto,
+    examples: {
+      gps: {
+        summary: 'Por GPS (RECOMENDADO)',
+        description: 'Cálculo preciso usando coordenadas GPS',
+        value: {
+          latitude: -34.6037,
+          longitude: -58.3816
+        }
+      },
+      postalCode: {
+        summary: 'Por Código Postal',
+        description: 'Cálculo estimado por zonas',
+        value: {
+          postalCode: '1425'
+        }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Costo de envío calculado exitosamente',
+    schema: {
+      oneOf: [
+        {
+          title: 'Respuesta por GPS',
+          example: {
+            method: 'gps_distance',
+            latitude: -34.6037,
+            longitude: -58.3816,
+            distance: '5.23 km',
+            distanceInMeters: 5230,
+            estimatedDuration: '15 minutos',
+            zone: 'Zona cercana (0-10 km)',
+            shippingCost: 1500,
+            deliveryTime: '24-48 horas',
+            currency: 'ARS',
+            message: 'Costo de envío calculado por distancia real'
+          }
+        },
+        {
+          title: 'Respuesta por Código Postal',
+          example: {
+            method: 'postal_code',
+            postalCode: '1425',
+            zone: 'CABA',
+            shippingCost: 1500,
+            deliveryTime: '24-48 horas',
+            currency: 'ARS',
+            message: 'Costo de envío calculado por zona postal'
+          }
+        }
+      ]
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Código postal inválido o coordenadas incorrectas' })
+  @Post('calculate-shipping')
+  calculateShipping(@Body() dto: CalculateShippingDto) {
+    return this.saleOrdersService.calculateShipping(dto);
   }
 
   // ==================== ENDPOINT DE PRUEBA ====================

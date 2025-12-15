@@ -20,11 +20,15 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { AppointmentsAnalyticsSeeder } from './seed/appointments-analytics.seeder';
 
 @ApiTags('Appointments')
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(
+    private readonly appointmentsService: AppointmentsService,
+    private readonly analyticsSeeder: AppointmentsAnalyticsSeeder,
+  ) {}
 
   @ApiOperation({ 
     summary: 'Get availability of a veterinarian for a date',
@@ -154,5 +158,25 @@ export class AppointmentsController {
   @Put(':id')
   remove(@Param('id') id: string) {
     return this.appointmentsService.remove(id);
+  }
+
+  @ApiOperation({
+    summary: 'Seeder para datos de analytics',
+    description: 'Crea 50 turnos distribuidos en la semana con registros médicos y diagnósticos para gráficas'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Seeder ejecutado exitosamente',
+    schema: {
+      example: {
+        appointments: 50,
+        medicalRecords: 35,
+        message: 'Datos de analytics creados'
+      }
+    }
+  })
+  @Get('seeder/analytics')
+  async seedAnalytics() {
+    return await this.analyticsSeeder.seed();
   }
 }

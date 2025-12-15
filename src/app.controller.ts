@@ -35,6 +35,7 @@ export class AppController {
         petName: 'Max',
         veterinarianName: 'Dra. Abigail Brea',
         reason: 'Consulta general - PRUEBA',
+        veterinarianId: 'test-vet-id',
       });
 
       return { success: true, message: 'Emails de prueba enviados correctamente' };

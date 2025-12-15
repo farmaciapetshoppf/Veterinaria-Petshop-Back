@@ -100,16 +100,6 @@ export class CreateVeterinarianDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiProperty({
-    description: 'Contraseña temporal generada por el frontend para enviar por email',
-    example: 'TempPass123!',
-    type: 'string',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  temporaryPassword?: string;
-
   @IsNotEmpty()
   @IsEnum(Role)
   role: Role = Role.Veterinarian;
