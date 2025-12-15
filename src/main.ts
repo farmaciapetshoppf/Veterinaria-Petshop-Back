@@ -4,7 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ExcludePasswordInterceptor } from './password-exclude/password-exclude.interceptor';
 import cookieParser from 'cookie-parser';
-import * as bodyParser from 'body-parser';
+import { captureRawBody } from './stripe/middleware/rawBody.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,16 +12,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Configuración especial para webhooks de Stripe
-  app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
-
-  // Middleware para el resto de rutas
-  app.use((req, res, next) => {
-    if (req.originalUrl === '/stripe/webhook') {
-      next();
-    } else {
-      bodyParser.json()(req, res, next);
-    }
-  });
+  app.use('/stripe/webhook', captureRawBody);
 
   // CORS - Configuración para permitir cookies entre dominios
   app.enableCors({
