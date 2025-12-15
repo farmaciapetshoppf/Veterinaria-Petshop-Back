@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Pet } from 'src/pets/entities/pet.entity';
 import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
+import { DiagnosisType } from '../dto/create-medical-records-pet.dto';
 
 @Entity('medical_records_pet')
 export class MedicalRecordsPet {
@@ -22,9 +23,17 @@ export class MedicalRecordsPet {
   @ManyToOne(() => Veterinarian, { nullable: false })
   veterinarian: Veterinarian;
 
-  // Diagnóstico
-  @Column({ type: 'text', nullable: false })
-  diagnosis: string;
+  // Diagnóstico (enum para analytics)
+  @Column({ 
+    type: 'enum', 
+    enum: DiagnosisType,
+    nullable: false 
+  })
+  diagnosis: DiagnosisType;
+
+  // Detalles adicionales del diagnóstico (cuando se elige "Otro")
+  @Column({ type: 'text', nullable: true })
+  diagnosisDetails: string;
 
   // Tratamiento
   @Column({ type: 'text', nullable: false })

@@ -48,13 +48,14 @@ export class PetsService {
   findAll() {
     return this.petRepository
       .find({
-        relations: [
-          'owner',
-          'mother',
-          'father',
-          'appointments',
-          'appointments.veterinarian',
-        ],
+        relations: {
+          owner: true,
+          mother: true,
+          father: true,
+          appointments: {
+            veterinarian: true,
+          },
+        },
       })
       .then((pets) => {
         pets.forEach((p) => {
@@ -74,13 +75,14 @@ export class PetsService {
     return this.petRepository
       .findOne({
         where: { id: String(id) },
-        relations: [
-          'owner',
-          'mother',
-          'father',
-          'appointments',
-          'appointments.veterinarian',
-        ],
+        relations: {
+          owner: true,
+          mother: true,
+          father: true,
+          appointments: {
+            veterinarian: true,
+          },
+        },
         withDeleted: false, // Excluir mascotas eliminadas
       })
       .then((p) => {

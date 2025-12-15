@@ -291,6 +291,7 @@ export class UsersSeeder implements OnModuleInit {
                   petName: petData.nombre,
                   veterinarianName: veterinarian.name,
                   reason: 'Consulta general',
+                  veterinarianId: veterinarian.id,
                 });
                 console.log(
                   `    ✉️  Email de confirmación enviado a ${userData.email}`,

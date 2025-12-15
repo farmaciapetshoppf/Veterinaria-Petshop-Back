@@ -9,6 +9,7 @@ import { Users } from '../users/entities/user.entity';
 import { Veterinarian } from '../veterinarians/entities/veterinarian.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { SupabaseModule } from 'src/supabase/supabase.module';
+import { MailerModule } from 'src/mailer/mailer.module';
 import { UsersModule } from 'src/users/users.module';
 import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
 
@@ -17,6 +18,7 @@ import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
     TypeOrmModule.forFeature([Conversation, Message, Users, Veterinarian]),
     SupabaseModule,
     AuthModule,
+    MailerModule,
     UsersModule,
     VeterinariansModule,
   ],

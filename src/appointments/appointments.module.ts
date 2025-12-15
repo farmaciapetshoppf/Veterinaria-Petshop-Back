@@ -9,15 +9,24 @@ import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
 import { Users } from 'src/users/entities/user.entity';
 import { Pet } from 'src/pets/entities/pet.entity';
 import { MailerModule } from 'src/mailer/mailer.module';
+import { MedicalRecordsPet } from 'src/medical-records-pet/entities/medical-records-pet.entity';
+import { AppointmentsAnalyticsSeeder } from './seed/appointments-analytics.seeder';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Appointments, Veterinarian, Users, Pet]),
+    TypeOrmModule.forFeature([
+      Appointments,
+      Veterinarian,
+      Users,
+      Pet,
+      MedicalRecordsPet,
+    ]),
     UsersModule,
     PetsModule,
     MailerModule,
   ],
   controllers: [AppointmentsController],
-  providers: [AppointmentsService],
+  providers: [AppointmentsService, AppointmentsAnalyticsSeeder],
+  exports: [AppointmentsService, AppointmentsAnalyticsSeeder],
 })
 export class AppointmentsModule {}

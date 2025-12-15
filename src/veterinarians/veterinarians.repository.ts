@@ -19,6 +19,7 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 import { Role } from 'src/auth/enum/roles.enum';
 import { StorageService } from 'src/supabase/storage.service';
 import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
+import { MailerService } from 'src/mailer/mailer.service';
 
 @Injectable()
 export class VeterinariansRepository {
@@ -27,37 +28,48 @@ export class VeterinariansRepository {
     private readonly veterinarianRepository: Repository<Veterinarian>,
     private readonly supabaseService: SupabaseService,
     private readonly storageService: StorageService,
+    private readonly mailerService: MailerService,
   ) {}
 
-  private generateTempPassword(length = 8): string {
-    // Aseguramos que la longitud sea al menos 8
-    const finalLength = Math.max(length, 8);
-
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
-    const special = '!@#$%^&*()_-+=<>?';
-
-    // Aseguramos que tenga al menos uno de cada tipo
-    let password = '';
-    password += lowercase[Math.floor(Math.random() * lowercase.length)];
-    password += uppercase[Math.floor(Math.random() * uppercase.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-    password += special[Math.floor(Math.random() * special.length)];
-
-    // Completamos el resto de la contraseña
-    const allChars = lowercase + uppercase + numbers + special;
-    const remainingLength = finalLength - 4;
-
-    for (let i = 0; i < remainingLength; i++) {
-      password += allChars[Math.floor(Math.random() * allChars.length)];
+  private generateTempPassword(): string {
+    const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijkmnopqrstuvwxyz';
+    const numbers = '23456789';
+    const special = '!@#$%&*';
+    
+    // Crear array con caracteres garantizados: 2 de cada tipo
+    const guaranteedChars = [
+      uppercase[Math.floor(Math.random() * uppercase.length)],
+      uppercase[Math.floor(Math.random() * uppercase.length)],
+      lowercase[Math.floor(Math.random() * lowercase.length)],
+      lowercase[Math.floor(Math.random() * lowercase.length)],
+      numbers[Math.floor(Math.random() * numbers.length)],
+      numbers[Math.floor(Math.random() * numbers.length)],
+      special[Math.floor(Math.random() * special.length)],
+      special[Math.floor(Math.random() * special.length)],
+    ];
+    
+    // Agregar 2 caracteres aleatorios más para llegar a 10
+    const allChars = uppercase + lowercase + numbers + special;
+    guaranteedChars.push(allChars[Math.floor(Math.random() * allChars.length)]);
+    guaranteedChars.push(allChars[Math.floor(Math.random() * allChars.length)]);
+    
+    // Mezclar usando Fisher-Yates shuffle
+    for (let i = guaranteedChars.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [guaranteedChars[i], guaranteedChars[j]] = [guaranteedChars[j], guaranteedChars[i]];
     }
-
-    // Mezclamos los caracteres para que no queden en orden predecible
-    return password
-      .split('')
-      .sort(() => 0.5 - Math.random())
-      .join('');
+    
+    const password = guaranteedChars.join('') + '!!';
+    
+    // Log para verificar
+    console.log('🔑 Contraseña temporal veterinario generada:', password);
+    console.log('   - Mayúsculas:', (password.match(/[A-Z]/g) || []).length);
+    console.log('   - Minúsculas:', (password.match(/[a-z]/g) || []).length);
+    console.log('   - Números:', (password.match(/[0-9]/g) || []).length);
+    console.log('   - Especiales:', (password.match(/[!@#$%&*]/g) || []).length);
+    
+    return password;
   }
 
   async fillAll() {
@@ -97,7 +109,7 @@ export class VeterinariansRepository {
 
   async create(createVeterinarianDto: CreateVeterinarianDto) {
     // Usar contraseña del frontend si viene, sino generar una
-    const tempPassword = createVeterinarianDto.temporaryPassword || this.generateTempPassword();
+    const tempPassword = this.generateTempPassword();
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
     const rawEmail =
@@ -127,12 +139,13 @@ export class VeterinariansRepository {
     }
 
     try {
-      // Crear usuario en Supabase Auth
+      // Crear usuario en Supabase Auth con email confirmado automáticamente
       const { data, error: authError } = await this.supabaseService
         .getClient()
-        .auth.signUp({
+        .auth.admin.createUser({
           email,
           password: tempPassword,
+          email_confirm: true,
         });
 
       if (authError) {
@@ -362,5 +375,290 @@ export class VeterinariansRepository {
       throw new NotFoundException('Veterinario no encontrado.');
     }
     return veterinarian;
+  }
+
+  async recreateSupabaseUser(email: string) {
+    try {
+      // Buscar el veterinario en la BD
+      const vet = await this.veterinarianRepository.findOne({ where: { email } });
+      
+      if (!vet) {
+        throw new NotFoundException(`Veterinario con email ${email} no encontrado`);
+      }
+
+      console.log(`📋 Veterinario encontrado: ${vet.name} (ID actual en BD: ${vet.id})`);
+
+      // Generar nueva contraseña temporal
+      const tempPassword = this.generateTempPassword();
+      const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+      console.log(`🔑 Nueva contraseña generada: ${tempPassword}`);
+
+      // Crear usuario en Supabase Auth con email confirmado
+      const { data: newUser, error: createError } = await this.supabaseService
+        .getClient()
+        .auth.admin.createUser({
+          email: email,
+          password: tempPassword,
+          email_confirm: true,
+        });
+
+      if (createError) {
+        console.error(`❌ Error creando usuario en Supabase:`, createError.message);
+        throw new InternalServerErrorException(`Error en Supabase: ${createError.message}`);
+      }
+
+      console.log(`✅ Usuario creado en Supabase con ID: ${newUser.user.id}`);
+
+      // Actualizar el ID en la base de datos
+      vet.id = newUser.user.id;
+      vet.password = hashedPassword;
+      vet.requirePasswordChange = true;
+      await this.veterinarianRepository.save(vet);
+
+      console.log(`✅ Veterinario actualizado en BD con nuevo ID de Supabase`);
+
+      // Enviar email con la nueva contraseña
+      await this.mailerService.sendWelcomeEmail({
+        to: vet.email,
+        userName: vet.name,
+        temporaryPassword: tempPassword,
+      });
+
+      console.log(`✅ Email enviado a ${vet.email}`);
+
+      return {
+        message: 'Usuario recreado exitosamente en Supabase',
+        email: vet.email,
+        name: vet.name,
+        newSupabaseId: newUser.user.id,
+        temporaryPassword: tempPassword,
+      };
+    } catch (error) {
+      console.error('❌ Error en recreateSupabaseUser:', error);
+      throw error;
+    }
+  }
+
+  async resetPasswordsAndSendEmails() {
+    try {
+      const veterinarians = await this.veterinarianRepository.find();
+      
+      const results: Array<{
+        email: string;
+        name: string;
+        success: boolean;
+        temporaryPassword?: string;
+        error?: string;
+      }> = [];
+
+      for (const vet of veterinarians) {
+        try {
+          // Generar nueva contraseña temporal
+          const tempPassword = this.generateTempPassword();
+          console.log(`📧 Contraseña que se enviará a ${vet.email}: ${tempPassword}`);
+          
+          const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+          // Actualizar contraseña en Supabase
+          console.log(`🔄 Actualizando contraseña en Supabase para ${vet.email} (ID: ${vet.id})`);
+          console.log(`🔑 Nueva contraseña para Supabase: ${tempPassword}`);
+          
+          const { data: updateData, error: supabaseError } = await this.supabaseService
+            .getClient()
+            .auth.admin.updateUserById(vet.id, {
+              password: tempPassword,
+            });
+
+          if (supabaseError) {
+            console.error(`❌ Error actualizando en Supabase para ${vet.email}:`, supabaseError.message);
+            throw new Error(`Error en Supabase: ${supabaseError.message}`);
+          }
+          
+          console.log(`✅ Contraseña actualizada en Supabase para ${vet.email}`);
+
+          // Actualizar en la base de datos
+          vet.password = hashedPassword;
+          vet.requirePasswordChange = true;
+          await this.veterinarianRepository.save(vet);
+
+          // Enviar email con la nueva contraseña
+          console.log(`📨 Enviando email a ${vet.email} con contraseña: ${tempPassword}`);
+          await this.mailerService.sendWelcomeEmail({
+            to: vet.email,
+            userName: vet.name,
+            temporaryPassword: tempPassword,
+          });
+
+          results.push({
+            email: vet.email,
+            name: vet.name,
+            success: true,
+            temporaryPassword: tempPassword,
+          });
+
+          console.log(`✅ Contraseña reseteada y email enviado a ${vet.email} - Contraseña final: ${tempPassword}`);
+        } catch (error) {
+          console.error(`❌ Error procesando veterinario ${vet.email}:`, error);
+          results.push({
+            email: vet.email,
+            name: vet.name,
+            success: false,
+            error: error instanceof Error ? error.message : 'Error desconocido',
+          });
+        }
+      }
+
+      return {
+        message: 'Proceso completado',
+        total: veterinarians.length,
+        successful: results.filter(r => r.success).length,
+        failed: results.filter(r => !r.success).length,
+        results,
+      };
+    } catch (error) {
+      console.error('❌ Error en resetPasswordsAndSendEmails:', error);
+      throw new InternalServerErrorException('Error al resetear contraseñas');
+    }
+  }
+
+  /**
+   * Reenvía los emails de bienvenida con las contraseñas actuales (sin cambiarlas)
+   */
+  async resendWelcomeEmails() {
+    try {
+      console.log('📧 Iniciando reenvío de emails de bienvenida...');
+      
+      const veterinarians = await this.veterinarianRepository.find();
+      const results: Array<{
+        email: string;
+        name: string;
+        success: boolean;
+        temporaryPassword?: string;
+        error?: string;
+      }> = [];
+
+      for (const vet of veterinarians) {
+        try {
+          // Obtener los datos del usuario de Supabase para mostrar la contraseña actual
+          const { data: supabaseUser } = await this.supabaseService
+            .getClient()
+            .auth.admin.getUserById(vet.id);
+
+          if (!supabaseUser) {
+            console.warn(`⚠️ Usuario no encontrado en Supabase: ${vet.email}`);
+            results.push({
+              email: vet.email,
+              name: vet.name,
+              success: false,
+              error: 'Usuario no encontrado en Supabase',
+            });
+            continue;
+          }
+
+          // Para reenviar necesitamos obtener la contraseña actual desde PostgreSQL
+          // Como está hasheada, vamos a generar una nueva y actualizarla
+          const tempPassword = this.generateTempPassword();
+          const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+          // Actualizar en Supabase
+          const { error: supabaseError } = await this.supabaseService
+            .getClient()
+            .auth.admin.updateUserById(vet.id, {
+              password: tempPassword,
+            });
+
+          if (supabaseError) {
+            console.error(`❌ Error actualizando contraseña en Supabase para ${vet.email}:`, supabaseError.message);
+            throw new Error(`Error en Supabase: ${supabaseError.message}`);
+          }
+
+          // Actualizar en PostgreSQL
+          vet.password = hashedPassword;
+          await this.veterinarianRepository.save(vet);
+
+          // Enviar email con la nueva contraseña
+          console.log(`📨 Enviando email a ${vet.email} con contraseña: ${tempPassword}`);
+          await this.mailerService.sendWelcomeEmail({
+            to: vet.email,
+            userName: vet.name,
+            temporaryPassword: tempPassword,
+          });
+
+          results.push({
+            email: vet.email,
+            name: vet.name,
+            success: true,
+            temporaryPassword: tempPassword,
+          });
+
+          console.log(`✅ Email enviado a ${vet.email} con contraseña: ${tempPassword}`);
+        } catch (error) {
+          console.error(`❌ Error procesando veterinario ${vet.email}:`, error);
+          results.push({
+            email: vet.email,
+            name: vet.name,
+            success: false,
+            error: error instanceof Error ? error.message : 'Error desconocido',
+          });
+        }
+      }
+
+      return {
+        message: 'Reenvío de emails completado',
+        total: veterinarians.length,
+        successful: results.filter(r => r.success).length,
+        failed: results.filter(r => !r.success).length,
+        results,
+      };
+    } catch (error) {
+      console.error('❌ Error en resendWelcomeEmails:', error);
+      throw new InternalServerErrorException('Error al reenviar emails');
+    }
+  }
+
+  /**
+   * Elimina completamente todos los veterinarios de Supabase Auth y de la base de datos
+   */
+  async deleteAllVeterinarians() {
+    try {
+      const veterinarians = await this.veterinarianRepository.find();
+      
+      let deletedCount = 0;
+      let errorCount = 0;
+
+      for (const vet of veterinarians) {
+        try {
+          // Intentar eliminar de Supabase Auth
+          if (vet.id) {
+            const { error } = await this.supabaseService
+              .getClient()
+              .auth.admin.deleteUser(vet.id);
+            
+            if (error) {
+              console.warn(`⚠️ Error eliminando veterinario ${vet.email} de Supabase:`, error.message);
+            }
+          }
+
+          // Eliminar de la base de datos
+          await this.veterinarianRepository.remove(vet);
+          deletedCount++;
+          console.log(`✅ Veterinario ${vet.email} eliminado completamente`);
+        } catch (error) {
+          errorCount++;
+          console.error(`❌ Error eliminando veterinario ${vet.email}:`, error);
+        }
+      }
+
+      return {
+        message: 'Proceso de eliminación completado',
+        deletedCount,
+        errorCount,
+        total: veterinarians.length,
+      };
+    } catch (error) {
+      console.error('❌ Error en deleteAllVeterinarians:', error);
+      throw new InternalServerErrorException('Error al eliminar veterinarios');
+    }
   }
 }

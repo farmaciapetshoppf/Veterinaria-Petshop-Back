@@ -38,9 +38,12 @@ export class MailerService {
     appointmentTime: string;
     petName: string;
     veterinarianName: string;
+    veterinarianId: string;
     reason: string;
   }) {
     try {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
+      
       await this.nestMailerService.sendMail({
         to: context.to,
         subject: '✅ Turno Confirmado - Huellitas Pet',
@@ -52,6 +55,8 @@ export class MailerService {
           petName: context.petName,
           veterinarianName: context.veterinarianName,
           reason: context.reason,
+          appointmentsUrl: `${frontendUrl}/appointments`,
+          chatUrl: `${frontendUrl}/messages?veterinarianId=${context.veterinarianId}`,
         },
       });
       console.log(`✅ Email de confirmación de turno enviado a ${context.to}`);
@@ -60,7 +65,11 @@ export class MailerService {
       await this.sendCopyToAdmin(
         '✅ Turno Confirmado - Huellitas Pet',
         context.to,
-        context,
+        {
+          ...context,
+          appointmentsUrl: `${frontendUrl}/appointments`,
+          chatUrl: `${frontendUrl}/messages?veterinarianId=${context.veterinarianId}`,
+        },
         'appointment-confirmation'
       );
     } catch (error) {
@@ -493,6 +502,136 @@ export class MailerService {
       }
     } catch (error) {
       console.error('❌ Error enviando reporte diario:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar notificación de mensaje nuevo en chat
+   */
+  async sendNewMessageNotification(context: {
+    to: string;
+    recipientName: string;
+    senderName: string;
+    messagePreview: string;
+    conversationUrl: string;
+  }) {
+    try {
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '💬 Tienes un mensaje nuevo - Huellitas Pet',
+        template: 'new-message',
+        context: {
+          recipientName: context.recipientName,
+          senderName: context.senderName,
+          messagePreview: context.messagePreview,
+          conversationUrl: context.conversationUrl,
+        },
+      });
+      console.log(`✅ Notificación de mensaje enviada a ${context.to}`);
+      
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '💬 Tienes un mensaje nuevo - Huellitas Pet',
+        context.to,
+        context,
+        'new-message'
+      );
+    } catch (error) {
+      console.error('❌ Error enviando notificación de mensaje:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar solicitud de medicamentos controlados al admin
+   */
+  async sendControlledMedRequestToAdmin(context: {
+    veterinarian: {
+      name: string;
+      email: string;
+      licenseNumber: string;
+    };
+    medication: string;
+    quantity: number;
+    urgency: string;
+    justification: string;
+    requestDate: string;
+  }) {
+    try {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
+      
+      await this.nestMailerService.sendMail({
+        to: this.adminEmail,
+        subject: '🩺 Nueva Solicitud de Medicamento Controlado - Huellitas Pet',
+        template: 'controlled-med-request-admin',
+        context: {
+          veterinarianName: context.veterinarian.name,
+          veterinarianEmail: context.veterinarian.email,
+          veterinarianLicense: context.veterinarian.licenseNumber,
+          medication: context.medication,
+          quantity: context.quantity,
+          urgency: context.urgency,
+          urgencyColor: 
+            context.urgency === 'alta' ? '#dc3545' : 
+            context.urgency === 'media' ? '#ffc107' : '#28a745',
+          justification: context.justification,
+          requestDate: context.requestDate,
+          adminPanelUrl: `${frontendUrl}/admin/controlled-medications`,
+        },
+      });
+      console.log(`✅ Solicitud de medicamento controlado enviada a admin`);
+    } catch (error) {
+      console.error('❌ Error enviando solicitud al admin:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar actualización de estado de solicitud al veterinario
+   */
+  async sendMedRequestStatusUpdate(context: {
+    to: string;
+    veterinarianName: string;
+    medication: string;
+    quantity: number;
+    status: string;
+    comment: string;
+  }) {
+    try {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
+      
+      const statusText = {
+        aprobado: '✅ APROBADA',
+        rechazado: '❌ RECHAZADA',
+        entregado: '📦 ENTREGADA',
+        cancelado: '🚫 CANCELADA',
+      }[context.status] || context.status.toUpperCase();
+
+      const statusColor = {
+        aprobado: '#28a745',
+        rechazado: '#dc3545',
+        entregado: '#17a2b8',
+        cancelado: '#6c757d',
+      }[context.status] || '#6c757d';
+
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: `${statusText} - Solicitud de Medicamento Controlado - Huellitas Pet`,
+        template: 'controlled-med-status-update',
+        context: {
+          veterinarianName: context.veterinarianName,
+          medication: context.medication,
+          quantity: context.quantity,
+          status: statusText,
+          statusColor: statusColor,
+          comment: context.comment,
+          myRequestsUrl: `${frontendUrl}/veterinarian/my-requests`,
+        },
+      });
+      console.log(`✅ Actualización de estado enviada a ${context.to}`);
+    } catch (error) {
+      console.error('❌ Error enviando actualización de estado:', error);
       throw error;
     }
   }

@@ -62,7 +62,12 @@ export class MedicalRecordsPetService {
    */
   async findAll(page: number = 1, limit: number = 20) {
     const [records, total] = await this.medicalRecordsRepository.findAndCount({
-      relations: ['pet', 'pet.owner', 'veterinarian'],
+      relations: {
+        pet: {
+          owner: true,
+        },
+        veterinarian: true,
+      },
       order: { consultationDate: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -86,7 +91,9 @@ export class MedicalRecordsPetService {
   async searchPets(searchTerm: string) {
     const pets = await this.petRepository.find({
       where: { nombre: Like(`%${searchTerm}%`) },
-      relations: ['owner'],
+      relations: {
+        owner: true,
+      },
       take: 10,
     });
 
@@ -102,7 +109,9 @@ export class MedicalRecordsPetService {
   async findByPet(petId: string) {
     const records = await this.medicalRecordsRepository.find({
       where: { pet: { id: petId } },
-      relations: ['veterinarian'],
+      relations: {
+        veterinarian: true,
+      },
       order: { consultationDate: 'DESC' },
     });
 
@@ -125,7 +134,12 @@ export class MedicalRecordsPetService {
   async findOne(id: string) {
     const record = await this.medicalRecordsRepository.findOne({
       where: { id },
-      relations: ['pet', 'pet.owner', 'veterinarian'],
+      relations: {
+        pet: {
+          owner: true,
+        },
+        veterinarian: true,
+      },
     });
 
     if (!record) {

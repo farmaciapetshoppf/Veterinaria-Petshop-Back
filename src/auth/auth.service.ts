@@ -26,16 +26,65 @@ export class AuthService {
     private readonly veterinariansService: VeterinariansService,
   ) {}
 
+  /**
+   * Genera una contraseña aleatoria de 10 caracteres
+   * Garantiza: 2 mayúsculas, 2 minúsculas, 2 números, 2 caracteres especiales
+   */
+  private generateRandomPassword(): string {
+    const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijkmnopqrstuvwxyz';
+    const numbers = '23456789';
+    const special = '!@#$%&*';
+    
+    let password = '';
+    
+    // Asegurar 2 mayúsculas
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    
+    // Asegurar 2 minúsculas
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    
+    // Asegurar 2 números
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    
+    // Asegurar 2 caracteres especiales
+    password += special[Math.floor(Math.random() * special.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+    
+    // Completar hasta 10 caracteres con caracteres aleatorios
+    const allChars = uppercase + lowercase + numbers + special;
+    for (let i = 8; i < 10; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+    
+    // Mezclar los caracteres usando Fisher-Yates shuffle
+    const passwordArray = password.split('');
+    for (let i = passwordArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
+    }
+    
+    return passwordArray.join('');
+  }
+
   async signUp(signUpDto: SignUpDto) {
     const { name, email, password, user, phone, country, address, city } =
       signUpDto;
 
     try {
+      // Generar contraseña temporal aleatoria
+      const temporaryPassword = this.generateRandomPassword();
+      console.log('🔑 Contraseña temporal generada:', temporaryPassword);
+      
+      // Usar la contraseña temporal en lugar de la proporcionada por el usuario
       const { data, error: authError } = await this.supabaseService
         .getClient()
         .auth.signUp({
           email: email,
-          password,
+          password: temporaryPassword,
         });
 
       if (authError) {
@@ -71,14 +120,25 @@ export class AuthService {
         });
 
         try {
-          const subject = '👋 ¡Bienvenido a Huellitas Pet 🐾!';
+          const subject = '🔑 Tu contraseña temporal - Huellitas Pet 🐾';
           const htmlContent = `
-                <h1>Hola, ${name}!</h1>
-                <p>¡Gracias por registrarte! Estamos listos para ayudarte con tus mascotas.</p>
-                <p>Tu cuenta ya está activa.</p>
+                <h1>¡Hola, ${name}!</h1>
+                <p>¡Bienvenido a Huellitas Pet! Tu cuenta ha sido creada exitosamente.</p>
+                <h2>Tu contraseña temporal:</h2>
+                <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0;">
+                  ${temporaryPassword}
+                </div>
+                <p><strong>⚠️ Importante:</strong></p>
+                <ul>
+                  <li>Guarda esta contraseña en un lugar seguro</li>
+                  <li>Úsala para iniciar sesión por primera vez</li>
+                  <li>Te recomendamos cambiarla después del primer inicio de sesión</li>
+                </ul>
+                <p>Si no solicitaste este registro, por favor ignora este correo.</p>
+                <p>¡Gracias por unirte a nuestra comunidad! 🐶🐱🐰</p>
             `;
           await this.mailerService.sendMail(email, subject, htmlContent);
-          console.log(`Correo de bienvenida enviado a ${email}`);
+          console.log(`✅ Correo con contraseña temporal enviado a ${email}`);
         } catch (mailError) {
           const errorMessage =
             mailError instanceof Error
@@ -93,8 +153,13 @@ export class AuthService {
 
       return {
         message:
-          'Registro de usuario iniciado. Revise su email para verificar.',
-        user: data.user,
+          'Registro exitoso. Revise su email para obtener su contraseña temporal.',
+        user: {
+          id: data.user?.id,
+          email: data.user?.email,
+          name: name,
+        },
+        temporaryPassword: temporaryPassword, // ✅ IMPORTANTE: Devolver contraseña temporal
       };
     } catch (error) {
       const message =
@@ -105,6 +170,9 @@ export class AuthService {
 
   async signIn(signInDto: SignInDto, res: Response): Promise<any> {
     try {
+      console.log('🔐 Intento de login para:', signInDto.email);
+      console.log('🔑 Contraseña recibida:', signInDto.password);
+      
       const { data, error } = await this.supabaseService
         .getClient()
         .auth.signInWithPassword({
@@ -112,11 +180,18 @@ export class AuthService {
           password: signInDto.password,
         });
 
-      if (error) throw new UnauthorizedException(error.message);
+      if (error) {
+        console.error('❌ Error de Supabase en signIn:', error.message);
+        console.error('❌ Código de error:', error.status);
+        throw new UnauthorizedException(error.message);
+      }
 
       if (!data.session) {
+        console.error('❌ No hay sesión devuelta por Supabase');
         throw new UnauthorizedException('No se devolvieron datos de sesión');
       }
+      
+      console.log('✅ Login exitoso en Supabase para:', signInDto.email);
 
       const email = data.user.email;
       if (!email) {

@@ -6,7 +6,33 @@ import {
   IsNumber,
   IsDateString,
   IsUUID,
+  IsEnum,
 } from 'class-validator';
+
+export enum DiagnosisType {
+  PARVOVIROSIS = 'Parvovirosis Canina',
+  MOQUILLO = 'Moquillo',
+  DERMATITIS_ALERGICA = 'Dermatitis Alérgica',
+  GASTROENTERITIS = 'Gastroenteritis',
+  OTITIS_EXTERNA = 'Otitis Externa',
+  ENFERMEDAD_PERIODONTAL = 'Enfermedad Periodontal',
+  CONJUNTIVITIS = 'Conjuntivitis',
+  PARASITOS_INTESTINALES = 'Parásitos Intestinales',
+  ARTROSIS = 'Artrosis',
+  CONTROL_RUTINA = 'Control de Rutina',
+  INFECCION_RESPIRATORIA = 'Infección Respiratoria',
+  FRACTURA = 'Fractura',
+  OBESIDAD = 'Obesidad',
+  INSUFICIENCIA_RENAL = 'Insuficiencia Renal',
+  DIABETES = 'Diabetes',
+  ALERGIAS_ALIMENTARIAS = 'Alergias Alimentarias',
+  PROBLEMAS_CARDIACOS = 'Problemas Cardíacos',
+  EPILEPSIA = 'Epilepsia',
+  INFECCION_URINARIA = 'Infección Urinaria',
+  TRAUMATISMO = 'Traumatismo',
+  INTOXICACION = 'Intoxicación',
+  OTRO = 'Otro',
+}
 
 export class CreateMedicalRecordsPetDto {
   @ApiProperty({
@@ -26,12 +52,22 @@ export class CreateMedicalRecordsPetDto {
   veterinarianId: string;
 
   @ApiProperty({
-    description: 'Diagnóstico de la consulta',
-    example: 'Infección respiratoria leve',
+    description: 'Diagnóstico de la consulta (enum predefinido para analytics)',
+    enum: DiagnosisType,
+    example: DiagnosisType.CONTROL_RUTINA,
+  })
+  @IsEnum(DiagnosisType)
+  @IsNotEmpty()
+  diagnosis: DiagnosisType;
+
+  @ApiProperty({
+    description: 'Detalles adicionales del diagnóstico (requerido si diagnosis es "Otro")',
+    example: 'Conjuntivitis bacteriana con secreción purulenta',
+    required: false,
   })
   @IsString()
-  @IsNotEmpty()
-  diagnosis: string;
+  @IsOptional()
+  diagnosisDetails?: string;
 
   @ApiProperty({
     description: 'Tratamiento prescrito',

@@ -32,14 +32,6 @@ export class ChatController {
     return this.chatService.getUserConversations(userId);
   }
 
-  @Post('conversations')
-  @ApiOperation({ summary: 'Crear o encontrar conversación con otro usuario' })
-  @ApiResponse({ status: 201, description: 'Conversación creada o encontrada' })
-  async createConversation(@Request() req, @Body() dto: CreateConversationDto) {
-    const userId = req.user.id;
-    return this.chatService.createOrFindConversation(userId, dto.participantId);
-  }
-
   @Get('conversations/unread-count')
   @ApiOperation({ summary: 'Obtener contador de mensajes no leídos' })
   @ApiResponse({ status: 200, description: 'Contador de mensajes no leídos' })
@@ -47,6 +39,14 @@ export class ChatController {
     const userId = req.user.id;
     const count = await this.chatService.getUnreadCount(userId);
     return { count };
+  }
+
+  @Post('conversations')
+  @ApiOperation({ summary: 'Crear o encontrar conversación con otro usuario' })
+  @ApiResponse({ status: 201, description: 'Conversación creada o encontrada' })
+  async createConversation(@Request() req, @Body() dto: CreateConversationDto) {
+    const userId = req.user.id;
+    return this.chatService.createOrFindConversation(userId, dto.participantId);
   }
 
   @Get('conversations/:id')
@@ -90,7 +90,7 @@ export class ChatController {
   ) {
     const userId = req.user.id;
     const offset = (page - 1) * limit;
-    return this.chatService.getMessages(conversationId, userId, limit, offset);
+    return this.chatService.getMessages(conversationId, userId, Number(limit), offset, Number(page));
   }
 
   @Post('conversations/:conversationId/messages')
@@ -110,12 +110,19 @@ export class ChatController {
     });
   }
 
-  @Patch('messages/:messageId/read')
-  @ApiOperation({ summary: 'Marcar mensaje como leído' })
-  @ApiResponse({ status: 200, description: 'Mensaje marcado como leído' })
-  async markMessageAsRead(@Request() req, @Param('messageId') messageId: string) {
-    await this.chatService.markMessageAsRead(messageId);
-    return { success: true };
+  @Patch('conversations/:conversationId/read')
+  @ApiOperation({ summary: 'Marcar todos los mensajes de una conversación como leídos' })
+  @ApiResponse({ status: 200, description: 'Mensajes marcados como leídos' })
+  async markConversationAsRead(
+    @Request() req,
+    @Param('conversationId') conversationId: string,
+  ) {
+    const userId = req.user.id;
+    const updatedCount = await this.chatService.markConversationAsRead(conversationId, userId);
+    return {
+      message: 'Mensajes marcados como leídos',
+      updatedCount,
+    };
   }
 
   @Delete('conversations/:id')

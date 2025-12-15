@@ -5,6 +5,8 @@ import { Conversation } from './entities/conversation.entity';
 import { Message } from './entities/message.entity';
 import { Users } from '../users/entities/user.entity';
 import { Veterinarian } from '../veterinarians/entities/veterinarian.entity';
+import { MailerService } from '../mailer/mailer.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ChatService {
@@ -17,6 +19,8 @@ export class ChatService {
     private usersRepository: Repository<Users>,
     @InjectRepository(Veterinarian)
     private veterinarianRepository: Repository<Veterinarian>,
+    private mailerService: MailerService,
+    private configService: ConfigService,
   ) {}
 
   // Obtener todas las conversaciones de un usuario con detalles de participantes
@@ -145,21 +149,64 @@ export class ChatService {
   }
 
   // Obtener mensajes de una conversación
-  async getMessages(conversationId: string, userId: string, limit = 50, offset = 0): Promise<Message[]> {
+  async getMessages(
+    conversationId: string,
+    userId: string,
+    limit = 50,
+    offset = 0,
+    page = 1,
+  ): Promise<{
+    conversation: {
+      id: string;
+      participants: Array<{
+        id: string;
+        name: string;
+        role: string;
+        profileImageUrl?: string;
+      }>;
+    };
+    messages: Message[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+    };
+  }> {
     // Verificar que el usuario sea parte de la conversación
     const conversation = await this.getConversationById(conversationId);
     if (!conversation.participants.includes(userId)) {
       throw new BadRequestException('No tienes acceso a esta conversación');
     }
 
+    // Obtener información de los participantes
+    const participantIds = conversation.participants.filter((id) => id !== userId);
+    const participants = await this.getParticipantsInfo(participantIds);
+
+    // Contar total de mensajes
+    const total = await this.messageRepository.count({
+      where: { conversationId },
+    });
+
+    // Obtener mensajes con paginación
     const messages = await this.messageRepository.find({
       where: { conversationId },
-      order: { createdAt: 'DESC' },
+      order: { createdAt: 'ASC' }, // Más antiguos primero
       take: limit,
       skip: offset,
     });
 
-    return messages.reverse(); // Invertir para mostrar más antiguos primero
+    return {
+      conversation: {
+        id: conversation.id,
+        participants,
+      },
+      messages,
+      pagination: {
+        page,
+        limit,
+        total,
+      },
+    };
   }
 
   // Enviar mensaje
@@ -191,11 +238,64 @@ export class ChatService {
     conversation.lastMessageAt = new Date();
     await this.conversationRepository.save(conversation);
 
+    // Enviar notificación por email al destinatario
+    try {
+      // Obtener información del remitente y destinatario
+      const recipientId = conversation.participants.find(id => id !== data.senderId);
+      
+      console.log('📧 Intentando enviar email de notificación...');
+      console.log('  - Sender ID:', data.senderId);
+      console.log('  - Recipient ID:', recipientId);
+      
+      if (recipientId) {
+        const senderInfo = await this.getParticipantsInfo([data.senderId]);
+        const recipientInfo = await this.getParticipantsInfo([recipientId]);
+
+        console.log('  - Sender info:', senderInfo[0]?.name, senderInfo[0]?.email);
+        console.log('  - Recipient info:', recipientInfo[0]?.name, recipientInfo[0]?.email);
+
+        if (senderInfo.length > 0 && recipientInfo.length > 0) {
+          const sender = senderInfo[0];
+          const recipient = recipientInfo[0];
+          
+          // Preparar preview del mensaje (primeros 100 caracteres)
+          const messagePreview = data.content.length > 100 
+            ? data.content.substring(0, 100) + '...'
+            : data.content;
+
+          // URL del frontend para ver la conversación
+          const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3002';
+          const conversationUrl = `${frontendUrl}/messages/${data.conversationId}`;
+
+          console.log('  - Conversation URL:', conversationUrl);
+          console.log('  - Enviando email a:', recipient.email);
+
+          // Enviar email de notificación
+          await this.mailerService.sendNewMessageNotification({
+            to: recipient.email,
+            recipientName: recipient.name,
+            senderName: sender.name,
+            messagePreview,
+            conversationUrl,
+          });
+          
+          console.log('✅ Email de notificación enviado exitosamente');
+        } else {
+          console.log('⚠️  No se encontró información completa de sender o recipient');
+        }
+      } else {
+        console.log('⚠️  No se encontró recipientId en la conversación');
+      }
+    } catch (error) {
+      // No lanzar error para no interrumpir el envío del mensaje
+      console.error('❌ Error enviando notificación por email:', error);
+    }
+
     return savedMessage;
   }
 
   // Marcar mensajes como leídos
-  async markConversationAsRead(conversationId: string, userId: string): Promise<void> {
+  async markConversationAsRead(conversationId: string, userId: string): Promise<number> {
     const conversation = await this.getConversationById(conversationId);
 
     if (!conversation.participants.includes(userId)) {
@@ -203,7 +303,7 @@ export class ChatService {
     }
 
     // Marcar todos los mensajes que no son del usuario como leídos
-    await this.messageRepository
+    const result = await this.messageRepository
       .createQueryBuilder()
       .update(Message)
       .set({ isRead: true })
@@ -211,6 +311,8 @@ export class ChatService {
       .andWhere('senderId != :userId', { userId })
       .andWhere('isRead = false')
       .execute();
+
+    return result.affected || 0;
   }
 
   // Obtener contador de mensajes no leídos

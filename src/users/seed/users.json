@@ -198,5 +198,185 @@
     "city": "Tucumán",
     "role": "user",
     "pets": []
+  },
+  {
+    "name": "Martín López",
+    "email": "martin.lopez@gmail.com",
+    "user": "martinl",
+    "phone": "+54 11 7890-1234",
+    "country": "Argentina",
+    "address": "Av. Belgrano 234",
+    "city": "Buenos Aires",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Firulais",
+        "species": "Perro",
+        "breed": "Mestizo",
+        "birthdate": "2020-09-12",
+        "weight": 18.5,
+        "appointments": []
+      },
+      {
+        "name": "Pelusa",
+        "species": "Gato",
+        "breed": "Angora",
+        "birthdate": "2021-06-18",
+        "weight": 3.8,
+        "appointments": []
+      }
+    ]
+  },
+  {
+    "name": "Sofía Ramírez",
+    "email": "sofia.ramirez@gmail.com",
+    "user": "sofiar",
+    "phone": "+54 11 8901-2345",
+    "country": "Argentina",
+    "address": "Mitre 567",
+    "city": "Rosario",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Nala",
+        "species": "Perro",
+        "breed": "Beagle",
+        "birthdate": "2022-03-05",
+        "weight": 14.2,
+        "appointments": []
+      }
+    ]
+  },
+  {
+    "name": "Diego Silva",
+    "email": "diego.silva@gmail.com",
+    "user": "diegos",
+    "phone": "+54 11 9012-3456",
+    "country": "Argentina",
+    "address": "San Juan 432",
+    "city": "Córdoba",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Tito",
+        "species": "Perro",
+        "breed": "Cocker Spaniel",
+        "birthdate": "2019-11-20",
+        "weight": 13.8,
+        "appointments": []
+      },
+      {
+        "name": "Nina",
+        "species": "Gato",
+        "breed": "Bengalí",
+        "birthdate": "2020-04-15",
+        "weight": 5.2,
+        "appointments": []
+      },
+      {
+        "name": "Pepito",
+        "species": "Perro",
+        "breed": "Chihuahua",
+        "birthdate": "2023-02-10",
+        "weight": 2.5,
+        "appointments": []
+      }
+    ]
+  },
+  {
+    "name": "Valentina Torres",
+    "email": "valentina.torres@gmail.com",
+    "user": "valet",
+    "phone": "+54 11 0123-4567",
+    "country": "Argentina",
+    "address": "Alem 789",
+    "city": "Mendoza",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Dante",
+        "species": "Perro",
+        "breed": "Doberman",
+        "birthdate": "2018-07-08",
+        "weight": 38.5,
+        "appointments": []
+      }
+    ]
+  },
+  {
+    "name": "Federico Morales",
+    "email": "federico.morales@gmail.com",
+    "user": "federicom",
+    "phone": "+54 11 1234-5670",
+    "country": "Argentina",
+    "address": "Sarmiento 123",
+    "city": "La Plata",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Lola",
+        "species": "Perro",
+        "breed": "Shih Tzu",
+        "birthdate": "2021-08-22",
+        "weight": 6.8,
+        "appointments": []
+      },
+      {
+        "name": "Manchitas",
+        "species": "Gato",
+        "breed": "Bicolor",
+        "birthdate": "2022-05-30",
+        "weight": 4.5,
+        "appointments": []
+      }
+    ]
+  },
+  {
+    "name": "Camila Vega",
+    "email": "camila.vega@gmail.com",
+    "user": "camilav",
+    "phone": "+54 11 2345-6701",
+    "country": "Argentina",
+    "address": "Moreno 456",
+    "city": "Buenos Aires",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Bobby",
+        "species": "Perro",
+        "breed": "Pug",
+        "birthdate": "2020-12-01",
+        "weight": 8.2,
+        "appointments": []
+      }
+    ]
+  },
+  {
+    "name": "Lucas Benítez",
+    "email": "lucas.benitez@gmail.com",
+    "user": "lucasb",
+    "phone": "+54 11 3456-7012",
+    "country": "Argentina",
+    "address": "España 678",
+    "city": "Rosario",
+    "role": "user",
+    "pets": [
+      {
+        "name": "Coco",
+        "species": "Perro",
+        "breed": "Yorkshire Terrier",
+        "birthdate": "2022-01-15",
+        "weight": 3.2,
+        "appointments": []
+      },
+      {
+        "name": "Milo",
+        "species": "Gato",
+        "breed": "Maine Coon",
+        "birthdate": "2021-09-08",
+        "weight": 7.5,
+        "appointments": []
+      }
+    ]
   }
 ]
