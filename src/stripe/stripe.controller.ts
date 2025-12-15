@@ -136,21 +136,16 @@ export class StripeController {
   @Post('webhook')
   async handleWebhook(
     @Headers('stripe-signature') signature: string,
-    @Req() req: Request & { rawBody: Buffer },
+    @Req() req: Request,
   ) {
     if (!signature) {
       throw new BadRequestException('Missing stripe-signature header');
     }
 
-    const rawBody = req.rawBody;
-    if (!rawBody) {
-      throw new BadRequestException('Missing raw body');
-    }
-
     try {
-      const event = await this.stripeService.constructEventFromPayload(
+      const event = this.stripeService.constructEventFromPayload(
         signature,
-        rawBody,
+        req.body,
       );
 
       console.log('🔔 Webhook de Stripe recibido:', event.type);
@@ -159,28 +154,50 @@ export class StripeController {
         case 'checkout.session.completed': {
           const session = event.data.object;
           console.log('✅ Checkout completado:', session.id);
-          // await this.saleOrdersService.updateOrderStatus(session.metadata.order_id, 'PAID');
+
+          if (session.metadata && session.metadata.order_id) {
+            await this.saleOrdersService.updateOrderStatus(
+              session.metadata.order_id,
+              'PAID',
+            );
+          } else {
+            console.warn('No se encontró order_id en metadata');
+          }
           break;
         }
         case 'payment_intent.succeeded': {
           const paymentIntent = event.data.object;
           console.log('✅ Pago exitoso:', paymentIntent.id);
-          // await this.saleOrdersService.updateOrderStatus(paymentIntent.metadata.order_id, 'PAID');
+
+          if (paymentIntent.metadata && paymentIntent.metadata.order_id) {
+            await this.saleOrdersService.updateOrderStatus(
+              paymentIntent.metadata.order_id,
+              'PAID',
+            );
+          } else {
+            console.warn('No se encontró order_id en metadata');
+          }
           break;
         }
         case 'payment_intent.payment_failed': {
           const paymentIntent = event.data.object;
           console.log('❌ Pago fallido:', paymentIntent.id);
-          // await this.saleOrdersService.updateOrderStatus(paymentIntent.metadata.order_id, 'CANCELLED');
+
+          if (paymentIntent.metadata && paymentIntent.metadata.order_id) {
+            await this.saleOrdersService.updateOrderStatus(
+              paymentIntent.metadata.order_id,
+              'CANCELLED',
+            );
+          } else {
+            console.warn('No se encontró order_id en metadata');
+          }
           break;
         }
+        default:
+          console.log(`Unhandled event type ${event.type}`);
       }
-
-      return { received: true };
     } catch (error) {
-      const err = error as Error;
-      console.error('Error procesando webhook:', err);
-      throw new BadRequestException(`Webhook Error: ${err.message}`);
+      console.error('Error procesando webhook:', error);
     }
   }
 }
