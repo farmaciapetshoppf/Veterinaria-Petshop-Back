@@ -1,12 +1,19 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { ManyToOne } from "typeorm";
-import { Users } from "src/users/entities/user.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ManyToOne } from 'typeorm';
+import { Users } from 'src/users/entities/user.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { SaleOrderProduct } from './sale-order-product.entity';
 export enum SaleOrderStatus {
-  ACTIVE = 'ACTIVE',       // Carrito activo - stock ya descontado
-  PENDING = 'PENDING',     // Esperando confirmación de pago en Mercado Pago
-  PAID = 'PAID',           // Pagado y finalizado
+  ACTIVE = 'ACTIVE', // Carrito activo - stock ya descontado
+  PENDING = 'PENDING', // Esperando confirmación de pago en Mercado Pago
+  PAID = 'PAID', // Pagado y finalizado
   CANCELLED = 'CANCELLED', // Cancelado - stock restaurado
 }
 
@@ -24,7 +31,7 @@ export class SaleOrder {
   @Column({
     type: 'enum',
     enum: SaleOrderStatus,
-    default: SaleOrderStatus.ACTIVE,  // Por defecto inicia como carrito activo
+    default: SaleOrderStatus.ACTIVE, // Por defecto inicia como carrito activo
   })
   status: SaleOrderStatus;
 
@@ -49,19 +56,21 @@ export class SaleOrder {
   @Column({ type: 'varchar', nullable: true })
   mercadoPagoStatus?: string;
 
-    // Buyer: el cliente que realiza la compra
-    @ManyToOne(() => Users, (user) => user.buyerSaleOrders)
-    buyer: Users;
+  @Column({ nullable: true })
+  stripeSessionId: string;
 
-    // Opcional: sucursal donde se procesa la orden (si se usa multi-sucursal)
-    @ManyToOne(() => Branch, { nullable: true })
-    @JoinColumn({ name: 'branch_id' })
-    branch?: Branch;
+  @Column({ nullable: true })
+  stripePaymentIntentId: string;
 
+  @Column({ nullable: true })
+  stripeStatus: string;
 
+  // Buyer: el cliente que realiza la compra
+  @ManyToOne(() => Users, (user) => user.buyerSaleOrders)
+  buyer: Users;
 
-
-
-
+  // Opcional: sucursal donde se procesa la orden (si se usa multi-sucursal)
+  @ManyToOne(() => Branch, { nullable: true })
+  @JoinColumn({ name: 'branch_id' })
+  branch?: Branch;
 }
-

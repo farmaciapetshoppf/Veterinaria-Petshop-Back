@@ -21,6 +21,7 @@ import { Users } from 'src/users/entities/user.entity';
 import { Products } from 'src/products/entities/product.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { MercadoPagoService } from 'src/mercadopago/mercadopago.service';
+import { StripeService } from 'src/stripe/stripe.service';
 
 @Injectable()
 export class SaleOrdersService {
@@ -49,20 +50,23 @@ export class SaleOrdersService {
     private readonly configService: ConfigService,
     private readonly mercadoPagoService: MercadoPagoService,
     private readonly mailerService: MailerService,
+    private readonly stripeService: StripeService,
   ) {
     // Inicializar MercadoPago
-    const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
+    const accessToken = this.configService.get<string>(
+      'MERCADOPAGO_ACCESS_TOKEN',
+    );
     if (accessToken) {
-      const client = new MercadoPagoConfig({ 
+      const client = new MercadoPagoConfig({
         accessToken,
-        options: { timeout: 5000 }
+        options: { timeout: 5000 },
       });
       this.mercadoPagoClient = new Preference(client);
     }
   }
 
   // ==================== CARRITO ACTIVO ====================
-  
+
   /**
    * Agregar producto al carrito activo del usuario
    * - Busca o crea carrito ACTIVE
@@ -73,9 +77,9 @@ export class SaleOrdersService {
     return this.dataSource.transaction(async (manager) => {
       // Buscar carrito activo del usuario
       let cart = await manager.findOne(SaleOrder, {
-        where: { 
-          buyer: { id: userId }, 
-          status: SaleOrderStatus.ACTIVE
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
         },
         relations: { items: { product: true } },
       });
@@ -100,7 +104,9 @@ export class SaleOrdersService {
 
       // Validar que el carrito no est√© vencido
       if (cart.expiresAt && new Date() > cart.expiresAt) {
-        throw new BadRequestException('El carrito ha expirado. Se crear√° uno nuevo.');
+        throw new BadRequestException(
+          'El carrito ha expirado. Se crear√° uno nuevo.',
+        );
       }
 
       // Buscar el producto
@@ -119,17 +125,26 @@ export class SaleOrdersService {
       }
 
       // Verificar si el producto ya est√° en el carrito
-      const existingItem = cart.items?.find(item => item.product.id === productId);
-      
-      console.log(`?? addToCart - Usuario: ${userId}, Producto: ${product.name} (${productId}), Cantidad: ${quantity}`);
-      console.log(`?? Items actuales en carrito:`, cart.items?.map(i => `${i.product.name} x${i.quantity}`));
+      const existingItem = cart.items?.find(
+        (item) => item.product.id === productId,
+      );
+
+      console.log(
+        `?? addToCart - Usuario: ${userId}, Producto: ${product.name} (${productId}), Cantidad: ${quantity}`,
+      );
+      console.log(
+        `?? Items actuales en carrito:`,
+        cart.items?.map((i) => `${i.product.name} x${i.quantity}`),
+      );
 
       if (existingItem) {
-        console.log(`?? Item YA existe en carrito, actualizando cantidad: ${existingItem.quantity} ? ${existingItem.quantity + quantity}`);
-        
+        console.log(
+          `?? Item YA existe en carrito, actualizando cantidad: ${existingItem.quantity} ? ${existingItem.quantity + quantity}`,
+        );
+
         // Actualizar cantidad existente
         const newTotalQty = existingItem.quantity + quantity;
-        
+
         // Validar que hay stock para la nueva cantidad total
         if (product.stock < newTotalQty) {
           throw new BadRequestException(
@@ -142,7 +157,7 @@ export class SaleOrdersService {
         await manager.save(SaleOrderProduct, existingItem);
       } else {
         console.log(`? Nuevo item, agregando al carrito`);
-        
+
         // Agregar nuevo item al carrito
         // Descontar stock inmediatamente
         product.stock -= quantity;
@@ -184,9 +199,9 @@ export class SaleOrdersService {
    */
   async getActiveCart(userId: string) {
     const cart = await this.saleOrderRepository.findOne({
-      where: { 
-        buyer: { id: userId }, 
-        status: SaleOrderStatus.ACTIVE
+      where: {
+        buyer: { id: userId },
+        status: SaleOrderStatus.ACTIVE,
       },
       relations: { items: { product: true }, buyer: true },
     });
@@ -205,7 +220,7 @@ export class SaleOrdersService {
     // ?? DEDUPLICAR items con el mismo producto (fix para llamadas duplicadas del front)
     const productMap = new Map<string, SaleOrderProduct>();
     const duplicates: SaleOrderProduct[] = [];
-    
+
     for (const item of cart.items) {
       const productId = item.product.id;
       if (productMap.has(productId)) {
@@ -213,7 +228,9 @@ export class SaleOrdersService {
         const existing = productMap.get(productId)!;
         existing.quantity += item.quantity;
         duplicates.push(item);
-        console.log(`?? Duplicado detectado: ${item.product.name} (qty: ${item.quantity})`);
+        console.log(
+          `?? Duplicado detectado: ${item.product.name} (qty: ${item.quantity})`,
+        );
       } else {
         productMap.set(productId, item);
       }
@@ -221,25 +238,29 @@ export class SaleOrdersService {
 
     // Eliminar duplicados de la BD si se encontraron
     if (duplicates.length > 0) {
-      console.log(`??? Eliminando ${duplicates.length} items duplicados del carrito`);
+      console.log(
+        `??? Eliminando ${duplicates.length} items duplicados del carrito`,
+      );
       await this.saleOrderProductRepository.remove(duplicates);
-      
+
       // Actualizar items consolidados
       const consolidated = Array.from(productMap.values());
       for (const item of consolidated) {
         await this.saleOrderProductRepository.save(item);
       }
-      
+
       cart.items = consolidated;
-      
+
       // Recalcular total
       cart.total = cart.items.reduce(
         (sum, item) => sum + Number(item.unitPrice) * item.quantity,
         0,
       );
       await this.saleOrderRepository.save(cart);
-      
-      console.log(`? Carrito consolidado: ${cart.items.length} items ˙nicos, total: $${cart.total}`);
+
+      console.log(
+        `? Carrito consolidado: ${cart.items.length} items ÔøΩnicos, total: $${cart.total}`,
+      );
     }
 
     return { message: 'Carrito activo', data: cart };
@@ -252,9 +273,9 @@ export class SaleOrdersService {
   async updateCartItem(userId: string, productId: string, newQuantity: number) {
     return this.dataSource.transaction(async (manager) => {
       const cart = await manager.findOne(SaleOrder, {
-        where: { 
-          buyer: { id: userId }, 
-          status: SaleOrderStatus.ACTIVE
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
         },
         relations: { items: { product: true } },
       });
@@ -263,7 +284,7 @@ export class SaleOrdersService {
         throw new NotFoundException('No hay carrito activo');
       }
 
-      const item = cart.items.find(i => i.product.id === productId);
+      const item = cart.items.find((i) => i.product.id === productId);
       if (!item) {
         throw new NotFoundException('Producto no encontrado en el carrito');
       }
@@ -321,14 +342,14 @@ export class SaleOrdersService {
 
   /**
    * Vaciar carrito completo
-   * Stock NO se restaura porque nunca se descontÛ
+   * Stock NO se restaura porque nunca se descontÔøΩ
    */
   async clearCart(userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const cart = await manager.findOne(SaleOrder, {
-        where: { 
-          buyer: { id: userId }, 
-          status: SaleOrderStatus.ACTIVE
+        where: {
+          buyer: { id: userId },
+          status: SaleOrderStatus.ACTIVE,
         },
         relations: { items: { product: true } },
       });
@@ -349,33 +370,43 @@ export class SaleOrdersService {
    */
   async getOrderHistory(userId: string) {
     const orders = await this.saleOrderRepository.find({
-      where: { 
+      where: {
         buyer: { id: userId },
-        status: SaleOrderStatus.PAID
+        status: SaleOrderStatus.PAID,
       },
       relations: { items: { product: true } },
       order: { createdAt: 'DESC' },
     });
 
-    return { 
-      message: 'Historial de compras', 
-      data: orders 
+    return {
+      message: 'Historial de compras',
+      data: orders,
     };
   }
 
   /**
    * Checkout: Crear preferencia de MercadoPago
    */
-  async checkout(userId: string, checkoutDto: { success_url: string; failure_url: string; pending_url: string; auto_return?: 'approved' | 'all' }) {
+  async checkout(
+    userId: string,
+    checkoutDto: {
+      success_url: string;
+      failure_url: string;
+      pending_url: string;
+      auto_return?: 'approved' | 'all';
+    },
+  ) {
     if (!this.mercadoPagoClient) {
-      throw new BadRequestException('MercadoPago no est√° configurado. Verifica MERCADOPAGO_ACCESS_TOKEN en .env');
+      throw new BadRequestException(
+        'MercadoPago no est√° configurado. Verifica MERCADOPAGO_ACCESS_TOKEN en .env',
+      );
     }
 
     // 1. Obtener carrito activo
     const cart = await this.saleOrderRepository.findOne({
-      where: { 
-        buyer: { id: userId }, 
-        status: SaleOrderStatus.ACTIVE
+      where: {
+        buyer: { id: userId },
+        status: SaleOrderStatus.ACTIVE,
       },
       relations: { items: { product: true }, buyer: true },
     });
@@ -395,25 +426,40 @@ export class SaleOrdersService {
     }
 
     try {
-      // ConfiguraciÛn del backend
+      // ConfiguraciÔøΩn del backend
       const ngrokUrl = this.configService.get<string>('NGROK_URL');
-      const publicBackendUrl = ngrokUrl || 
+      const publicBackendUrl =
+        ngrokUrl ||
         this.configService.get<string>('BACKEND_PUBLIC_URL') ||
         this.configService.get<string>('API_URL') ||
         'http://localhost:3000';
-      const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
+      const accessToken = this.configService.get<string>(
+        'MERCADOPAGO_ACCESS_TOKEN',
+      );
 
       if (!accessToken) {
         throw new BadRequestException('Token de MercadoPago no configurado');
       }
 
-      this.logToFile('?? Backend configurado:', { publicBackendUrl, notificationUrl: `${publicBackendUrl}/sale-orders/webhook` });
-      this.logToFile('?? Access Token (prefijo):', accessToken?.substring(0, 20) + '...');
+      this.logToFile('?? Backend configurado:', {
+        publicBackendUrl,
+        notificationUrl: `${publicBackendUrl}/sale-orders/webhook`,
+      });
+      this.logToFile(
+        '?? Access Token (prefijo):',
+        accessToken?.substring(0, 20) + '...',
+      );
       this.logToFile('?? CheckoutDto recibido desde el frontend:', checkoutDto);
 
-      // Validar que el frontend envÌe las URLs (son obligatorias)
-      if (!checkoutDto?.success_url || !checkoutDto?.failure_url || !checkoutDto?.pending_url) {
-        throw new BadRequestException('Las URLs de retorno (success_url, failure_url, pending_url) son obligatorias en el body');
+      // Validar que el frontend envÔøΩe las URLs (son obligatorias)
+      if (
+        !checkoutDto?.success_url ||
+        !checkoutDto?.failure_url ||
+        !checkoutDto?.pending_url
+      ) {
+        throw new BadRequestException(
+          'Las URLs de retorno (success_url, failure_url, pending_url) son obligatorias en el body',
+        );
       }
 
       // Usar SOLO las URLs que vienen del frontend (sin fallback)
@@ -422,19 +468,19 @@ export class SaleOrdersService {
         failure: checkoutDto.failure_url,
         pending: checkoutDto.pending_url,
       };
-      
+
       this.logToFile('?? Back URLs recibidas del frontend:', backUrls);
 
       // 3. Crear preferencia usando el SDK de MercadoPago
-      const client = new MercadoPagoConfig({ 
+      const client = new MercadoPagoConfig({
         accessToken: accessToken,
-        options: { timeout: 5000 }
+        options: { timeout: 5000 },
       });
-      
+
       const preference = new Preference(client);
 
       const preferenceBody: any = {
-        items: cart.items.map(item => ({
+        items: cart.items.map((item) => ({
           id: String(item.product.id),
           title: item.product.name,
           quantity: item.quantity,
@@ -461,7 +507,7 @@ export class SaleOrdersService {
 
       const preferenceData = { body: preferenceBody };
 
-      this.logToFile('?? Datos que se enviar·n al SDK:', preferenceData);
+      this.logToFile('?? Datos que se enviarÔøΩn al SDK:', preferenceData);
 
       const result = await preference.create(preferenceData);
 
@@ -476,15 +522,19 @@ export class SaleOrdersService {
         message: 'Preferencia de pago creada exitosamente',
         data: {
           preferenceId: result.id,
-          initPoint: result.init_point, // Este es el link de PRODUCCI”N
+          initPoint: result.init_point, // Este es el link de PRODUCCIÔøΩN
           sandboxInitPoint: result.sandbox_init_point, // Este es solo para testing
         },
       };
     } catch (error) {
       console.error('? Error creando preferencia de MercadoPago:', error);
       const err = error as any;
-      const errorMessage = err?.response?.data || err?.message || 'Error desconocido';
-      console.error('Detalles del error:', JSON.stringify(errorMessage, null, 2));
+      const errorMessage =
+        err?.response?.data || err?.message || 'Error desconocido';
+      console.error(
+        'Detalles del error:',
+        JSON.stringify(errorMessage, null, 2),
+      );
       throw new BadRequestException('Error al generar preferencia de pago');
     }
   }
@@ -493,11 +543,14 @@ export class SaleOrdersService {
    * Webhook de MercadoPago para recibir notificaciones de pago
    */
   async handleWebhook(body: any) {
-    console.log('?? Webhook recibido de MercadoPago:', JSON.stringify(body, null, 2));
+    console.log(
+      '?? Webhook recibido de MercadoPago:',
+      JSON.stringify(body, null, 2),
+    );
 
     try {
       const topic = body.type || body.topic;
-      
+
       // Manejar merchant_order
       if (topic === 'merchant_order') {
         const merchantOrderId = body.data?.id || body['data.id'] || body.id;
@@ -507,8 +560,10 @@ export class SaleOrdersService {
         }
 
         console.log('?? Procesando merchant_order:', merchantOrderId);
-        
-        const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
+
+        const accessToken = this.configService.get<string>(
+          'MERCADOPAGO_ACCESS_TOKEN',
+        );
         const merchantOrderResponse = await axios.get(
           `https://api.mercadolibre.com/merchant_orders/${merchantOrderId}`,
           {
@@ -519,7 +574,10 @@ export class SaleOrdersService {
         );
 
         const merchantOrder = merchantOrderResponse.data;
-        console.log('?? Merchant Order:', JSON.stringify(merchantOrder, null, 2));
+        console.log(
+          '?? Merchant Order:',
+          JSON.stringify(merchantOrder, null, 2),
+        );
 
         const orderId = merchantOrder.external_reference;
         if (!orderId) {
@@ -536,24 +594,31 @@ export class SaleOrdersService {
           return { message: 'Orden no encontrada' };
         }
 
-        // Verificar si todos los pagos est·n aprobados
-        const allPaid = merchantOrder.payments?.every((p: any) => p.status === 'approved');
-        
+        // Verificar si todos los pagos estÔøΩn aprobados
+        const allPaid = merchantOrder.payments?.every(
+          (p: any) => p.status === 'approved',
+        );
+
         if (allPaid && merchantOrder.payments.length > 0) {
           order.status = SaleOrderStatus.PAID;
           order.mercadoPagoStatus = 'approved';
           await this.saleOrderRepository.save(order);
           console.log(`? Orden ${order.id} marcada como PAID`);
         } else {
-          console.log(`? Orden ${order.id} tiene pagos pendientes o rechazados`);
+          console.log(
+            `? Orden ${order.id} tiene pagos pendientes o rechazados`,
+          );
         }
 
         return { message: 'Webhook merchant_order procesado' };
       }
-      
+
       // Manejar payment
       if (topic !== 'payment') {
-        console.log('?? Evento ignorado (topic no es payment ni merchant_order):', topic);
+        console.log(
+          '?? Evento ignorado (topic no es payment ni merchant_order):',
+          topic,
+        );
         return { message: 'Evento ignorado' };
       }
 
@@ -563,9 +628,13 @@ export class SaleOrdersService {
         return { message: 'Webhook recibido pero sin paymentId' };
       }
 
-      const accessToken = this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN');
+      const accessToken = this.configService.get<string>(
+        'MERCADOPAGO_ACCESS_TOKEN',
+      );
       if (!accessToken) {
-        throw new BadRequestException('MERCADOPAGO_ACCESS_TOKEN no configurado');
+        throw new BadRequestException(
+          'MERCADOPAGO_ACCESS_TOKEN no configurado',
+        );
       }
 
       let payment;
@@ -581,7 +650,9 @@ export class SaleOrdersService {
         payment = paymentResponse.data;
       } catch (error: any) {
         if (error.response?.status === 404) {
-          console.warn(`?? Payment ${paymentId} no encontrado (probablemente sandbox/test)`);
+          console.warn(
+            `?? Payment ${paymentId} no encontrado (probablemente sandbox/test)`,
+          );
           return { message: 'Payment no encontrado' };
         }
         throw error;
@@ -598,7 +669,9 @@ export class SaleOrdersService {
       });
 
       if (!order) {
-        console.warn(`Orden ${orderId} no encontrada para payment ${paymentId}`);
+        console.warn(
+          `Orden ${orderId} no encontrada para payment ${paymentId}`,
+        );
         return { message: 'Orden no encontrada' };
       }
 
@@ -617,7 +690,9 @@ export class SaleOrdersService {
       order.status = statusMap[payment.status] || order.status;
 
       await this.saleOrderRepository.save(order);
-      console.log(`Orden ${order.id} actualizada a estado: ${order.status} (MP: ${payment.status})`);
+      console.log(
+        `Orden ${order.id} actualizada a estado: ${order.status} (MP: ${payment.status})`,
+      );
 
       return { message: 'Webhook procesado correctamente' };
     } catch (error) {
@@ -652,8 +727,10 @@ export class SaleOrdersService {
    */
   @Cron(CronExpression.EVERY_2_HOURS)
   async cancelExpiredCarts() {
-    console.log('üïê Ejecutando tarea programada: Cancelar carritos vencidos...');
-    
+    console.log(
+      'üïê Ejecutando tarea programada: Cancelar carritos vencidos...',
+    );
+
     const expiredCarts = await this.saleOrderRepository.find({
       where: {
         status: SaleOrderStatus.ACTIVE,
@@ -672,7 +749,7 @@ export class SaleOrdersService {
     }
 
     console.log(`‚úÖ Tarea completada: ${cancelled.length} carritos cancelados`);
-    
+
     return {
       message: `${cancelled.length} carritos vencidos cancelados`,
       data: cancelled,
@@ -762,8 +839,12 @@ export class SaleOrdersService {
 
       // Generar preferencia de MercadoPago
       try {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3002';
-        const backendUrl = this.configService.get<string>('BACKEND_URL') || 'http://localhost:3000';
+        const frontendUrl =
+          this.configService.get<string>('FRONTEND_URL') ||
+          'http://localhost:3002';
+        const backendUrl =
+          this.configService.get<string>('NEXT_PUBLIC_API_URL') ||
+          'http://localhost:3000';
 
         const preference = await this.mercadoPagoClient.create({
           body: {
@@ -806,9 +887,7 @@ export class SaleOrdersService {
         };
       } catch (error) {
         console.error('? Error creating MercadoPago preference:', error);
-        throw new BadRequestException(
-          'Error al generar preferencia de pago',
-        );
+        throw new BadRequestException('Error al generar preferencia de pago');
       }
     });
   }
@@ -843,7 +922,7 @@ export class SaleOrdersService {
   }
 
   // ==================== M√âTODO DE PRUEBA ====================
-  
+
   /**
    * Actualizar estado de una orden manualmente (para testing)
    */
@@ -865,20 +944,215 @@ export class SaleOrdersService {
     };
   }
 
-  // ==================== CALCULAR COSTO DE ENVÕO ====================
+  /**
+   * Checkout con Stripe: Crear sesi√≥n de pago
+   */
+  async checkoutWithStripe(
+    userId: string,
+    checkoutDto: {
+      success_url: string;
+      cancel_url: string;
+    },
+  ) {
+    // 1. Obtener carrito activo
+    const cart = await this.saleOrderRepository.findOne({
+      where: {
+        buyer: { id: userId },
+        status: SaleOrderStatus.ACTIVE,
+      },
+      relations: ['items', 'items.product', 'buyer'],
+    });
+
+    if (!cart) {
+      throw new NotFoundException('No hay carrito activo para procesar');
+    }
+
+    if (!cart.items || cart.items.length === 0) {
+      throw new BadRequestException('El carrito est√° vac√≠o');
+    }
+
+    // 2. Verificar que no est√© vencido
+    if (cart.expiresAt && new Date() > cart.expiresAt) {
+      await this.cancelExpiredCart(cart.id);
+      throw new BadRequestException('El carrito ha expirado');
+    }
+
+    try {
+      // Validar que el frontend env√≠e las URLs (son obligatorias)
+      if (!checkoutDto?.success_url || !checkoutDto?.cancel_url) {
+        throw new BadRequestException(
+          'Las URLs de retorno (success_url, cancel_url) son obligatorias en el body',
+        );
+      }
+
+      // Crear sesi√≥n de checkout con Stripe
+      const session = await this.stripeService.createCheckoutSession(
+        cart.items,
+        cart.id,
+        cart.buyer?.email || 'cliente@ejemplo.com',
+        checkoutDto.success_url,
+        checkoutDto.cancel_url,
+      );
+
+      // Guardar ID de sesi√≥n en el carrito y cambiar estado a PENDING
+      cart.stripeSessionId = session.id;
+      cart.status = SaleOrderStatus.PENDING;
+      await this.saleOrderRepository.save(cart);
+
+      return {
+        message: 'Sesi√≥n de pago creada exitosamente',
+        data: {
+          sessionId: session.id,
+          checkoutUrl: session.url,
+        },
+      };
+    } catch (error) {
+      console.error('‚ùå Error creando sesi√≥n de Stripe:', error);
+      throw new BadRequestException('Error al generar sesi√≥n de pago');
+    }
+  }
 
   /**
-   * Calcular costo de envÌo basado en cÛdigo postal O coordenadas GPS
-   * 
-   * MÈtodo 1 (cÛdigo postal): LÛgica por zonas predefinidas
-   * MÈtodo 2 (lat/lng): C·lculo por distancia real usando MapTiler API
-   * 
+   * Procesar webhook de Stripe
+   */
+  async handleStripeWebhook(event: any) {
+    console.log('üîî Webhook de Stripe recibido:', event.type);
+
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object;
+          const orderId =
+            session.metadata?.order_id || session.client_reference_id;
+
+          if (!orderId) {
+            console.warn('‚ö†Ô∏è Sesi√≥n sin ID de orden');
+            return { message: 'Sesi√≥n sin ID de orden' };
+          }
+
+          const order = await this.saleOrderRepository.findOne({
+            where: { id: orderId },
+            relations: ['items'], // Aseg√∫rate de cargar las relaciones necesarias
+          });
+
+          if (!order) {
+            console.warn(`‚ö†Ô∏è Orden ${orderId} no encontrada`);
+            return { message: 'Orden no encontrada' };
+          }
+
+          // Actualizar estado de la orden
+          order.status = SaleOrderStatus.PAID;
+          order.stripeStatus = 'completed';
+          await this.saleOrderRepository.save(order);
+
+          console.log(`‚úÖ Orden ${order.id} marcada como PAID (Stripe)`);
+
+          // Enviar correo de confirmaci√≥n
+          await this.mailerService.sendPurchaseConfirmation({
+            to: session.customer_email,
+            userName: order.buyer.name, // Ajusta seg√∫n tus datos
+            orderId: order.id,
+            items: order.items.map((item) => ({
+              productName: item.product.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice.toFixed(2),
+              subtotal: (item.quantity * item.unitPrice).toFixed(2),
+            })),
+            total: order.total.toFixed(2),
+          });
+
+          break;
+        }
+        case 'payment_intent.succeeded': {
+          const paymentIntent = event.data.object;
+          const orderId = paymentIntent.metadata?.order_id;
+
+          if (!orderId) {
+            console.warn('‚ö†Ô∏è PaymentIntent sin ID de orden');
+            return { message: 'PaymentIntent sin ID de orden' };
+          }
+
+          const order = await this.saleOrderRepository.findOne({
+            where: { id: orderId },
+            relations: ['items'],
+          });
+
+          if (!order) {
+            console.warn(`‚ö†Ô∏è Orden ${orderId} no encontrada`);
+            return { message: 'Orden no encontrada' };
+          }
+
+          // Actualizar estado de la orden
+          order.status = SaleOrderStatus.PAID;
+          order.stripePaymentIntentId = paymentIntent.id;
+          order.stripeStatus = 'succeeded';
+          await this.saleOrderRepository.save(order);
+
+          console.log(
+            `‚úÖ Orden ${order.id} marcada como PAID (Stripe PaymentIntent)`,
+          );
+
+          // Enviar correo de confirmaci√≥n
+          await this.mailerService.sendPurchaseConfirmation({
+            to: paymentIntent.receipt_email,
+            userName: order.buyer.name,
+            orderId: order.id,
+            items: order.items.map((item) => ({
+              productName: item.product.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice.toFixed(2),
+              subtotal: (item.quantity * item.unitPrice).toFixed(2),
+            })),
+            total: order.total.toFixed(2),
+          });
+
+          break;
+        }
+        case 'payment_intent.payment_failed': {
+          const paymentIntent = event.data.object;
+          const orderId = paymentIntent.metadata?.order_id;
+
+          if (!orderId) return { message: 'PaymentIntent sin ID de orden' };
+
+          const order = await this.saleOrderRepository.findOne({
+            where: { id: orderId },
+          });
+
+          if (!order) return { message: 'Orden no encontrada' };
+
+          // Actualizar estado de la orden
+          order.status = SaleOrderStatus.CANCELLED;
+          order.stripePaymentIntentId = paymentIntent.id;
+          order.stripeStatus = 'failed';
+          await this.saleOrderRepository.save(order);
+
+          console.log(
+            `‚ùå Orden ${order.id} marcada como CANCELLED (Stripe PaymentIntent failed)`,
+          );
+          break;
+        }
+      }
+
+      return { message: 'Webhook procesado correctamente' };
+    } catch (error) {
+      console.error('Error procesando webhook de Stripe:', error);
+      throw new BadRequestException('Error procesando webhook de Stripe');
+    }
+  }
+  // ==================== CALCULAR COSTO DE ENVÔøΩO ====================
+
+  /**
+   * Calcular costo de envÔøΩo basado en cÔøΩdigo postal O coordenadas GPS
+   *
+   * MÔøΩtodo 1 (cÔøΩdigo postal): LÔøΩgica por zonas predefinidas
+   * MÔøΩtodo 2 (lat/lng): CÔøΩlculo por distancia real usando MapTiler API
+   *
    * Tarifas por distancia (basadas en Correo Argentino):
    * - 0-10 km: $1500 (entrega en 24-48hs)
-   * - 10-30 km: $2500 (entrega en 2-3 dÌas)
-   * - 30-100 km: $4000 (entrega en 3-5 dÌas)
-   * - 100-300 km: $6000 (entrega en 5-7 dÌas)
-   * - +300 km: $8000 (entrega en 7-10 dÌas)
+   * - 10-30 km: $2500 (entrega en 2-3 dÔøΩas)
+   * - 30-100 km: $4000 (entrega en 3-5 dÔøΩas)
+   * - 100-300 km: $6000 (entrega en 5-7 dÔøΩas)
+   * - +300 km: $8000 (entrega en 7-10 dÔøΩas)
    */
   async calculateShipping(dto: CalculateShippingDto) {
     // Si se proporcionan coordenadas, calcular por distancia real
@@ -886,22 +1160,26 @@ export class SaleOrdersService {
       return this.calculateShippingByDistance(dto.latitude, dto.longitude);
     }
 
-    // Si solo se proporciona cÛdigo postal, usar mÈtodo por zonas
+    // Si solo se proporciona cÔøΩdigo postal, usar mÔøΩtodo por zonas
     if (dto.postalCode) {
       return this.calculateShippingByPostalCode(dto.postalCode);
     }
 
-    throw new BadRequestException('Debe proporcionar cÛdigo postal o coordenadas (latitude, longitude)');
+    throw new BadRequestException(
+      'Debe proporcionar cÔøΩdigo postal o coordenadas (latitude, longitude)',
+    );
   }
 
   /**
-   * Calcular envÌo por cÛdigo postal (mÈtodo simplificado por zonas)
+   * Calcular envÔøΩo por cÔøΩdigo postal (mÔøΩtodo simplificado por zonas)
    */
   private calculateShippingByPostalCode(postalCodeStr: string) {
     const postalCode = parseInt(postalCodeStr, 10);
 
     if (isNaN(postalCode) || postalCode < 1000 || postalCode > 9999) {
-      throw new BadRequestException('CÛdigo postal inv·lido. Debe ser un n˙mero de 4 dÌgitos.');
+      throw new BadRequestException(
+        'CÔøΩdigo postal invÔøΩlido. Debe ser un nÔøΩmero de 4 dÔøΩgitos.',
+      );
     }
 
     let shippingCost: number;
@@ -916,15 +1194,15 @@ export class SaleOrdersService {
     } else if (postalCode >= 1600 && postalCode <= 1900) {
       zone = 'GBA (Gran Buenos Aires)';
       shippingCost = 2000;
-      deliveryTime = '2-3 dÌas h·biles';
+      deliveryTime = '2-3 dÔøΩas hÔøΩbiles';
     } else if (postalCode >= 2000 && postalCode <= 7999) {
       zone = 'Interior Buenos Aires';
       shippingCost = 3000;
-      deliveryTime = '3-5 dÌas h·biles';
+      deliveryTime = '3-5 dÔøΩas hÔøΩbiles';
     } else {
-      zone = 'Resto del paÌs';
+      zone = 'Resto del paÔøΩs';
       shippingCost = 5000;
-      deliveryTime = '5-7 dÌas h·biles';
+      deliveryTime = '5-7 dÔøΩas hÔøΩbiles';
     }
 
     return {
@@ -934,38 +1212,43 @@ export class SaleOrdersService {
       shippingCost,
       deliveryTime,
       currency: 'ARS',
-      message: 'Costo de envÌo calculado por zona postal',
+      message: 'Costo de envÔøΩo calculado por zona postal',
     };
   }
 
   /**
-   * Calcular envÌo por distancia real usando fÛrmula de Haversine
-   * (distancia en lÌnea recta entre dos puntos GPS)
+   * Calcular envÔøΩo por distancia real usando fÔøΩrmula de Haversine
+   * (distancia en lÔøΩnea recta entre dos puntos GPS)
    */
-  private async calculateShippingByDistance(clientLat: number, clientLng: number) {
+  private async calculateShippingByDistance(
+    clientLat: number,
+    clientLng: number,
+  ) {
     try {
       // Obtener coordenadas del local desde variables de entorno
       const localLatStr = this.configService.get<string>('LOCAL_LATITUD');
       const localLngStr = this.configService.get<string>('LOCAL_LONGITUD');
 
       if (!localLatStr || !localLngStr) {
-        throw new BadRequestException('ConfiguraciÛn de ubicaciÛn del local incompleta');
+        throw new BadRequestException(
+          'ConfiguraciÔøΩn de ubicaciÔøΩn del local incompleta',
+        );
       }
 
       const localLat = parseFloat(localLatStr);
       const localLng = parseFloat(localLngStr);
 
-      // Calcular distancia usando fÛrmula de Haversine (distancia en lÌnea recta)
+      // Calcular distancia usando fÔøΩrmula de Haversine (distancia en lÔøΩnea recta)
       const distanceInKm = this.calculateHaversineDistance(
-        localLat, 
-        localLng, 
-        clientLat, 
-        clientLng
+        localLat,
+        localLng,
+        clientLat,
+        clientLng,
       );
-      
+
       const distanceInMeters = distanceInKm * 1000;
-      
-      // Estimar duraciÛn aproximada (asumiendo 40 km/h promedio en ciudad, 60 km/h en ruta)
+
+      // Estimar duraciÔøΩn aproximada (asumiendo 40 km/h promedio en ciudad, 60 km/h en ruta)
       const avgSpeed = distanceInKm < 30 ? 40 : 60; // km/h
       const durationInMinutes = Math.round((distanceInKm / avgSpeed) * 60);
 
@@ -974,26 +1257,31 @@ export class SaleOrdersService {
       let deliveryTime: string;
       let zone: string;
 
-      if (distanceInMeters <= 10000) { // 0-10 km
+      if (distanceInMeters <= 10000) {
+        // 0-10 km
         zone = 'Zona cercana (0-10 km)';
         shippingCost = 1500;
         deliveryTime = '24-48 horas';
-      } else if (distanceInMeters <= 30000) { // 10-30 km
+      } else if (distanceInMeters <= 30000) {
+        // 10-30 km
         zone = 'Zona metropolitana (10-30 km)';
         shippingCost = 2500;
-        deliveryTime = '2-3 dÌas h·biles';
-      } else if (distanceInMeters <= 100000) { // 30-100 km
+        deliveryTime = '2-3 dÔøΩas hÔøΩbiles';
+      } else if (distanceInMeters <= 100000) {
+        // 30-100 km
         zone = 'Zona provincial (30-100 km)';
         shippingCost = 4000;
-        deliveryTime = '3-5 dÌas h·biles';
-      } else if (distanceInMeters <= 300000) { // 100-300 km
+        deliveryTime = '3-5 dÔøΩas hÔøΩbiles';
+      } else if (distanceInMeters <= 300000) {
+        // 100-300 km
         zone = 'Zona regional (100-300 km)';
         shippingCost = 6000;
-        deliveryTime = '5-7 dÌas h·biles';
-      } else { // +300 km
+        deliveryTime = '5-7 dÔøΩas hÔøΩbiles';
+      } else {
+        // +300 km
         zone = 'Zona nacional (+300 km)';
         shippingCost = 8000;
-        deliveryTime = '7-10 dÌas h·biles';
+        deliveryTime = '7-10 dÔøΩas hÔøΩbiles';
       }
 
       return {
@@ -1007,23 +1295,21 @@ export class SaleOrdersService {
         shippingCost,
         deliveryTime,
         currency: 'ARS',
-        message: 'Costo de envÌo calculado por distancia GPS',
+        message: 'Costo de envÔøΩo calculado por distancia GPS',
       };
     } catch (error) {
-      console.error('Error calculando envÌo por distancia:', error);
-      
+      console.error('Error calculando envÔøΩo por distancia:', error);
+
       if (error instanceof BadRequestException) {
         throw error;
       }
-      
-      throw new BadRequestException('Error al calcular la distancia. Verifique las coordenadas proporcionadas.');
+
+      throw new BadRequestException(
+        'Error al calcular la distancia. Verifique las coordenadas proporcionadas.',
+      );
     }
   }
 
-  /**
-   * Calcular distancia entre dos puntos GPS usando fÛrmula de Haversine
-   * Retorna distancia en kilÛmetros
-   */
   private calculateHaversineDistance(
     lat1: number,
     lon1: number,
@@ -1054,16 +1340,3 @@ export class SaleOrdersService {
     return degrees * (Math.PI / 180);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

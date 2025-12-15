@@ -1,4 +1,3 @@
-
 import {
   Entity,
   ManyToOne,
@@ -8,7 +7,6 @@ import {
 } from 'typeorm';
 import { SaleOrder } from './sale-order.entity';
 import { Products } from 'src/products/entities/product.entity';
-
 
 @Entity('sale_order_products')
 export class SaleOrderProduct {
