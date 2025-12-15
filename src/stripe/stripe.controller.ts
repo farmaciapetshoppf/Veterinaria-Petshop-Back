@@ -136,22 +136,16 @@ export class StripeController {
   @Post('webhook')
   async handleWebhook(
     @Headers('stripe-signature') signature: string,
-    @Req() req: Request & { rawBody: Buffer },
+    @Req() req: Request,
   ) {
     if (!signature) {
       throw new BadRequestException('Missing stripe-signature header');
     }
 
-    const rawBody = req.rawBody;
-    console.log(req.rawBody);
-    if (!rawBody) {
-      throw new BadRequestException('Missing raw body');
-    }
-
     try {
       const event = this.stripeService.constructEventFromPayload(
         signature,
-        rawBody,
+        req.body,
       );
 
       console.log('🔔 Webhook de Stripe recibido:', event.type);
@@ -203,8 +197,7 @@ export class StripeController {
           console.log(`Unhandled event type ${event.type}`);
       }
     } catch (error) {
-      const err = error as Error;
-      console.error('Error procesando webhook:', err.message);
+      console.error('Error procesando webhook:', error);
     }
   }
 }

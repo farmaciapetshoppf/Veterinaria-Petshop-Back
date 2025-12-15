@@ -117,12 +117,26 @@ export class StripeService {
   /**
    * Verificar firma del webhook y construir evento
    */
+  // stripe.service.ts (método constructEventFromPayload)
   constructEventFromPayload(signature: string, payload: Buffer) {
-    return this.stripe.webhooks.constructEvent(
-      payload,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET || '',
-    );
+    console.log('🔍 Construyendo evento con firma:', signature);
+    console.log(`🔍 Payload length: ${payload.length} bytes`);
+
+    try {
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      console.log(
+        `🔑 Usando webhook secret: ${webhookSecret?.substring(0, 10)}...`,
+      );
+
+      return this.stripe.webhooks.constructEvent(
+        payload,
+        signature,
+        webhookSecret || '',
+      );
+    } catch (error) {
+      console.error('❌ Error construyendo evento de Stripe:', error);
+      throw error;
+    }
   }
 
   /**
