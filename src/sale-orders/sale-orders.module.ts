@@ -11,6 +11,7 @@ import { Users } from 'src/users/entities/user.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { MercadoPagoModule } from 'src/mercadopago/mercadopago.module';
 import { MailerModule } from 'src/mailer/mailer.module';
+import { SaleOrdersAnalyticsSeeder } from './seed/sale-orders-analytics.seeder';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { MailerModule } from 'src/mailer/mailer.module';
     MailerModule,
   ],
   controllers: [SaleOrdersController],
-  providers: [SaleOrdersService],
+  providers: [SaleOrdersService, SaleOrdersAnalyticsSeeder],
+  exports: [SaleOrdersAnalyticsSeeder],
 })
 export class SaleOrdersModule {}

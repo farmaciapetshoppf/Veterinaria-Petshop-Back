@@ -18,7 +18,7 @@ import {
 @ApiTags('Analytics')
 @Controller('analytics')
 @UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin)
+@Roles(Role.Admin, Role.Veterinarian)
 @ApiBearerAuth()
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}

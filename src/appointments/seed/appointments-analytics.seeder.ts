@@ -23,18 +23,27 @@ export class AppointmentsAnalyticsSeeder {
     private readonly medicalRecordsRepo: Repository<MedicalRecordsPet>,
   ) {}
 
-  async seed() {
+  async seed(force: boolean = false) {
     console.log('🩺 Iniciando seeder de turnos para analytics...');
 
-    // Verificar si ya existen turnos
+    // BORRAR turnos y registros médicos existentes
     const existingAppointments = await this.appointmentsRepo.count();
     if (existingAppointments > 0) {
-      console.log(`⚠️ Ya existen ${existingAppointments} turnos en la base de datos. Saltando seeder.`);
-      return {
-        appointments: existingAppointments,
-        medicalRecords: 0,
-        message: 'Seeder omitido - turnos ya existentes'
-      };
+      console.log(`🗑️  Borrando ${existingAppointments} turnos existentes...`);
+      
+      // Borrar registros médicos primero (tienen FK a turnos)
+      const allMedicalRecords = await this.medicalRecordsRepo.find();
+      if (allMedicalRecords.length > 0) {
+        await this.medicalRecordsRepo.remove(allMedicalRecords);
+      }
+      
+      // Borrar turnos
+      const allAppointments = await this.appointmentsRepo.find();
+      if (allAppointments.length > 0) {
+        await this.appointmentsRepo.remove(allAppointments);
+      }
+      
+      console.log('✅ Turnos y registros médicos eliminados');
     }
 
     // Obtener veterinarios, mascotas y usuarios existentes
@@ -47,7 +56,7 @@ export class AppointmentsAnalyticsSeeder {
       return;
     }
     
-    console.log(`📊 Distribuyendo 120 turnos entre ${veterinarians.length} veterinarios...`);
+    console.log(`📊 Distribuyendo 50 turnos entre ${veterinarians.length} veterinarios...`);
 
     // Obtener fecha actual y preparar las fechas de la semana
     const today = new Date();
@@ -134,8 +143,8 @@ export class AppointmentsAnalyticsSeeder {
     let appointmentsCreated = 0;
     let medicalRecordsCreated = 0;
 
-    // Crear 120 turnos distribuidos en la semana (para gráficas más completas)
-    for (let i = 0; i < 120; i++) {
+    // Crear 50 turnos distribuidos en la semana
+    for (let i = 0; i < 50; i++) {
       // Distribuir turnos en los 7 días de la semana
       const appointmentDate = new Date(startOfWeek);
       appointmentDate.setDate(startOfWeek.getDate() + (i % 7));
@@ -152,8 +161,8 @@ export class AppointmentsAnalyticsSeeder {
       const randomTime = availableTimes[Math.floor(Math.random() * availableTimes.length)];
       const randomDiagnosis = commonDiagnoses[Math.floor(Math.random() * commonDiagnoses.length)];
 
-      // 70% de los turnos están completados (status false)
-      const isCompleted = Math.random() < 0.7;
+      // 80% de los turnos están completados (status false) - más registros médicos
+      const isCompleted = Math.random() < 0.8;
 
       const newAppointment = this.appointmentsRepo.create({
         user: petOwner,
@@ -187,6 +196,22 @@ export class AppointmentsAnalyticsSeeder {
 
     console.log(`✅ ${appointmentsCreated} turnos creados para analytics`);
     console.log(`✅ ${medicalRecordsCreated} registros médicos creados`);
+    
+    // Mostrar diagnósticos creados
+    const medicalRecords = await this.medicalRecordsRepo.find();
+    const diagnosisCounts = new Map<string, number>();
+    
+    medicalRecords.forEach(record => {
+      const count = diagnosisCounts.get(record.diagnosis) || 0;
+      diagnosisCounts.set(record.diagnosis, count + 1);
+    });
+    
+    console.log('📋 Diagnósticos creados:');
+    Array.from(diagnosisCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([diagnosis, count]) => {
+        console.log(`   ✓ ${diagnosis}: ${count} casos`);
+      });
 
     // Agregar solicitudes de medicamentos controlados a algunos veterinarios
     await this.addControlledMedicationsRequests(veterinarians);
