@@ -195,10 +195,31 @@ export class VeterinariansRepository {
 
       await this.veterinarianRepository.save(vet);
 
+      // Enviar email con contraseña temporal
+      try {
+        console.log(`📧 Enviando email de bienvenida a veterinario: ${email}`);
+        await this.mailerService.sendVeterinarianWelcome({
+          to: email,
+          veterinarianName: createVeterinarianDto.name,
+          temporaryPassword: tempPassword,
+          loginUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+        });
+        console.log('✅ Email enviado exitosamente');
+      } catch (emailError) {
+        console.error('❌ Error enviando email al veterinario:', emailError);
+        // No fallar la creación si el email falla
+      }
+
       return {
         message:
           'Veterinario creado con éxito. ' +
           `La contraseña temporal es: ${tempPassword}`,
+        temporaryPassword: tempPassword,
+        veterinarian: {
+          id: vet.id,
+          name: vet.name,
+          email: vet.email,
+        },
       };
     } catch (error) {
       console.error('Error al crear veterinario:', error);

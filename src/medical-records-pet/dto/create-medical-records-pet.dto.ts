@@ -7,7 +7,11 @@ import {
   IsDateString,
   IsUUID,
   IsEnum,
+  IsArray,
+  ValidateNested,
+  Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum DiagnosisType {
   PARVOVIROSIS = 'Parvovirosis Canina',
@@ -130,4 +134,105 @@ export class CreateMedicalRecordsPetDto {
   @IsDateString()
   @IsOptional()
   nextAppointment?: string;
+
+  @ApiProperty({
+    description: 'Medicamentos utilizados en la consulta con tracking de stock',
+    required: false,
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        medicationId: { type: 'string', format: 'uuid' },
+        medicationName: { type: 'string' },
+        medicationType: { type: 'string', enum: ['GENERAL', 'CONTROLLED'] },
+        quantity: { type: 'number', minimum: 1 },
+        dosage: { type: 'string' },
+        duration: { type: 'string' },
+        prescriptionNotes: { type: 'string' },
+      },
+    },
+    example: [
+      {
+        medicationId: '123e4567-e89b-12d3-a456-426614174000',
+        medicationName: 'Amoxicilina 500mg',
+        medicationType: 'GENERAL',
+        quantity: 10,
+        dosage: '1 comprimido cada 12 horas',
+        duration: '7 días',
+        prescriptionNotes: 'Tomar con alimentos',
+      },
+    ],
+  })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => MedicationUsedDto)
+  medicationsUsed?: MedicationUsedDto[];
+}
+
+export enum MedicationType {
+  GENERAL = 'GENERAL',
+  CONTROLLED = 'CONTROLLED',
+}
+
+export class MedicationUsedDto {
+  @ApiProperty({
+    description: 'ID del medicamento',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsUUID()
+  @IsNotEmpty()
+  medicationId: string;
+
+  @ApiProperty({
+    description: 'Nombre del medicamento',
+    example: 'Amoxicilina 500mg',
+  })
+  @IsString()
+  @IsNotEmpty()
+  medicationName: string;
+
+  @ApiProperty({
+    description: 'Tipo de medicamento',
+    enum: MedicationType,
+    example: MedicationType.GENERAL,
+  })
+  @IsEnum(MedicationType)
+  @IsNotEmpty()
+  medicationType: MedicationType;
+
+  @ApiProperty({
+    description: 'Cantidad utilizada',
+    example: 10,
+    minimum: 1,
+  })
+  @IsNumber()
+  @Min(1)
+  @IsNotEmpty()
+  quantity: number;
+
+  @ApiProperty({
+    description: 'Dosis prescrita',
+    example: '1 comprimido cada 12 horas',
+  })
+  @IsString()
+  @IsNotEmpty()
+  dosage: string;
+
+  @ApiProperty({
+    description: 'Duración del tratamiento',
+    example: '7 días',
+  })
+  @IsString()
+  @IsNotEmpty()
+  duration: string;
+
+  @ApiProperty({
+    description: 'Notas adicionales de la prescripción',
+    example: 'Tomar con alimentos',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  prescriptionNotes?: string;
 }

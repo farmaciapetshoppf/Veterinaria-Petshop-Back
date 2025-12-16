@@ -13,6 +13,7 @@ import { MailerModule } from 'src/mailer/mailer.module';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/users/users.module';
+import { GeneralMedicationsModule } from 'src/general-medications/general-medications.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UsersModule } from 'src/users/users.module';
     MailerModule,
     forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
+    forwardRef(() => GeneralMedicationsModule),
     MulterModule.register({
       limits: {
         fileSize: 50 * 1024 * 1024, // Limitar el tamaño a 50MB
@@ -35,6 +37,6 @@ import { UsersModule } from 'src/users/users.module';
     VeterinariansSeeder,
     RolesGuard,
   ],
-  exports: [VeterinariansService, VeterinariansSeeder],
+  exports: [VeterinariansService, VeterinariansSeeder, TypeOrmModule],
 })
 export class VeterinariansModule {}

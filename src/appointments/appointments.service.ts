@@ -5,14 +5,19 @@ import {
 } from '@nestjs/common';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { CompleteAppointmentDto } from './dto/complete-appointment.dto';
 import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
-import { Repository, MoreThanOrEqual, LessThan, Between } from 'typeorm';
+import { Repository, MoreThanOrEqual, LessThan, Between, DataSource } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Appointments } from './entities/appointment.entity';
 import { Users } from 'src/users/entities/user.entity';
 import { Pet } from 'src/pets/entities/pet.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { MailerService } from 'src/mailer/mailer.service';
+import { MedicalRecordsPet } from 'src/medical-records-pet/entities/medical-records-pet.entity';
+import { GeneralMedication } from 'src/general-medications/entities/general-medication.entity';
+import { MedicationUsageHistory } from 'src/general-medications/entities/medication-usage-history.entity';
+import { AdminNotification } from 'src/general-medications/entities/admin-notification.entity';
 
 @Injectable()
 export class AppointmentsService {
@@ -29,7 +34,20 @@ export class AppointmentsService {
     @InjectRepository(Veterinarian)
     private readonly vetsRepo: Repository<Veterinarian>,
 
+    @InjectRepository(MedicalRecordsPet)
+    private readonly medicalRecordsRepo: Repository<MedicalRecordsPet>,
+
+    @InjectRepository(GeneralMedication)
+    private readonly medicationsRepo: Repository<GeneralMedication>,
+
+    @InjectRepository(MedicationUsageHistory)
+    private readonly usageHistoryRepo: Repository<MedicationUsageHistory>,
+
+    @InjectRepository(AdminNotification)
+    private readonly notificationsRepo: Repository<AdminNotification>,
+
     private readonly mailerService: MailerService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(dto: CreateAppointmentDto) {
@@ -366,6 +384,168 @@ export class AppointmentsService {
       }
     } catch (error) {
       console.error('❌ Error enviando confirmación de turno:', error);
+    }
+  }
+
+  async completeAppointment(appointmentId: string, dto: CompleteAppointmentDto) {
+    // Usar transacción para garantizar atomicidad
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Buscar el turno
+      const appointment = await queryRunner.manager.findOne(Appointments, {
+        where: { id: appointmentId },
+        relations: ['veterinarian', 'pet', 'user'],
+      });
+
+      if (!appointment) {
+        throw new NotFoundException(`Turno ${appointmentId} no encontrado`);
+      }
+
+      if (!appointment.status) {
+        throw new BadRequestException('Este turno ya fue completado');
+      }
+
+      // 2. Crear registro médico
+      const medicalRecord = queryRunner.manager.create(MedicalRecordsPet, {
+        pet: appointment.pet,
+        veterinarian: appointment.veterinarian,
+        diagnosis: dto.diagnosis,
+        treatment: dto.treatment,
+        medications: dto.medicationsUsed?.map(m => `${m.dosage} - ${m.duration}`).join('; ') || '',
+        observations: dto.observations,
+        weight: dto.weight,
+        temperature: dto.temperature,
+      });
+
+      const savedMedicalRecord = await queryRunner.manager.save(MedicalRecordsPet, medicalRecord);
+
+      // 3. Procesar medicamentos usados
+      const medicationsUsedResult: any[] = [];
+      const notifications: any[] = [];
+
+      if (dto.medicationsUsed && dto.medicationsUsed.length > 0) {
+        for (const medUsed of dto.medicationsUsed) {
+          // Buscar medicamento
+          const medication = await queryRunner.manager.findOne(GeneralMedication, {
+            where: { id: medUsed.medicationId },
+          });
+
+          if (!medication) {
+            throw new NotFoundException(`Medicamento ${medUsed.medicationId} no encontrado`);
+          }
+
+          // Validar stock suficiente
+          if (medication.stock < medUsed.quantity) {
+            throw new BadRequestException(
+              `Stock insuficiente para ${medication.name}. Disponible: ${medication.stock}, Solicitado: ${medUsed.quantity}`,
+            );
+          }
+
+          const previousStock = medication.stock;
+
+          // Descontar stock
+          medication.stock -= medUsed.quantity;
+          await queryRunner.manager.save(GeneralMedication, medication);
+
+          // Registrar uso en historial
+          const usageHistory = queryRunner.manager.create(MedicationUsageHistory, {
+            medicationId: medication.id,
+            appointmentId: appointment.id,
+            veterinarianId: appointment.veterinarian.id,
+            petId: appointment.pet.id,
+            quantity: medUsed.quantity,
+            dosage: medUsed.dosage,
+            duration: medUsed.duration,
+            prescriptionNotes: medUsed.prescriptionNotes,
+            medicationType: medUsed.medicationType,
+            usedAt: new Date(),
+          });
+
+          await queryRunner.manager.save(MedicationUsageHistory, usageHistory);
+
+          medicationsUsedResult.push({
+            id: usageHistory.id,
+            medicationId: medication.id,
+            medicationName: medication.name,
+            quantity: medUsed.quantity,
+            previousStock,
+            newStock: medication.stock,
+            usedAt: usageHistory.usedAt,
+          });
+
+          // Verificar si el stock es bajo y generar notificación
+          if (medication.stock < medication.minStock) {
+            const notification = queryRunner.manager.create(AdminNotification, {
+              type: 'LOW_STOCK',
+              medicationId: medication.id,
+              message: `⚠️ Stock bajo: ${medication.name} tiene solo ${medication.stock} unidades (mínimo: ${medication.minStock})`,
+              isRead: false,
+            });
+
+            await queryRunner.manager.save(AdminNotification, notification);
+
+            notifications.push({
+              type: 'LOW_STOCK',
+              medicationId: medication.id,
+              medicationName: medication.name,
+              currentStock: medication.stock,
+              minStock: medication.minStock,
+            });
+          }
+        }
+      }
+
+      // 4. Marcar turno como completado
+      appointment.status = false; // false = completado
+      await queryRunner.manager.save(Appointments, appointment);
+
+      // Commit de la transacción
+      await queryRunner.commitTransaction();
+
+      console.log(`✅ Consulta ${appointmentId} completada exitosamente`);
+
+      // 5. Enviar email de notificación de registro médico
+      try {
+        await this.mailerService.sendMedicalRecordNotification({
+          to: appointment.user.email,
+          ownerName: appointment.user.name,
+          petName: appointment.pet.nombre,
+          veterinarianName: appointment.veterinarian.name,
+          diagnosis: dto.diagnosis,
+          treatment: dto.treatment,
+          medications: dto.medicationsUsed?.map(m => 
+            `${m.dosage} durante ${m.duration}`
+          ).join(', ') || 'Ninguno',
+          observations: dto.observations,
+          weight: dto.weight,
+          temperature: dto.temperature,
+        });
+      } catch (emailError) {
+        console.warn('⚠️ Error enviando email de registro médico:', emailError);
+      }
+
+      return {
+        success: true,
+        message: 'Consulta completada exitosamente',
+        data: {
+          appointmentId: appointment.id,
+          medicalRecordId: savedMedicalRecord.id,
+          medicationsUsed: medicationsUsedResult,
+          notifications,
+        },
+      };
+
+    } catch (error) {
+      // Rollback en caso de error
+      await queryRunner.rollbackTransaction();
+      console.error('❌ Error completando consulta:', error);
+      throw error;
+    } finally {
+      // Liberar queryRunner
+      await queryRunner.release();
     }
   }
 }

@@ -20,6 +20,6 @@ import { MulterModule } from '@nestjs/platform-express';
   ],
   controllers: [CategoriesController],
   providers: [CategoriesService, CategoriesSeeder, StorageService],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, CategoriesSeeder],
 })
 export class CategoriesModule {}
