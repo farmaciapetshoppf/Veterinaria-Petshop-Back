@@ -428,7 +428,7 @@ export class SaleOrdersService {
     try {
       // Configuración del backend
       const ngrokUrl = this.configService.get<string>('NGROK_URL');
-      const publicBackendUrl =
+      const publicBackendUrl: string =
         ngrokUrl ||
         this.configService.get<string>('BACKEND_PUBLIC_URL') ||
         this.configService.get<string>('API_URL');
@@ -440,7 +440,7 @@ export class SaleOrdersService {
         throw new BadRequestException('Token de MercadoPago no configurado');
       }
 
-      this.logToFile('?? Backend configurado:', {
+      this.logToFile('🌐 Backend configurado:', {
         publicBackendUrl,
         notificationUrl: `${publicBackendUrl}/sale-orders/webhook`,
       });
