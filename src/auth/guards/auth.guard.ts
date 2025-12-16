@@ -21,13 +21,13 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    
+
     // Intentar obtener el token de múltiples fuentes
     let token: string | undefined;
-    
+
     // 1. Buscar en cookies
     token = request.cookies?.['access_token'];
-    
+
     // 2. Si no está en cookies, buscar en header Authorization (Bearer token)
     if (!token) {
       const authHeader = request.headers['authorization'];
@@ -35,14 +35,16 @@ export class AuthGuard implements CanActivate {
         token = authHeader.substring(7); // Remover "Bearer "
       }
     }
-    
+
     // 3. Si no está en Bearer, buscar en header access_token directo
     if (!token) {
       token = request.headers['access_token'] as string;
     }
 
     if (!token) {
-      throw new UnauthorizedException('No tiene token de autorización. Por favor envíe el token en cookies (access_token), header Authorization (Bearer token) o header access_token.');
+      throw new UnauthorizedException(
+        'No tiene token de autorización. Por favor envíe el token en cookies (access_token), header Authorization (Bearer token) o header access_token.',
+      );
     }
 
     try {
