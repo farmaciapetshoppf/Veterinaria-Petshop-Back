@@ -176,7 +176,7 @@ export class SaleOrdersService {
       // Recalcular total del carrito
       const updatedCart = await manager.findOne(SaleOrder, {
         where: { id: cart.id },
-        relations: { items: { product: true } },
+        relations: { items: { product: true }, buyer: true },
       });
 
       if (updatedCart) {
