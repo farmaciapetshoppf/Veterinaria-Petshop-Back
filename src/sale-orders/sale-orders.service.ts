@@ -427,11 +427,7 @@ export class SaleOrdersService {
 
     try {
       // Configuración del backend
-      const ngrokUrl = this.configService.get<string>('NGROK_URL');
-      const publicBackendUrl: string =
-        ngrokUrl ||
-        this.configService.get<string>('BACKEND_PUBLIC_URL') ||
-        this.configService.get<string>('API_URL');
+      const apiUrl = this.configService.get<string>('API_URL');
       const accessToken = this.configService.get<string>(
         'MERCADOPAGO_ACCESS_TOKEN',
       );
@@ -440,9 +436,9 @@ export class SaleOrdersService {
         throw new BadRequestException('Token de MercadoPago no configurado');
       }
 
-      this.logToFile('🌐 Backend configurado:', {
-        publicBackendUrl,
-        notificationUrl: `${publicBackendUrl}/sale-orders/webhook`,
+      this.logToFile('?? Backend configurado:', {
+        apiUrl,
+        notificationUrl: `${apiUrl}/sale-orders/webhook`,
       });
       this.logToFile(
         '?? Access Token (prefijo):',
@@ -450,7 +446,7 @@ export class SaleOrdersService {
       );
       this.logToFile('?? CheckoutDto recibido desde el frontend:', checkoutDto);
 
-      // Validar que el frontend env�e las URLs (son obligatorias)
+      // Validar que el frontend envíe las URLs (son obligatorias)
       if (
         !checkoutDto?.success_url ||
         !checkoutDto?.failure_url ||
@@ -487,7 +483,7 @@ export class SaleOrdersService {
           currency_id: 'ARS',
         })),
         back_urls: backUrls,
-        notification_url: `${publicBackendUrl.replace(/\/$/, '')}/sale-orders/webhook`,
+        notification_url: `${apiUrl}/sale-orders/webhook`,
         external_reference: String(cart.id),
         metadata: {
           order_id: cart.id,
