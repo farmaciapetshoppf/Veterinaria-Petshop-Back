@@ -19,8 +19,8 @@ export class MercadoPagoService {
    */
   async createPreference(items: any[], orderId: string, buyerEmail: string) {
     try {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
-      const apiUrl = process.env.API_URL || 'http://localhost:3000';
+      const frontendUrl = process.env.FRONTEND_URL;
+      const apiUrl = process.env.API_URL;
 
       console.log('🔧 Debug - Environment Variables:');
       console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
@@ -66,7 +66,10 @@ export class MercadoPagoService {
         },
       };
 
-      console.log('📦 Preference data:', JSON.stringify(preferenceData, null, 2));
+      console.log(
+        '📦 Preference data:',
+        JSON.stringify(preferenceData, null, 2),
+      );
 
       const preference = await this.preference.create({
         body: preferenceData,
