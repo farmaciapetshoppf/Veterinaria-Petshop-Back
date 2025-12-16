@@ -39,9 +39,6 @@ async function bootstrap() {
       process.env.API_URL,
       process.env.NGROK_URL,
       process.env.FRONTEND_URL,
-      'http://localhost:3002',
-      'http://localhost:3000',
-      'https://darcy-semisuccess-ashleigh.ngrok-free.dev',
     ]
       .filter(Boolean)
       .map((url) => (url?.endsWith('/') ? url.slice(0, -1) : url)),
