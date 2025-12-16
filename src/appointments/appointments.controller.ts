@@ -161,6 +161,81 @@ export class AppointmentsController {
   }
 
   @ApiOperation({
+    summary: 'Complete appointment with medications',
+    description: 'Completa una consulta veterinaria, crea el registro médico, descuenta stock de medicamentos usados y genera notificaciones'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del turno a completar',
+    example: 'uuid-turno-123'
+  })
+  @ApiBody({
+    schema: {
+      example: {
+        diagnosis: 'GASTROENTERITIS',
+        treatment: 'Dieta blanda por 3 días',
+        observations: 'Control en 1 semana',
+        nextAppointment: '2025-12-22',
+        vaccinations: 'Antirrábica',
+        weight: 15.5,
+        temperature: 38.5,
+        medicationsUsed: [
+          {
+            medicationId: 'uuid-medicamento-1',
+            medicationType: 'GENERAL',
+            quantity: 2,
+            dosage: '1 comprimido cada 12 horas',
+            duration: '7 días'
+          }
+        ]
+      }
+    }
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Consulta completada exitosamente',
+    schema: {
+      example: {
+        success: true,
+        message: 'Consulta completada exitosamente',
+        data: {
+          appointmentId: 'uuid',
+          medicalRecordId: 'uuid',
+          medicationsUsed: [
+            {
+              id: 'uuid-uso-1',
+              medicationId: 'uuid-medicamento-1',
+              medicationName: 'Omeprazol 20mg',
+              quantity: 2,
+              previousStock: 50,
+              newStock: 48,
+              usedAt: '2025-12-15T10:30:00Z'
+            }
+          ],
+          notifications: [
+            {
+              type: 'LOW_STOCK',
+              medicationId: 'uuid-medicamento-2',
+              medicationName: 'Tramadol 50mg',
+              currentStock: 5,
+              minStock: 10
+            }
+          ]
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Stock insuficiente o turno ya completado' })
+  @ApiResponse({ status: 404, description: 'Turno o medicamento no encontrado' })
+  @Post(':id/complete')
+  completeAppointment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: any,
+  ) {
+    return this.appointmentsService.completeAppointment(id, dto);
+  }
+
+  @ApiOperation({
     summary: 'Seeder para datos de analytics',
     description: 'Crea 50 turnos distribuidos en la semana con registros médicos y diagnósticos para gráficas'
   })

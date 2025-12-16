@@ -635,4 +635,48 @@ export class MailerService {
       throw error;
     }
   }
+
+  /**
+   * Enviar email de bienvenida a veterinario con contraseña temporal
+   */
+  async sendVeterinarianWelcome(context: {
+    to: string;
+    veterinarianName: string;
+    temporaryPassword: string;
+    loginUrl: string;
+  }) {
+    try {
+      console.log(`📧 Enviando bienvenida a veterinario: ${context.to}`);
+      
+      await this.nestMailerService.sendMail({
+        to: context.to,
+        subject: '👨‍⚕️ Bienvenido al equipo - Huellitas Pet',
+        template: 'veterinarian-welcome',
+        context: {
+          to: context.to,
+          veterinarianName: context.veterinarianName,
+          temporaryPassword: context.temporaryPassword,
+          loginUrl: context.loginUrl,
+        },
+      });
+      
+      console.log(`✅ Email de bienvenida enviado a ${context.to}`);
+
+      // Enviar copia a admin
+      await this.sendCopyToAdmin(
+        '👨‍⚕️ Bienvenido al equipo - Huellitas Pet',
+        context.to,
+        {
+          to: context.to,
+          veterinarianName: context.veterinarianName,
+          temporaryPassword: context.temporaryPassword,
+          loginUrl: context.loginUrl,
+        },
+        'veterinarian-welcome',
+      );
+    } catch (error) {
+      console.error('❌ Error enviando email de bienvenida a veterinario:', error);
+      throw error;
+    }
+  }
 }

@@ -19,6 +19,9 @@ import { ProductsService } from './products/products.service';
 import { AppointmentsAnalyticsSeeder } from './appointments/seed/appointments-analytics.seeder';
 import { VeterinariansSeeder } from './veterinarians/seed/veterinarians.seed';
 import { SaleOrdersAnalyticsSeeder } from './sale-orders/seed/sale-orders-analytics.seeder';
+import { UsersSeeder } from './users/seed/users.seeder';
+import { CategoriesSeeder } from './categories/seed/categories.seeder';
+import { GeneralMedicationsSeeder } from './general-medications/seed/general-medications.seeder';
 import { MailerModule } from './mailer/mailer.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
@@ -65,20 +68,36 @@ import { GeneralMedicationsModule } from './general-medications/general-medicati
 export class AppModule implements OnApplicationBootstrap {
   constructor(
     private readonly productsService: ProductsService,
+    private readonly categoriesSeeder: CategoriesSeeder,
+    private readonly usersSeeder: UsersSeeder,
     private readonly veterinariansSeeder: VeterinariansSeeder,
+    private readonly medicationsSeeder: GeneralMedicationsSeeder,
     private readonly appointmentsSeeder: AppointmentsAnalyticsSeeder,
     private readonly saleOrdersSeeder: SaleOrdersAnalyticsSeeder,
   ) {}
   async onApplicationBootstrap() {
-    console.log('Aplicación inicializada correctamente');
+    console.log('🚀 Aplicación inicializada correctamente');
+    console.log('📦 Iniciando carga automática de seeders...');
+    console.log('═'.repeat(50));
+    
+    // 1. Categorías (primero, porque productos las necesitan)
+    console.log('\n📂 [1/7] Verificando categorías...');
+    await this.categoriesSeeder.onModuleInit();
+    
+    // 2. Productos (necesitan categorías)
+    console.log('\n🛍️  [2/7] Verificando productos...');
     await this.productsService.seeder();
-    console.log('Productos cargados');
-
-    // Esperar un momento para que los seeders previos terminen
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Ejecutar seeder de veterinarios automáticamente
-    console.log('🩺 Verificando veterinarios...');
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // 3. Usuarios (antes que veterinarios porque pueden ser admins)
+    console.log('\n👥 [3/7] Verificando usuarios...');
+    await this.usersSeeder.onModuleInit();
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // 4. Veterinarios (necesitan usuarios para crear cuentas)
+    console.log('\n🩺 [4/7] Verificando veterinarios...');
     const existingVets = await this.veterinariansSeeder.getCount();
     if (existingVets < 6) {
       console.log('👨‍⚕️ Cargando veterinarios...');
@@ -87,23 +106,44 @@ export class AppModule implements OnApplicationBootstrap {
     } else {
       console.log(`✅ Ya existen ${existingVets} veterinarios`);
     }
-
-    // Ejecutar seeder de turnos automáticamente
-    console.log('🩺 Cargando turnos de analytics...');
+    
+    // 5. Medicamentos (antes de turnos porque pueden ser usados en consultas)
+    console.log('\n💊 [5/7] Verificando medicamentos...');
+    const medicationsResult = await this.medicationsSeeder.seed();
+    if (medicationsResult) {
+      if (medicationsResult.message === 'Medicamentos ya existentes') {
+        console.log(`✅ ${medicationsResult.medications} medicamentos ya existentes`);
+      } else {
+        console.log(`✅ ${medicationsResult.medications} medicamentos cargados`);
+        const lowStock = medicationsResult.lowStockControlled || 0;
+        if (lowStock > 0) {
+          console.log(`⚠️  ${lowStock} medicamentos controlados con stock bajo`);
+        }
+      }
+    }
+    
+    // 6. Turnos con diagnósticos (necesitan veterinarios, usuarios y mascotas)
+    console.log('\n📅 [6/7] Verificando turnos de analytics...');
     const appointmentsResult = await this.appointmentsSeeder.seed();
     if (appointmentsResult) {
-      console.log(
-        `✅ ${appointmentsResult.appointments} turnos y ${appointmentsResult.medicalRecords} registros médicos creados`,
-      );
+      if (appointmentsResult.message === 'Turnos ya existentes') {
+        console.log(`✅ ${appointmentsResult.appointments} turnos ya existentes`);
+      } else {
+        console.log(`✅ ${appointmentsResult.appointments} turnos y ${appointmentsResult.medicalRecords} registros médicos creados`);
+      }
     }
 
-    // Ejecutar seeder de compras automáticamente
-    console.log('🛒 Cargando órdenes de compra para analytics...');
+    // 7. Órdenes de compra (necesitan usuarios y productos)
+    console.log('\n🛒 [7/7] Verificando órdenes de compra para analytics...');
     const salesResult = await this.saleOrdersSeeder.seed();
-    if (salesResult) {
-      console.log(
-        `✅ ${salesResult.orders} órdenes creadas - Ingresos: $${salesResult.revenue.toFixed(2)}`,
-      );
+    if (salesResult && salesResult.revenue !== undefined) {
+      console.log(`✅ ${salesResult.orders} órdenes creadas - Ingresos: $${salesResult.revenue.toFixed(2)}`);
+    } else if (salesResult) {
+      console.log(`✅ ${salesResult.orders} órdenes ya existentes`);
     }
+    
+    console.log('\n' + '═'.repeat(50));
+    console.log('🎉 Todos los seeders completados exitosamente');
+    console.log('✨ Sistema listo para usar\n');
   }
 }

@@ -21,6 +21,8 @@ import { CONTROLLED_MEDICATIONS_CATALOG } from './dto/controlled-medications-cat
 import { MailerService } from 'src/mailer/mailer.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { GeneralMedication } from 'src/general-medications/entities/general-medication.entity';
+import { StockLog, StockLogAction } from 'src/general-medications/entities/stock-log.entity';
 
 @Injectable()
 export class VeterinariansService {
@@ -29,6 +31,10 @@ export class VeterinariansService {
     private readonly mailerService: MailerService,
     @InjectRepository(Veterinarian)
     private readonly veterinarianRepo: Repository<Veterinarian>,
+    @InjectRepository(GeneralMedication)
+    private readonly medicationRepo: Repository<GeneralMedication>,
+    @InjectRepository(StockLog)
+    private readonly stockLogRepo: Repository<StockLog>,
   ) {}
 
   fillAllVeterinarians() {
@@ -301,7 +307,81 @@ export class VeterinariansService {
       throw new NotFoundException('Solicitud no encontrada');
     }
 
-    // Actualizar estado
+    const request = veterinarian.medicamentosControlados[dto.requestIndex];
+
+    // VALIDACIONES DE SEGURIDAD
+    // Validación 1: Evitar múltiples entregas de la misma solicitud
+    if (dto.estado === RequestStatus.ENTREGADO && request.estado === RequestStatus.ENTREGADO) {
+      throw new BadRequestException('Esta solicitud ya fue marcada como entregada anteriormente');
+    }
+
+    // Validación 2: La solicitud debe estar aprobada antes de entregar
+    if (dto.estado === RequestStatus.ENTREGADO && request.estado !== RequestStatus.APROBADO) {
+      throw new BadRequestException(
+        `Solo se pueden marcar como entregadas las solicitudes previamente aprobadas. Estado actual: ${request.estado}`
+      );
+    }
+
+    // Validación 3: Verificar que la cantidad sea válida
+    if (request.cantidad <= 0) {
+      throw new BadRequestException('La cantidad de la solicitud debe ser mayor a 0');
+    }
+
+    // LÓGICA DE ACTUALIZACIÓN DE STOCK
+    let stockUpdate: {
+      medication: string;
+      quantityAdded: number;
+      previousStock: number;
+      newStock: number;
+    } | null = null;
+
+    if (dto.estado === RequestStatus.ENTREGADO && request.estado !== RequestStatus.ENTREGADO) {
+      // Buscar el medicamento en el inventario
+      const medication = await this.medicationRepo.findOne({
+        where: { name: request.nombre },
+      });
+
+      if (!medication) {
+        throw new NotFoundException(
+          `Medicamento "${request.nombre}" no encontrado en el inventario`
+        );
+      }
+
+      // Incrementar el stock
+      const previousStock = medication.stock;
+      medication.stock += request.cantidad;
+      await this.medicationRepo.save(medication);
+
+      console.log(`✅ Stock actualizado: ${medication.name}`);
+      console.log(`   Anterior: ${previousStock} | Nuevo: ${medication.stock} (+${request.cantidad})`);
+
+      stockUpdate = {
+        medication: medication.name,
+        quantityAdded: request.cantidad,
+        previousStock: previousStock,
+        newStock: medication.stock,
+      };
+
+      // Crear log de auditoría
+      try {
+        await this.stockLogRepo.save({
+          medicationId: medication.id,
+          medicationName: medication.name,
+          action: StockLogAction.RESTOCK,
+          quantity: request.cantidad,
+          previousStock: previousStock,
+          newStock: medication.stock,
+          reason: `Solicitud entregada - RequestIndex: ${dto.requestIndex} - Veterinario: ${veterinarian.name} (${veterinarian.email})`,
+          performedBy: 'admin', // TODO: Obtener del contexto de autenticación
+        });
+        console.log(`📝 Log de stock creado para ${medication.name}`);
+      } catch (logError) {
+        console.error('❌ Error creando log de stock:', logError);
+        // No lanzar error, el log es opcional
+      }
+    }
+
+    // Actualizar estado de la solicitud
     veterinarian.medicamentosControlados[dto.requestIndex].estado = dto.estado;
     veterinarian.medicamentosControlados[dto.requestIndex].comentarioAdmin =
       dto.comentarioAdmin || '';
@@ -323,12 +403,18 @@ export class VeterinariansService {
         comment: dto.comentarioAdmin || 'Sin comentarios adicionales',
       });
     } catch (emailError) {
-      console.error('Error enviando email al veterinario:', emailError);
+      console.error('❌ Error enviando email al veterinario:', emailError);
     }
 
+    // Construir respuesta mejorada
+    const responseMessage = dto.estado === RequestStatus.ENTREGADO && stockUpdate
+      ? `Estado actualizado a entregado. Stock incrementado en ${stockUpdate.quantityAdded} unidades (${stockUpdate.medication})`
+      : 'Estado de solicitud actualizado';
+
     return {
-      message: 'Estado de solicitud actualizado',
+      message: responseMessage,
       request: veterinarian.medicamentosControlados[dto.requestIndex],
+      stockUpdate: stockUpdate,
     };
   }
 
