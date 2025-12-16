@@ -4,7 +4,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ExcludePasswordInterceptor } from './password-exclude/password-exclude.interceptor';
 import cookieParser from 'cookie-parser';
-import { captureRawBody } from './stripe/middleware/rawBody.middleware';
 import express from 'express';
 
 async function bootstrap() {
@@ -19,15 +18,6 @@ async function bootstrap() {
   app.use((req, res, next) => {
     if (req.originalUrl !== '/stripe/webhook') {
       express.json()(req, res, next);
-    } else {
-      next();
-    }
-  });
-
-  // Aplicar cookieParser para todas las rutas excepto webhook
-  app.use((req, res, next) => {
-    if (req.originalUrl !== '/stripe/webhook') {
-      cookieParser()(req, res, next);
     } else {
       next();
     }
