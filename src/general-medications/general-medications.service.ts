@@ -12,6 +12,7 @@ import {
   RestockRequestStatus,
 } from './entities/medication-restock-request.entity';
 import { MedicationUsageHistory } from './entities/medication-usage-history.entity';
+import { StockLog } from './entities/stock-log.entity';
 import { Users } from '../users/entities/user.entity';
 import { Veterinarian } from '../veterinarians/entities/veterinarian.entity';
 import { UseMedicationDto } from './dto/use-medication.dto';
@@ -27,6 +28,8 @@ export class GeneralMedicationsService {
     private restockRequestRepo: Repository<MedicationRestockRequest>,
     @InjectRepository(MedicationUsageHistory)
     private usageHistoryRepo: Repository<MedicationUsageHistory>,
+    @InjectRepository(StockLog)
+    private stockLogRepo: Repository<StockLog>,
     @InjectRepository(Users)
     private usersRepo: Repository<Users>,
     @InjectRepository(Veterinarian)
@@ -49,11 +52,30 @@ export class GeneralMedicationsService {
     }));
   }
 
+  // Obtener solo medicamentos controlados
+  async findControlled(): Promise<GeneralMedication[]> {
+    return this.medicationRepo
+      .createQueryBuilder('med')
+      .where('med.category LIKE :pattern', { pattern: '%controlado%' })
+      .orderBy('med.name', 'ASC')
+      .getMany();
+  }
+
   // Obtener medicamentos con stock bajo
   async findLowStock(): Promise<GeneralMedication[]> {
     return this.medicationRepo
       .createQueryBuilder('med')
       .where('med.stock <= med.min_stock')
+      .orderBy('med.stock', 'ASC')
+      .getMany();
+  }
+
+  // Obtener medicamentos controlados con stock bajo
+  async findControlledLowStock(): Promise<GeneralMedication[]> {
+    return this.medicationRepo
+      .createQueryBuilder('med')
+      .where('med.stock < med.min_stock')
+      .andWhere('med.category LIKE :pattern', { pattern: '%controlado%' })
       .orderBy('med.stock', 'ASC')
       .getMany();
   }
@@ -531,5 +553,30 @@ export class GeneralMedicationsService {
       message: '✅ Medicamentos generales cargados exitosamente',
       count: created.length,
     };
+  }
+
+  // Obtener logs de stock (para auditoría)
+  async getStockLogs(medicationId?: string, limit: number = 50) {
+    const query = this.stockLogRepo
+      .createQueryBuilder('log')
+      .leftJoinAndSelect('log.medication', 'medication')
+      .orderBy('log.createdAt', 'DESC')
+      .take(limit);
+
+    if (medicationId) {
+      query.where('log.medicationId = :medicationId', { medicationId });
+    }
+
+    return query.getMany();
+  }
+
+  // Obtener logs de stock por medicamento específico
+  async getStockLogsByMedication(medicationName: string) {
+    return this.stockLogRepo
+      .createQueryBuilder('log')
+      .where('log.medicationName = :name', { name: medicationName })
+      .orderBy('log.createdAt', 'DESC')
+      .take(100)
+      .getMany();
   }
 }

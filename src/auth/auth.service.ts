@@ -75,16 +75,15 @@ export class AuthService {
       signUpDto;
 
     try {
-      // Generar contraseña temporal aleatoria
-      const temporaryPassword = this.generateRandomPassword();
-      console.log('🔑 Contraseña temporal generada:', temporaryPassword);
+      // Los usuarios COMUNES usan la contraseña que eligieron al registrarse
+      // Solo los veterinarios (creados por admin) reciben contraseña temporal
+      console.log('📝 Registrando usuario común con contraseña elegida');
       
-      // Usar la contraseña temporal en lugar de la proporcionada por el usuario
       const { data, error: authError } = await this.supabaseService
         .getClient()
         .auth.signUp({
           email: email,
-          password: temporaryPassword,
+          password: password, // ✅ Usar la contraseña que el usuario eligió
         });
 
       if (authError) {
@@ -119,26 +118,13 @@ export class AuthService {
           role: Role.User,
         });
 
+        // Enviar email de bienvenida SIN contraseña temporal (usuarios comunes)
         try {
-          const subject = '🔑 Tu contraseña temporal - Huellitas Pet 🐾';
-          const htmlContent = `
-                <h1>¡Hola, ${name}!</h1>
-                <p>¡Bienvenido a Huellitas Pet! Tu cuenta ha sido creada exitosamente.</p>
-                <h2>Tu contraseña temporal:</h2>
-                <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0;">
-                  ${temporaryPassword}
-                </div>
-                <p><strong>⚠️ Importante:</strong></p>
-                <ul>
-                  <li>Guarda esta contraseña en un lugar seguro</li>
-                  <li>Úsala para iniciar sesión por primera vez</li>
-                  <li>Te recomendamos cambiarla después del primer inicio de sesión</li>
-                </ul>
-                <p>Si no solicitaste este registro, por favor ignora este correo.</p>
-                <p>¡Gracias por unirte a nuestra comunidad! 🐶🐱🐰</p>
-            `;
-          await this.mailerService.sendMail(email, subject, htmlContent);
-          console.log(`✅ Correo con contraseña temporal enviado a ${email}`);
+          await this.mailerService.sendWelcomeEmail({
+            to: email,
+            userName: name,
+          });
+          console.log(`✅ Email de bienvenida enviado a ${email}`);
         } catch (mailError) {
           const errorMessage =
             mailError instanceof Error
@@ -153,13 +139,12 @@ export class AuthService {
 
       return {
         message:
-          'Registro exitoso. Revise su email para obtener su contraseña temporal.',
+          'Registro exitoso. ¡Bienvenido a Huellitas Pet!',
         user: {
           id: data.user?.id,
           email: data.user?.email,
           name: name,
         },
-        temporaryPassword: temporaryPassword, // ✅ IMPORTANTE: Devolver contraseña temporal
       };
     } catch (error) {
       const message =

@@ -40,6 +40,6 @@ import { MailerModule } from 'src/mailer/mailer.module';
     StorageService,
     UsersSeeder,
   ],
-  exports: [UsersService],
+  exports: [UsersService, UsersSeeder],
 })
 export class UsersModule {}

@@ -25,25 +25,18 @@ export class SaleOrdersAnalyticsSeeder {
   async seed() {
     console.log('🛒 Iniciando seeder de compras para analytics...');
 
-    // Verificar y borrar órdenes existentes de analytics
+    // Verificar órdenes existentes
     const existingOrders = await this.saleOrderRepo.count();
-    if (existingOrders > 0) {
-      console.log(`🗑️  Borrando ${existingOrders} órdenes existentes...`);
-      
-      // Borrar productos de órdenes primero (FK)
-      const allOrderProducts = await this.saleOrderProductRepo.find();
-      if (allOrderProducts.length > 0) {
-        await this.saleOrderProductRepo.remove(allOrderProducts);
-      }
-      
-      // Borrar órdenes
-      const allOrders = await this.saleOrderRepo.find();
-      if (allOrders.length > 0) {
-        await this.saleOrderRepo.remove(allOrders);
-      }
-      
-      console.log('✅ Órdenes de compra eliminadas');
+    if (existingOrders >= 100) {
+      console.log(`⏭️  Ya hay ${existingOrders} órdenes cargadas, saltando seeder`);
+      return {
+        orders: existingOrders,
+        message: 'Órdenes ya existentes'
+      };
     }
+
+    const ordersToCreate = 100 - existingOrders;
+    console.log(`📊 Creando ${ordersToCreate} órdenes adicionales...`);
 
     // Obtener datos necesarios
     const users = await this.usersRepo.find();
@@ -55,8 +48,6 @@ export class SaleOrdersAnalyticsSeeder {
       return;
     }
 
-    console.log(`📊 Creando 100 órdenes de compra distribuidas en los últimos 30 días...`);
-
     const today = new Date();
     const thirtyDaysAgo = new Date(today);
     thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -66,8 +57,8 @@ export class SaleOrdersAnalyticsSeeder {
     let ordersCreated = 0;
     let totalRevenue = 0;
 
-    // Crear 100 órdenes distribuidas en los últimos 30 días
-    for (let i = 0; i < 100; i++) {
+    // Crear órdenes faltantes distribuidas en los últimos 30 días
+    for (let i = 0; i < ordersToCreate; i++) {
       // Generar fecha aleatoria en los últimos 30 días
       const randomDaysAgo = Math.floor(Math.random() * 30);
       const orderDate = new Date(today);
@@ -158,6 +149,10 @@ export class SaleOrdersAnalyticsSeeder {
     console.log(`✅ ${ordersCreated} órdenes de compra creadas`);
     console.log(`💰 Ingresos totales generados: $${totalRevenue.toFixed(2)}`);
 
+    // Guardar valores para retornar
+    const finalOrdersCount = ordersCreated;
+    const finalRevenue = totalRevenue;
+
     // Mostrar estadísticas por producto
     await this.showProductStats();
 
@@ -166,8 +161,8 @@ export class SaleOrdersAnalyticsSeeder {
 
     console.log('🎉 Seeder de compras completado');
     return {
-      orders: ordersCreated,
-      revenue: totalRevenue,
+      orders: finalOrdersCount,
+      revenue: finalRevenue,
       message: 'Datos de compras creados exitosamente'
     };
   }
@@ -236,5 +231,7 @@ export class SaleOrdersAnalyticsSeeder {
     console.log(`   📅 Hoy: ${todayOrders.length} órdenes - $${todayRevenue.toFixed(2)}`);
     console.log(`   📅 Esta semana: ${weekOrders.length} órdenes - $${weekRevenue.toFixed(2)}`);
     console.log(`   📅 Este mes: ${monthOrders.length} órdenes - $${monthRevenue.toFixed(2)}`);
+    
+    console.log('🎉 Seeder de órdenes de compra completado');
   }
 }

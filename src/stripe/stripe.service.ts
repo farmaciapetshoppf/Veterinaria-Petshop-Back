@@ -9,10 +9,20 @@ export class StripeService {
   private logFile = path.join(process.cwd(), 'stripe-payments.log');
 
   constructor() {
-    // Inicializar cliente de Stripe
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-      apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
-    });
+    // Inicializar cliente de Stripe solo si hay API key configurada
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    
+    if (!stripeKey || stripeKey.includes('1234567890')) {
+      console.warn('⚠️  STRIPE_SECRET_KEY no configurada. Las funciones de pago con Stripe estarán deshabilitadas.');
+      console.warn('⚠️  Por favor configura STRIPE_SECRET_KEY en el archivo .env para habilitar Stripe.');
+      // @ts-ignore - Permitir stripe sin inicializar
+      this.stripe = null;
+    } else {
+      this.stripe = new Stripe(stripeKey, {
+        apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
+      });
+      console.log('✅ Stripe inicializado correctamente');
+    }
   }
 
   private logToFile(message: string, data?: any) {
@@ -32,6 +42,10 @@ export class StripeService {
     successUrl: string,
     cancelUrl: string,
   ) {
+    if (!this.stripe) {
+      throw new Error('Stripe no está configurado. Por favor configura STRIPE_SECRET_KEY en el archivo .env');
+    }
+    
     try {
       this.logToFile('📦 Items en la sesión de checkout:', items);
 
@@ -86,6 +100,10 @@ export class StripeService {
     orderId: string,
     customerEmail?: string,
   ) {
+    if (!this.stripe) {
+      throw new Error('Stripe no está configurado. Por favor configura STRIPE_SECRET_KEY en el archivo .env');
+    }
+    
     try {
       const paymentIntent = await this.stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Stripe usa centavos
@@ -119,6 +137,10 @@ export class StripeService {
    */
   // stripe.service.ts (método constructEventFromPayload)
   constructEventFromPayload(signature: string, payload: Buffer) {
+    if (!this.stripe) {
+      throw new Error('Stripe no está configurado. Por favor configura STRIPE_SECRET_KEY en el archivo .env');
+    }
+    
     console.log('🔍 Construyendo evento con firma:', signature);
     console.log(`🔍 Payload length: ${payload.length} bytes`);
 

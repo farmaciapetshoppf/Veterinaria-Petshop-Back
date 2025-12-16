@@ -44,6 +44,16 @@ export class GeneralMedicationsController {
     return this.medicationsService.findAll();
   }
 
+  @Get('controlled')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Obtener solo medicamentos controlados' })
+  @ApiResponse({ status: 200, description: 'Lista de medicamentos controlados' })
+  @Roles(Role.Veterinarian, Role.Admin)
+  async findControlled() {
+    return this.medicationsService.findControlled();
+  }
+
   @Get('low-stock')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
@@ -52,6 +62,16 @@ export class GeneralMedicationsController {
   @Roles(Role.Veterinarian, Role.Admin)
   async findLowStock() {
     return this.medicationsService.findLowStock();
+  }
+
+  @Get('controlled/low-stock')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Obtener medicamentos controlados con stock bajo' })
+  @ApiResponse({ status: 200, description: 'Lista de medicamentos controlados con stock bajo' })
+  @Roles(Role.Veterinarian, Role.Admin)
+  async findControlledLowStock() {
+    return this.medicationsService.findControlledLowStock();
   }
 
   @Post('use')
@@ -183,5 +203,30 @@ export class GeneralMedicationsController {
   @ApiResponse({ status: 201, description: 'Medicamentos precargados' })
   async seedMedications() {
     return this.medicationsService.seedMedications();
+  }
+
+  @Get('stock-logs')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Obtener logs de auditoría de stock (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Logs de stock' })
+  @ApiQuery({ name: 'medicationId', required: false, description: 'Filtrar por ID de medicamento' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Límite de resultados (default: 50)' })
+  @Roles(Role.Admin)
+  async getStockLogs(
+    @Query('medicationId') medicationId?: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.medicationsService.getStockLogs(medicationId, limit || 50);
+  }
+
+  @Get('stock-logs/:medicationName')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Obtener logs de stock por nombre de medicamento (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Logs de stock del medicamento' })
+  @Roles(Role.Admin)
+  async getStockLogsByMedication(@Param('medicationName') medicationName: string) {
+    return this.medicationsService.getStockLogsByMedication(medicationName);
   }
 }

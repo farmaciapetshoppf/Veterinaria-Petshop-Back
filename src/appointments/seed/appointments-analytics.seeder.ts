@@ -26,25 +26,19 @@ export class AppointmentsAnalyticsSeeder {
   async seed(force: boolean = false) {
     console.log('🩺 Iniciando seeder de turnos para analytics...');
 
-    // BORRAR turnos y registros médicos existentes
+    // Verificar turnos existentes
     const existingAppointments = await this.appointmentsRepo.count();
-    if (existingAppointments > 0) {
-      console.log(`🗑️  Borrando ${existingAppointments} turnos existentes...`);
-      
-      // Borrar registros médicos primero (tienen FK a turnos)
-      const allMedicalRecords = await this.medicalRecordsRepo.find();
-      if (allMedicalRecords.length > 0) {
-        await this.medicalRecordsRepo.remove(allMedicalRecords);
-      }
-      
-      // Borrar turnos
-      const allAppointments = await this.appointmentsRepo.find();
-      if (allAppointments.length > 0) {
-        await this.appointmentsRepo.remove(allAppointments);
-      }
-      
-      console.log('✅ Turnos y registros médicos eliminados');
+    if (existingAppointments >= 50) {
+      console.log(`⏭️  Ya hay ${existingAppointments} turnos cargados, saltando seeder`);
+      return {
+        appointments: existingAppointments,
+        medicalRecords: await this.medicalRecordsRepo.count(),
+        message: 'Turnos ya existentes'
+      };
     }
+
+    const appointmentsToCreate = 50 - existingAppointments;
+    console.log(`📊 Creando ${appointmentsToCreate} turnos adicionales...`);
 
     // Obtener veterinarios, mascotas y usuarios existentes
     const veterinarians = await this.veterinariansRepo.find();
@@ -143,8 +137,8 @@ export class AppointmentsAnalyticsSeeder {
     let appointmentsCreated = 0;
     let medicalRecordsCreated = 0;
 
-    // Crear 50 turnos distribuidos en la semana
-    for (let i = 0; i < 50; i++) {
+    // Crear turnos faltantes distribuidos en la semana
+    for (let i = 0; i < appointmentsToCreate; i++) {
       // Distribuir turnos en los 7 días de la semana
       const appointmentDate = new Date(startOfWeek);
       appointmentDate.setDate(startOfWeek.getDate() + (i % 7));
