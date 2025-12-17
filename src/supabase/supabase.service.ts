@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SupabaseService {
-  
   private supabase: SupabaseClient;
 
   constructor(private configService: ConfigService) {
@@ -21,7 +20,7 @@ export class SupabaseService {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: false,
+        detectSessionInUrl: true,
       },
     });
   }

@@ -448,7 +448,7 @@ export class SaleOrdersService {
       );
       this.logToFile('?? CheckoutDto recibido desde el frontend:', checkoutDto);
 
-      // Validar que el frontend env�e las URLs (son obligatorias)
+      // Validar que el frontend envíe las URLs (son obligatorias)
       if (
         !checkoutDto?.success_url ||
         !checkoutDto?.failure_url ||
@@ -485,7 +485,7 @@ export class SaleOrdersService {
           currency_id: 'ARS',
         })),
         back_urls: backUrls,
-        notification_url: `${apiUrl.replace(/\/$/, '')}/sale-orders/webhook`,
+        notification_url: `${apiUrl}/sale-orders/webhook`,
         external_reference: String(cart.id),
         metadata: {
           order_id: cart.id,

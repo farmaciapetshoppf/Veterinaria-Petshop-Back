@@ -80,11 +80,14 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     // Determinar si estamos procesando un código o un hash
-    const urlFragment = code || hash || (req.query.fragment as string);
+    const urlFragment = code || hash;
 
     if (!urlFragment) {
       throw new BadRequestException('Falta el código o hash de autenticación');
     }
+
+    // Agregar logs para depuración
+    console.log('Procesando callback con fragmento:', urlFragment);
 
     return this.authService.handleAuthCallback(urlFragment, res);
   }
