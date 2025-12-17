@@ -427,12 +427,9 @@ export class SaleOrdersService {
 
     try {
       // Configuración del backend
-      const ngrokUrl = this.configService.get<string>('NGROK_URL');
-      const publicBackendUrl: string =
-        ngrokUrl ||
-        this.configService.get<string>('BACKEND_PUBLIC_URL') ||
+      const apiUrl =
         this.configService.get<string>('API_URL') ||
-        'http://localhost:3000';
+        'https://veterinaria-petshop-back.onrender.com';
       const accessToken = this.configService.get<string>(
         'MERCADOPAGO_ACCESS_TOKEN',
       );
@@ -442,8 +439,8 @@ export class SaleOrdersService {
       }
 
       this.logToFile('🌐 Backend configurado:', {
-        publicBackendUrl,
-        notificationUrl: `${publicBackendUrl}/sale-orders/webhook`,
+        apiUrl,
+        notificationUrl: `${apiUrl}/sale-orders/webhook`,
       });
       this.logToFile(
         '?? Access Token (prefijo):',
@@ -488,7 +485,7 @@ export class SaleOrdersService {
           currency_id: 'ARS',
         })),
         back_urls: backUrls,
-        notification_url: `${publicBackendUrl.replace(/\/$/, '')}/sale-orders/webhook`,
+        notification_url: `${apiUrl.replace(/\/$/, '')}/sale-orders/webhook`,
         external_reference: String(cart.id),
         metadata: {
           order_id: cart.id,

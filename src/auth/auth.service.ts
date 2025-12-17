@@ -168,7 +168,7 @@ export class AuthService {
       if (error) {
         console.error('❌ Error de Supabase en signIn:', error.message);
         console.error('❌ Código de error:', error.status);
-        throw new UnauthorizedException(error.message);
+        throw new UnauthorizedException('Invalid login credentials');
       }
 
       if (!data.session) {
@@ -177,6 +177,15 @@ export class AuthService {
       }
       
       console.log('✅ Login exitoso en Supabase para:', signInDto.email);
+
+      // ✅ Enviar email de bienvenida sin bloquear el login
+      this.mailerService
+        .sendWelcomeEmail(signInDto.email)
+        .catch((e) => {
+          console.warn(
+            `⚠️  Fallo el envío de correo a ${signInDto.email}. Causa: ${e.message}`,
+          );
+        });
 
       const email = data.user.email;
       if (!email) {
