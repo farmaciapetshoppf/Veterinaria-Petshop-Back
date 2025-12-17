@@ -27,7 +27,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       process.env.API_URL,
-      process.env.NGROK_URL,
+      process.env.BACKEND_PUBLIC_URL,
       process.env.FRONTEND_URL,
     ]
       .filter(Boolean)
