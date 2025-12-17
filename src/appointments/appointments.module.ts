@@ -16,6 +16,7 @@ import { GeneralMedication } from 'src/general-medications/entities/general-medi
 import { MedicationUsageHistory } from 'src/general-medications/entities/medication-usage-history.entity';
 import { AdminNotification } from 'src/general-medications/entities/admin-notification.entity';
 import { AuthModule } from 'src/auth/auth.module';
+import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { AuthModule } from 'src/auth/auth.module';
       MedicationUsageHistory,
       AdminNotification,
     ]),
-    UsersModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => VeterinariansModule),
     PetsModule,
     MailerModule,
     GeneralMedicationsModule,
