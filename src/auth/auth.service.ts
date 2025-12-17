@@ -240,37 +240,23 @@ export class AuthService {
       console.log('¿Es producción?', isProduc);
       console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 
-      // Extraer solo el nombre de dominio sin protocolo ni barras
-      let domain = null;
-      if (isProduc && process.env.FRONTEND_URL) {
-        try {
-          const url = new URL(process.env.FRONTEND_URL);
-          domain = url.hostname; // Esto extraerá solo el nombre de dominio
-          console.log('Dominio extraído para cookies:', domain);
-        } catch (urlError) {
-          console.error('Error al parsear FRONTEND_URL:', urlError);
-          // Continuar sin establecer el dominio
-        }
-      }
-
-      // Configurar opciones de cookie
-      const cookieOptions = {
+      // Establecer cookies con múltiples nombres para compatibilidad
+      res.cookie('access_token', data.session.access_token, {
         httpOnly: true,
         secure: isProduc,
         sameSite: isProduc ? 'none' : 'lax',
         path: '/',
         maxAge: 24 * 3600 * 1000,
-      };
+      });
 
-      // Añadir dominio solo si es válido
-      if (domain) {
-        cookieOptions['domain'] = domain;
-      }
-
-      // Establecer cookies con las opciones correctas
-      console.log('Estableciendo cookie con opciones:', cookieOptions);
-      res.cookie('access_token', data.session.access_token, cookieOptions);
-      res.cookie('_vercel_jwt', data.session.access_token, cookieOptions);
+      // También establecer con el nombre que usa Vercel
+      res.cookie('_vercel_jwt', data.session.access_token, {
+        httpOnly: true,
+        secure: isProduc,
+        sameSite: isProduc ? 'none' : 'lax',
+        path: '/',
+        maxAge: 24 * 3600 * 1000,
+      });
 
       console.log('✅ Cookies establecidas correctamente');
 
