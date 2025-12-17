@@ -206,11 +206,11 @@ export class AuthService {
 
       res.cookie('access_token', data.session.access_token, {
         httpOnly: true,
-        secure: false,
+        secure: true,
         sameSite: 'lax' as const,
         path: '/',
         maxAge: 24 * 3600 * 1000, // 24 horas
-        domain: 'localhost',
+        domain: process.env.FRONTEND_URL,
       });
 
       let responsePayload: any;
@@ -281,13 +281,15 @@ export class AuthService {
         console.error('Error cerrando sesion desde supabase:', error);
       }
 
+      const isProduc = process.env.NODE_ENV === 'production';
+
       const cookieOptions = {
         httpOnly: true,
-        secure: false, // ✅ false en desarrollo
+        secure: true, // ✅ false en desarrollo
         sameSite: 'lax' as const,
         path: '/',
-        domain: 'localhost', // ✅ Especificar dominio
         expires: new Date(0),
+        ...(isProduc && { domain: process.env.FRONTEND_URL }),
       };
 
       res.clearCookie('access_token', cookieOptions);
@@ -461,15 +463,16 @@ export class AuthService {
         }
       }
 
+      const isProduc = process.env.NODE_ENV === 'production';
+
       // En el método processUserSession
       res.cookie('access_token', accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // Solo seguro en producción
-        sameSite: 'lax' as const,
+        secure: isProduc, // Solo seguro en producción
+        sameSite: isProduc ? 'none' : 'lax',
         path: '/',
         maxAge: 3600 * 1000, // 1 hora
-        // Eliminar la propiedad domain para que use el dominio actual automáticamente
-        // domain: 'localhost', // ← Eliminar esta línea
+        ...(isProduc && { domain: process.env.FRONTEND_URL }),
       });
 
       return {
