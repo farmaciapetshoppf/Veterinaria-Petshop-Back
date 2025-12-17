@@ -26,7 +26,8 @@ export class AuthGuard implements CanActivate {
     let token: string | undefined;
 
     // 1. Buscar en cookies
-    token = request.cookies?.['access_token'];
+    token =
+      request.cookies?.['access_token'] || request.cookies?.['_vercel_jwt'];
 
     // 2. Si no está en cookies, buscar en header Authorization (Bearer token)
     if (!token) {
