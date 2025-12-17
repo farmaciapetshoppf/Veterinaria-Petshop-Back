@@ -12,6 +12,8 @@ import { MulterModule } from '@nestjs/platform-express';
 import { ProductImage } from './entities/product-image.entity';
 import { ProductImageService } from './products-image.service';
 import { AuthModule } from 'src/auth/auth.module';
+import { UsersModule } from 'src/users/users.module';
+import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { AuthModule } from 'src/auth/auth.module';
     ]),
     CategoriesModule,
     forwardRef(() => AuthModule),
+    forwardRef(() => VeterinariansModule),
+    forwardRef(() => UsersModule),
     SupabaseModule,
     MulterModule.register({
       limits: {
