@@ -216,13 +216,15 @@ export class AuthService {
           );
         });
 
+      const isProduc = process.env.NODE_ENV === 'production';
+
       res.cookie('access_token', data.session.access_token, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'lax' as const,
+        secure: isProduc, // Solo seguro en producción
+        sameSite: isProduc ? 'none' : 'lax',
         path: '/',
         maxAge: 24 * 3600 * 1000, // 24 horas
-        domain: process.env.FRONTEND_URL,
+        ...(isProduc && { domain: process.env.FRONTEND_URL }),
       });
 
       let responsePayload: any;
@@ -297,7 +299,7 @@ export class AuthService {
 
       const cookieOptions = {
         httpOnly: true,
-        secure: true, // ✅ false en desarrollo
+        secure: isProduc, // Solo seguro en producción
         sameSite: 'lax' as const,
         path: '/',
         expires: new Date(0),
