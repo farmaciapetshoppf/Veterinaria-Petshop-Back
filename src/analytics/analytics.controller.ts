@@ -1,5 +1,11 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -25,7 +31,8 @@ export class AnalyticsController {
 
   @ApiOperation({
     summary: 'Get dashboard metrics (Admin only)',
-    description: 'Obtiene métricas generales del dashboard con indicadores de crecimiento',
+    description:
+      'Obtiene métricas generales del dashboard con indicadores de crecimiento',
   })
   @ApiResponse({
     status: 200,
@@ -39,7 +46,8 @@ export class AnalyticsController {
 
   @ApiOperation({
     summary: 'Get sales data by period (Admin only)',
-    description: 'Obtiene datos de ventas agrupados por el período seleccionado',
+    description:
+      'Obtiene datos de ventas agrupados por el período seleccionado',
   })
   @ApiQuery({
     name: 'period',
@@ -53,7 +61,9 @@ export class AnalyticsController {
     type: [SalesDataDto],
   })
   @Get('sales')
-  async getSales(@Query('period') period: 'day' | 'week' | 'month' | 'year' = 'month') {
+  async getSales(
+    @Query('period') period: 'day' | 'week' | 'month' | 'year' = 'month',
+  ) {
     return await this.analyticsService.getSalesByPeriod(period);
   }
 
