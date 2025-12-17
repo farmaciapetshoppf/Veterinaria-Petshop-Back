@@ -35,38 +35,41 @@ export class AuthService {
     const lowercase = 'abcdefghijkmnopqrstuvwxyz';
     const numbers = '23456789';
     const special = '!@#$%&*';
-    
+
     let password = '';
-    
+
     // Asegurar 2 mayúsculas
     password += uppercase[Math.floor(Math.random() * uppercase.length)];
     password += uppercase[Math.floor(Math.random() * uppercase.length)];
-    
+
     // Asegurar 2 minúsculas
     password += lowercase[Math.floor(Math.random() * lowercase.length)];
     password += lowercase[Math.floor(Math.random() * lowercase.length)];
-    
+
     // Asegurar 2 números
     password += numbers[Math.floor(Math.random() * numbers.length)];
     password += numbers[Math.floor(Math.random() * numbers.length)];
-    
+
     // Asegurar 2 caracteres especiales
     password += special[Math.floor(Math.random() * special.length)];
     password += special[Math.floor(Math.random() * special.length)];
-    
+
     // Completar hasta 10 caracteres con caracteres aleatorios
     const allChars = uppercase + lowercase + numbers + special;
     for (let i = 8; i < 10; i++) {
       password += allChars[Math.floor(Math.random() * allChars.length)];
     }
-    
+
     // Mezclar los caracteres usando Fisher-Yates shuffle
     const passwordArray = password.split('');
     for (let i = passwordArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
+      [passwordArray[i], passwordArray[j]] = [
+        passwordArray[j],
+        passwordArray[i],
+      ];
     }
-    
+
     return passwordArray.join('');
   }
 
@@ -78,7 +81,7 @@ export class AuthService {
       // Los usuarios COMUNES usan la contraseña que eligieron al registrarse
       // Solo los veterinarios (creados por admin) reciben contraseña temporal
       console.log('📝 Registrando usuario común con contraseña elegida');
-      
+
       const { data, error: authError } = await this.supabaseService
         .getClient()
         .auth.signUp({
@@ -138,8 +141,7 @@ export class AuthService {
       }
 
       return {
-        message:
-          'Registro exitoso. ¡Bienvenido a Huellitas Pet!',
+        message: 'Registro exitoso. ¡Bienvenido a Huellitas Pet!',
         user: {
           id: data.user?.id,
           email: data.user?.email,
@@ -157,7 +159,7 @@ export class AuthService {
     try {
       console.log('🔐 Intento de login para:', signInDto.email);
       console.log('🔑 Contraseña recibida:', signInDto.password);
-      
+
       const { data, error } = await this.supabaseService
         .getClient()
         .auth.signInWithPassword({
@@ -175,7 +177,7 @@ export class AuthService {
         console.error('❌ No hay sesión devuelta por Supabase');
         throw new UnauthorizedException('No se devolvieron datos de sesión');
       }
-      
+
       console.log('✅ Login exitoso en Supabase para:', signInDto.email);
 
       const email = data.user.email;
@@ -216,11 +218,11 @@ export class AuthService {
 
       res.cookie('access_token', data.session.access_token, {
         httpOnly: true,
-        secure: false,
+        secure: true,
         sameSite: 'lax' as const,
         path: '/',
         maxAge: 24 * 3600 * 1000, // 24 horas
-        domain: 'localhost',
+        domain: process.env.FRONTEND_URL,
       });
 
       let responsePayload: any;
@@ -291,13 +293,15 @@ export class AuthService {
         console.error('Error cerrando sesion desde supabase:', error);
       }
 
+      const isProduc = process.env.NODE_ENV === 'production';
+
       const cookieOptions = {
         httpOnly: true,
-        secure: false, // ✅ false en desarrollo
+        secure: true, // ✅ false en desarrollo
         sameSite: 'lax' as const,
         path: '/',
-        domain: 'localhost', // ✅ Especificar dominio
         expires: new Date(0),
+        ...(isProduc && { domain: process.env.FRONTEND_URL }),
       };
 
       res.clearCookie('access_token', cookieOptions);
@@ -357,12 +361,12 @@ export class AuthService {
     }
   }
 
-  // Nuevo método para manejar el callback con el código o hash de la URL
   async handleAuthCallback(urlFragment: string, res: Response): Promise<any> {
     try {
-      // Verificar si es un código o un hash de sesión
-      let session;
+      console.log('Tipo de fragmento recibido:', typeof urlFragment);
+      console.log('Fragmento recibido:', urlFragment);
 
+      // Verificar si es un código o un hash de sesión
       if (urlFragment.startsWith('#')) {
         // Es un hash de sesión (formato antiguo)
         const hashParams = new URLSearchParams(urlFragment.substring(1));
@@ -378,22 +382,29 @@ export class AuthService {
         return this.processUserSession(accessToken, res);
       } else {
         // Intentar procesar como un código de autorización
-        const { data, error } = await this.supabaseService
-          .getClient()
-          .auth.exchangeCodeForSession(urlFragment);
+        try {
+          const { data, error } = await this.supabaseService
+            .getClient()
+            .auth.exchangeCodeForSession(urlFragment);
 
-        if (error) {
-          throw new UnauthorizedException(error.message);
+          if (error) {
+            console.error('Error al intercambiar código por sesión:', error);
+            throw new UnauthorizedException(error.message);
+          }
+
+          if (!data || !data.session) {
+            throw new UnauthorizedException('No se pudo obtener la sesión');
+          }
+
+          const accessToken = data.session.access_token;
+          return this.processUserSession(accessToken, res);
+        } catch (exchangeError) {
+          console.error('Error en exchangeCodeForSession:', exchangeError);
+          throw exchangeError;
         }
-
-        if (!data || !data.session) {
-          throw new UnauthorizedException('No se pudo obtener la sesión');
-        }
-
-        const accessToken = data.session.access_token;
-        return this.processUserSession(accessToken, res);
       }
     } catch (error) {
+      console.error('Error en handleAuthCallback:', error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -464,13 +475,16 @@ export class AuthService {
         }
       }
 
+      const isProduc = process.env.NODE_ENV === 'production';
+
+      // En el método processUserSession
       res.cookie('access_token', accessToken, {
         httpOnly: true,
-        secure: false, // ✅ false en desarrollo para que funcione en localhost
-        sameSite: 'lax' as const,
+        secure: isProduc, // Solo seguro en producción
+        sameSite: isProduc ? 'none' : 'lax',
         path: '/',
         maxAge: 3600 * 1000, // 1 hora
-        domain: 'localhost', // ✅ Especificar dominio para localhost
+        ...(isProduc && { domain: process.env.FRONTEND_URL }),
       });
 
       return {
