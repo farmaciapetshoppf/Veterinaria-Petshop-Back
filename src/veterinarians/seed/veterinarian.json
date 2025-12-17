@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Abigail Brea",
+    "email": "abiiibreazuuu@gmail.com",
+    "matricula": "VET-2018-001",
+    "description": "Especialista en cirugía veterinaria con más de 10 años de experiencia. Me apasiona cuidar de tus mascotas y brindarles la mejor atención médica.",
+    "phone": "11-2345-6789",
+    "time": "2025-12-11",
+    "horario_atencion": "2025-12-11T09:00:00",
+    "isActive": true,
+    "role": "Veterinarian"
+  },
+  {
+    "name": "Adrián Espíndola",
+    "email": "adrianmespindola@gmail.com",
+    "matricula": "VET-2019-002",
+    "description": "Veterinario especializado en animales exóticos y felinos. Dedico mi carrera a mejorar la calidad de vida de nuestros amigos peludos.",
+    "phone": "11-3456-7890",
+    "time": "2025-12-11",
+    "horario_atencion": "2025-12-11T14:00:00",
+    "isActive": true,
+    "role": "Veterinarian"
+  },
+  {
+    "name": "María González",
+    "email": "maria.gonzalez.vet@gmail.com",
+    "matricula": "VET-2020-003",
+    "description": "Especialista en dermatología veterinaria y alergias. Con enfoque en medicina preventiva y tratamientos holísticos.",
+    "phone": "11-4567-8901",
+    "time": "2025-12-11",
+    "horario_atencion": "2025-12-11T10:00:00",
+    "isActive": true,
+    "role": "Veterinarian"
+  },
+  {
+    "name": "Carlos Rodríguez",
+    "email": "carlos.rodriguez.vet@gmail.com",
+    "matricula": "VET-2017-004",
+    "description": "Veterinario con especialización en traumatología y ortopedia. Experto en rehabilitación post-quirúrgica.",
+    "phone": "11-5678-9012",
+    "time": "2025-12-11",
+    "horario_atencion": "2025-12-11T15:00:00",
+    "isActive": true,
+    "role": "Veterinarian"
+  },
+  {
+    "name": "Laura Fernández",
+    "email": "laura.fernandez.vet@gmail.com",
+    "matricula": "VET-2021-005",
+    "description": "Veterinaria especializada en medicina interna y cardiología. Dedicada al diagnóstico y tratamiento de enfermedades crónicas.",
+    "phone": "11-6789-0123",
+    "time": "2025-12-11",
+    "horario_atencion": "2025-12-11T11:00:00",
+    "isActive": true,
+    "role": "Veterinarian"
+  },
+  {
+    "name": "Diego Martínez",
+    "email": "diego.martinez.vet@gmail.com",
+    "matricula": "VET-2019-006",
+    "description": "Veterinario especializado en odontología veterinaria y cirugías maxilofaciales. Enfocado en la salud dental de mascotas.",
+    "phone": "11-7890-1234",
+    "time": "2025-12-11",
+    "horario_atencion": "2025-12-11T16:00:00",
+    "isActive": true,
+    "role": "Veterinarian"
+  }
+]

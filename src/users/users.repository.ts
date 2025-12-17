@@ -1,0 +1,221 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Users } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import { CreateUserDto } from './dto/create-user.dto';
+import { SupabaseService } from 'src/supabase/supabase.service';
+import { Role } from 'src/auth/enum/roles.enum';
+import { generateShortUuid } from 'src/utils/uuid.utils';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { StorageService } from 'src/supabase/storage.service';
+
+@Injectable()
+export class UsersRepository {
+  constructor(
+    @InjectRepository(Users)
+    private readonly usersRepository: Repository<Users>,
+    private supabaseService: SupabaseService,
+    private storageService: StorageService,
+  ) {}
+
+  async getUsers(): Promise<Users[]> {
+    const users = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.pets', 'pet')
+      .leftJoinAndSelect('pet.mother', 'mother')
+      .leftJoinAndSelect('mother.owner', 'motherOwner')
+      .leftJoinAndSelect('pet.father', 'father')
+      .leftJoinAndSelect('father.owner', 'fatherOwner')
+      .leftJoinAndSelect('pet.appointments', 'appointment')
+      .leftJoinAndSelect('appointment.veterinarian', 'veterinarian')
+      .addSelect(['veterinarian.horario_atencion'])
+      .leftJoinAndSelect('user.buyerSaleOrders', 'orders')
+      .leftJoinAndSelect('orders.items', 'orderItems')
+      .leftJoinAndSelect('orderItems.product', 'orderItemProduct')
+      .where('user.isDeleted = :isDeleted', { isDeleted: false })
+      .getMany();
+
+    // Remove sensitive fields from nested veterinarians
+    users.forEach((u) => {
+      if (u.pets) {
+        u.pets.forEach((p) => {
+          if (p.appointments) {
+            p.appointments.forEach((a) => {
+              if (a.veterinarian && (a.veterinarian as any).password) {
+                delete (a.veterinarian as any).password;
+              }
+            });
+          }
+        });
+      }
+      // Opcional: ordenar órdenes por fecha descendente si están presentes
+      if ((u as any).buyerSaleOrders) {
+        (u as any).buyerSaleOrders = (u as any).buyerSaleOrders.sort(
+          (a: any, b: any) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+      }
+    });
+
+    return users;
+  }
+
+  async getUserById(id: string): Promise<Users> {
+    const user = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.pets', 'pet')
+      .leftJoinAndSelect('pet.mother', 'mother')
+      .leftJoinAndSelect('mother.owner', 'motherOwner')
+      .leftJoinAndSelect('pet.father', 'father')
+      .leftJoinAndSelect('father.owner', 'fatherOwner')
+      .leftJoinAndSelect('pet.appointments', 'appointment')
+      .leftJoinAndSelect('appointment.veterinarian', 'veterinarian')
+      .addSelect(['veterinarian.horario_atencion'])
+      .leftJoinAndSelect('user.buyerSaleOrders', 'orders')
+      .leftJoinAndSelect('orders.items', 'orderItems')
+      .leftJoinAndSelect('orderItems.product', 'orderItemProduct')
+      .where('user.id = :id AND user.isDeleted = :isDeleted', {
+        id,
+        isDeleted: false,
+      })
+      .getOne();
+
+    // Strip password from nested veterinarians
+    if (user && user.pets) {
+      user.pets.forEach((p) => {
+        if (p.appointments) {
+          p.appointments.forEach((a) => {
+            if (a.veterinarian && (a.veterinarian as any).password) {
+              delete (a.veterinarian as any).password;
+            }
+          });
+        }
+      });
+    }
+    // Ordenar órdenes del comprador por fecha descendente si están presentes
+    if (user && (user as any).buyerSaleOrders) {
+      (user as any).buyerSaleOrders = (user as any).buyerSaleOrders.sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    }
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+    return user;
+  }
+
+  createUser(createUserDto: CreateUserDto): Promise<Users> {
+    const newUser = this.usersRepository.create({
+      ...createUserDto,
+      email: createUserDto.email.toLowerCase(),
+      uid: generateShortUuid(12),
+    });
+    return this.usersRepository.save(newUser);
+  }
+
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<Users> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user)
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+
+    const { name, phone, country, address, city } = updateUserDto;
+
+    if (name !== undefined) user.name = name;
+    if (phone !== undefined) user.phone = phone;
+    if (country !== undefined) user.country = country;
+    if (address !== undefined) user.address = address;
+    if (city !== undefined) user.city = city;
+
+    return this.usersRepository.save(user);
+  }
+
+  async updateUserProfileImage(
+    id: string,
+    file: Express.Multer.File,
+  ): Promise<Users> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+
+    if (!file.mimetype.includes('image/')) {
+      throw new Error('El archivo debe ser una imagen (.jpg, .png, .webp)');
+    }
+
+    const result = await this.storageService.uploadFile(file, 'users');
+    if (!result) {
+      throw new Error('Error al subir la imagen de perfil');
+    }
+
+    user.profileImageUrl = result.publicUrl;
+
+    return this.usersRepository.save(user);
+  }
+
+  async updateRole(id: string, role: Role): Promise<Users> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+
+    user.role = role;
+    return this.usersRepository.save(user);
+  }
+
+  async deleteUser(id: string): Promise<{ message: string }> {
+    try {
+      const userToDelete = await this.usersRepository.findOne({
+        where: { id },
+      });
+
+      if (!userToDelete) {
+        throw new NotFoundException(`El usuario con id: '${id}' no existe`);
+      }
+
+      // Marcar como eliminado
+      userToDelete.isDeleted = true;
+      userToDelete.deletedAt = new Date();
+      await this.usersRepository.save(userToDelete);
+
+      // Opcional: también podrías actualizar o desactivar el usuario en Supabase
+      const { error } = await this.supabaseService
+        .getClient()
+        .auth.admin.updateUserById(id, {
+          email: `disabled_${userToDelete.email}`,
+        }); // O alguna otra acción adecuada
+
+      if (error) {
+        throw new Error(
+          `Error al actualizar usuario en Supabase: ${error.message}`,
+        );
+      }
+
+      return { message: 'Usuario marcado como eliminado' };
+    } catch (error) {
+      console.error('Error en deleteUser:', error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(
+        `Error al marcar usuario como eliminado: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<Users> {
+    const user = await this.usersRepository.findOne({
+      where: { email: email.toLowerCase() },
+      relations: ['pets'],
+    });
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado.');
+    }
+    return user;
+  }
+}
