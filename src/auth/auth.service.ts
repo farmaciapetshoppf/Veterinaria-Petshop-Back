@@ -344,6 +344,7 @@ export class AuthService {
       };
 
       res.clearCookie('access_token', cookieOptions);
+      res.clearCookie('_vercel_jwt', cookieOptions);
 
       return {
         success: true,
