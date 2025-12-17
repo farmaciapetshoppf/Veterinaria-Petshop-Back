@@ -180,22 +180,13 @@ export class AuthService {
 
       console.log('✅ Login exitoso en Supabase para:', signInDto.email);
 
-      // ✅ Enviar email de bienvenida sin bloquear el login
-      this.mailerService
-        .sendWelcomeEmail(signInDto.email)
-        .catch((e) => {
-          console.warn(
-            `⚠️  Fallo el envío de correo a ${signInDto.email}. Causa: ${e.message}`,
-          );
-        });
-
       const email = data.user.email;
       if (!email) {
         throw new UnauthorizedException('El email no está disponible.');
       }
 
-      let user;
-      let userType;
+      let user: any;
+      let userType: 'regular' | 'veterinarian';
 
       // Intentar obtener el usuario de la tabla de usuarios comunes
       try {
@@ -212,6 +203,18 @@ export class AuthService {
           );
         }
       }
+
+      // ✅ Enviar email de bienvenida sin bloquear el login (después de obtener usuario)
+      this.mailerService
+        .sendWelcomeEmail({
+          to: email,
+          userName: user.name || email.split('@')[0],
+        })
+        .catch((e) => {
+          console.warn(
+            `⚠️  Fallo el envío de correo a ${email}. Causa: ${e.message}`,
+          );
+        });
 
       res.cookie('access_token', data.session.access_token, {
         httpOnly: true,
