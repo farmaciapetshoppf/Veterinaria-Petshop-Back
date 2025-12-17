@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { PetsController } from './pets.controller';
 import { PetRepository } from './repositories/pet.repository';
@@ -8,11 +8,13 @@ import { Users } from 'src/users/entities/user.entity';
 import { StorageService } from 'src/supabase/storage.service';
 import { SupabaseModule } from 'src/supabase/supabase.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Pet, Users]),
     SupabaseModule,
+    forwardRef(() => AuthModule),
     MulterModule.register({
       limits: {
         fileSize: 50 * 1024 * 1024, // Limitar el tamaño a 50MB

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
@@ -24,7 +24,7 @@ import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
       Veterinarian,
       MedicalRecordsPet,
     ]),
-    AuthModule,
+    forwardRef(() => AuthModule),
     UsersModule,
     VeterinariansModule,
   ],

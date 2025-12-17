@@ -7,11 +7,16 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { MedicalRecordsPetService } from './medical-records-pet.service';
 import { CreateMedicalRecordsPetDto } from './dto/create-medical-records-pet.dto';
 import { UpdateMedicalRecordsPetDto } from './dto/update-medical-records-pet.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Medical Records Pet')
 @Controller('medical-records-pet')
@@ -20,6 +25,8 @@ export class MedicalRecordsPetController {
     private readonly medicalRecordsPetService: MedicalRecordsPetService,
   ) {}
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Crear registro médico',
     description:
@@ -30,6 +37,8 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.create(createMedicalRecordsPetDto);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Obtener todos los registros médicos',
     description: 'Lista paginada de todos los registros médicos',
@@ -51,6 +60,8 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.findAll(page, limit);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Buscar mascotas',
     description:
@@ -67,9 +78,12 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.searchPets(searchTerm);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Obtener historial médico de una mascota',
-    description: 'Retorna todos los registros médicos de una mascota específica',
+    description:
+      'Retorna todos los registros médicos de una mascota específica',
   })
   @ApiParam({
     name: 'petId',
@@ -81,6 +95,8 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.findByPet(petId);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Obtener un registro médico específico',
     description: 'Retorna los detalles de un registro médico por su ID',
@@ -95,6 +111,8 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.findOne(id);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Actualizar registro médico',
     description: 'Modifica los datos de un registro médico existente',
@@ -112,6 +130,8 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.update(id, updateMedicalRecordsPetDto);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Eliminar registro médico',
     description: 'Elimina un registro médico del sistema',

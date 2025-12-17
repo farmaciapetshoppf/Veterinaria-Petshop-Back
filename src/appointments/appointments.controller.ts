@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Query,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -21,7 +22,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AppointmentsAnalyticsSeeder } from './seed/appointments-analytics.seeder';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.User)
 @ApiTags('Appointments')
 @Controller('appointments')
 export class AppointmentsController {
@@ -30,22 +37,23 @@ export class AppointmentsController {
     private readonly analyticsSeeder: AppointmentsAnalyticsSeeder,
   ) {}
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get availability of a veterinarian for a date',
-    description: 'Retorna los horarios disponibles de un veterinario para una fecha específica (slots de 30 minutos desde las 9:00 hasta las 18:00)'
+    description:
+      'Retorna los horarios disponibles de un veterinario para una fecha específica (slots de 30 minutos desde las 9:00 hasta las 18:00)',
   })
   @ApiParam({
     name: 'veterinarianId',
     description: 'ID del veterinario',
-    example: 'vet-123'
+    example: 'vet-123',
   })
   @ApiQuery({
     name: 'date',
     description: 'Fecha a consultar (YYYY-MM-DD)',
-    example: '2025-12-15'
+    example: '2025-12-15',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Disponibilidad obtenida',
     schema: {
       example: {
@@ -54,10 +62,10 @@ export class AppointmentsController {
         slots: [
           { time: '09:00', available: true },
           { time: '09:30', available: true },
-          { time: '10:00', available: false }
-        ]
-      }
-    }
+          { time: '10:00', available: false },
+        ],
+      },
+    },
   })
   @Get('availability/:veterinarianId')
   getAvailability(
@@ -67,12 +75,13 @@ export class AppointmentsController {
     return this.appointmentsService.getAvailability(vetId, date);
   }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Create new appointment',
-    description: 'Crea un nuevo turno y envía automáticamente un email de confirmación al usuario con todos los detalles de la cita.'
+    description:
+      'Crea un nuevo turno y envía automáticamente un email de confirmación al usuario con todos los detalles de la cita.',
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'Turno creado exitosamente - email de confirmación enviado',
     schema: {
       example: {
@@ -84,17 +93,22 @@ export class AppointmentsController {
           status: 'SCHEDULED',
           user: { name: 'Juan Pérez', email: 'juan@example.com' },
           pet: { nombre: 'Max' },
-          veterinarian: { name: 'Dr. García' }
-        }
-      }
-    }
+          veterinarian: { name: 'Dr. García' },
+        },
+      },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Datos inválidos o horario no disponible' })
+  @ApiResponse({
+    status: 400,
+    description: 'Datos inválidos o horario no disponible',
+  })
   @Post('NewAppointment')
   create(@Body() dto: CreateAppointmentDto) {
     return this.appointmentsService.create(dto);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Get all appointments' })
   @Get('AllAppointments')
   async findAll() {
@@ -102,6 +116,8 @@ export class AppointmentsController {
     return { message: 'Appointments retrieved', data };
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Get appointment by ID' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -109,6 +125,8 @@ export class AppointmentsController {
     return { message: `Appointment ${id} retrieved`, data };
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Update appointment' })
   @ApiParam({ name: 'id', description: 'Appointment ID' })
   @ApiBody({ type: UpdateAppointmentDto })
@@ -122,6 +140,8 @@ export class AppointmentsController {
     return this.appointmentsService.update(id, updateAppointmentDto);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Delete appointment (soft delete)' })
   @ApiParam({
     name: 'id',
@@ -160,14 +180,17 @@ export class AppointmentsController {
     return this.appointmentsService.remove(id);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Complete appointment with medications',
-    description: 'Completa una consulta veterinaria, crea el registro médico, descuenta stock de medicamentos usados y genera notificaciones'
+    description:
+      'Completa una consulta veterinaria, crea el registro médico, descuenta stock de medicamentos usados y genera notificaciones',
   })
   @ApiParam({
     name: 'id',
     description: 'ID del turno a completar',
-    example: 'uuid-turno-123'
+    example: 'uuid-turno-123',
   })
   @ApiBody({
     schema: {
@@ -185,11 +208,11 @@ export class AppointmentsController {
             medicationType: 'GENERAL',
             quantity: 2,
             dosage: '1 comprimido cada 12 horas',
-            duration: '7 días'
-          }
-        ]
-      }
-    }
+            duration: '7 días',
+          },
+        ],
+      },
+    },
   })
   @ApiResponse({
     status: 200,
@@ -209,8 +232,8 @@ export class AppointmentsController {
               quantity: 2,
               previousStock: 50,
               newStock: 48,
-              usedAt: '2025-12-15T10:30:00Z'
-            }
+              usedAt: '2025-12-15T10:30:00Z',
+            },
           ],
           notifications: [
             {
@@ -218,15 +241,21 @@ export class AppointmentsController {
               medicationId: 'uuid-medicamento-2',
               medicationName: 'Tramadol 50mg',
               currentStock: 5,
-              minStock: 10
-            }
-          ]
-        }
-      }
-    }
+              minStock: 10,
+            },
+          ],
+        },
+      },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Stock insuficiente o turno ya completado' })
-  @ApiResponse({ status: 404, description: 'Turno o medicamento no encontrado' })
+  @ApiResponse({
+    status: 400,
+    description: 'Stock insuficiente o turno ya completado',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Turno o medicamento no encontrado',
+  })
   @Post(':id/complete')
   completeAppointment(
     @Param('id', ParseUUIDPipe) id: string,
@@ -235,9 +264,12 @@ export class AppointmentsController {
     return this.appointmentsService.completeAppointment(id, dto);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Seeder para datos de analytics',
-    description: 'Crea 50 turnos distribuidos en la semana con registros médicos y diagnósticos para gráficas'
+    description:
+      'Crea 50 turnos distribuidos en la semana con registros médicos y diagnósticos para gráficas',
   })
   @ApiResponse({
     status: 200,
@@ -246,9 +278,9 @@ export class AppointmentsController {
       example: {
         appointments: 50,
         medicalRecords: 35,
-        message: 'Datos de analytics creados'
-      }
-    }
+        message: 'Datos de analytics creados',
+      },
+    },
   })
   @Get('seeder/analytics')
   async seedAnalytics() {

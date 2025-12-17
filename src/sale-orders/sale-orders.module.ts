@@ -13,6 +13,7 @@ import { MercadoPagoModule } from 'src/mercadopago/mercadopago.module';
 import { MailerModule } from 'src/mailer/mailer.module';
 import { StripeModule } from 'src/stripe/stripe.module';
 import { SaleOrdersAnalyticsSeeder } from './seed/sale-orders-analytics.seeder';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SaleOrdersAnalyticsSeeder } from './seed/sale-orders-analytics.seeder';
     ProductsModule,
     UsersModule,
     MercadoPagoModule,
+    forwardRef(() => AuthModule),
     MailerModule,
     forwardRef(() => StripeModule),
   ],
