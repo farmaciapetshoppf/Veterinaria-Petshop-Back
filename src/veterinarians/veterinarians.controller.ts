@@ -11,7 +11,6 @@ import {
   UseGuards,
   Delete,
   ParseIntPipe,
-  Req,
 } from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
@@ -39,35 +38,55 @@ import { UpdateMedRequestStatusDto } from './dto/update-med-request-status.dto';
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Get('seeder')
   seeder() {
     return this.veterinariansService.seeder();
   }
 
-  @ApiOperation({ summary: 'Reset all veterinarians (delete and recreate from seeder)' })
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @ApiOperation({
+    summary: 'Reset all veterinarians (delete and recreate from seeder)',
+  })
   @Post('reset')
   resetAllVeterinarians() {
     return this.veterinariansService.resetAllVeterinarians();
   }
 
-  @ApiOperation({ summary: 'Reset passwords for all existing veterinarians and send emails' })
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @ApiOperation({
+    summary: 'Reset passwords for all existing veterinarians and send emails',
+  })
   @Post('reset-passwords')
   resetPasswordsAndSendEmails() {
     return this.veterinariansService.resetPasswordsAndSendEmails();
   }
 
-  @ApiOperation({ summary: 'Resend welcome emails with new passwords to all veterinarians' })
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @ApiOperation({
+    summary: 'Resend welcome emails with new passwords to all veterinarians',
+  })
   @Post('resend-emails')
   resendWelcomeEmails() {
     return this.veterinariansService.resendWelcomeEmails();
   }
 
-  @ApiOperation({ summary: 'Recreate user in Supabase for a specific veterinarian by email' })
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @ApiOperation({
+    summary: 'Recreate user in Supabase for a specific veterinarian by email',
+  })
   @Post('recreate-supabase/:email')
   recreateSupabaseUser(@Param('email') email: string) {
     return this.veterinariansService.recreateSupabaseUser(email);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   @ApiOperation({ summary: 'Get all active veterinarians' })
   @Get()
   async fillAllVeterinarians() {
@@ -75,6 +94,8 @@ export class VeterinariansController {
     return { message: 'Veterinarians retrieved', data };
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   @ApiOperation({ summary: 'Get veterinarian by ID' })
   @Get(':id')
   fillByIdVeterinarians(@Param('id', ParseUUIDPipe) id: string) {
@@ -84,6 +105,8 @@ export class VeterinariansController {
       .then((data) => ({ message: `Veterinarian ${id} retrieved`, data }));
   }
 
+  @UseGuards(AuthGuard)
+  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Create new veterinarian' })
   @Post()
   createVeterinarian(@Body() createVeterinarian: CreateVeterinarianDto) {
@@ -155,7 +178,8 @@ export class VeterinariansController {
             id: 'ketamina-100',
             nombre: 'Ketamina 100mg/ml',
             categoria: 'Anestésicos',
-            descripcion: 'Anestésico disociativo para procedimientos quirúrgicos',
+            descripcion:
+              'Anestésico disociativo para procedimientos quirúrgicos',
             presentacion: 'Frasco ampolla 10ml',
             requiereMatricula: true,
             restricciones: 'Lista III - Requiere registro de uso',
@@ -211,7 +235,8 @@ export class VeterinariansController {
 
   @ApiOperation({
     summary: 'Get my controlled medication requests (Veterinarian only)',
-    description: 'Veterinario consulta sus propias solicitudes de medicamentos controlados',
+    description:
+      'Veterinario consulta sus propias solicitudes de medicamentos controlados',
   })
   @ApiResponse({
     status: 200,
@@ -241,16 +266,22 @@ export class VeterinariansController {
   @Roles(Role.Veterinarian)
   @ApiBearerAuth()
   @Get(':id/controlled-medications/my-requests')
-  getMyControlledMedRequests(@Param('id', ParseUUIDPipe) veterinarianId: string) {
+  getMyControlledMedRequests(
+    @Param('id', ParseUUIDPipe) veterinarianId: string,
+  ) {
     return this.veterinariansService.getMyControlledMedRequests(veterinarianId);
   }
 
   @ApiOperation({
     summary: 'Cancel my controlled medication request (Veterinarian only)',
-    description: 'Veterinario cancela su propia solicitud (solo si está pendiente)',
+    description:
+      'Veterinario cancela su propia solicitud (solo si está pendiente)',
   })
   @ApiParam({ name: 'id', description: 'ID del veterinario' })
-  @ApiParam({ name: 'requestIndex', description: 'Índice de la solicitud en el array' })
+  @ApiParam({
+    name: 'requestIndex',
+    description: 'Índice de la solicitud en el array',
+  })
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Veterinarian)
   @ApiBearerAuth()

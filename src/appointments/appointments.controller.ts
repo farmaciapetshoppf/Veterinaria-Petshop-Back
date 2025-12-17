@@ -25,8 +25,9 @@ import { AppointmentsAnalyticsSeeder } from './seed/appointments-analytics.seede
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @Roles(Role.User)
 @ApiTags('Appointments')
 @Controller('appointments')
@@ -106,7 +107,7 @@ export class AppointmentsController {
     return this.appointmentsService.create(dto);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Get all appointments' })
   @Get('AllAppointments')
@@ -115,7 +116,7 @@ export class AppointmentsController {
     return { message: 'Appointments retrieved', data };
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Get appointment by ID' })
   @Get(':id')
@@ -124,7 +125,7 @@ export class AppointmentsController {
     return { message: `Appointment ${id} retrieved`, data };
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Update appointment' })
   @ApiParam({ name: 'id', description: 'Appointment ID' })
@@ -139,7 +140,7 @@ export class AppointmentsController {
     return this.appointmentsService.update(id, updateAppointmentDto);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Delete appointment (soft delete)' })
   @ApiParam({
@@ -179,7 +180,7 @@ export class AppointmentsController {
     return this.appointmentsService.remove(id);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Complete appointment with medications',
@@ -263,7 +264,7 @@ export class AppointmentsController {
     return this.appointmentsService.completeAppointment(id, dto);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Seeder para datos de analytics',
