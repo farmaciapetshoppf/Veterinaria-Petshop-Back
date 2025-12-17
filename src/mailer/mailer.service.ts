@@ -259,6 +259,8 @@ export class MailerService {
    * Enviar email de bienvenida
    */
   async sendWelcomeEmail(context: { to: string; userName: string; temporaryPassword?: string }) {
+    if (process.env.MAIL_ENABLED !== 'true') return;
+    
     try {
       await this.nestMailerService.sendMail({
         to: context.to,
