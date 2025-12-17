@@ -227,15 +227,6 @@ export class AuthService {
         ...(isProduc && { domain: process.env.FRONTEND_URL }),
       });
 
-      res.cookie('_vercel_jwt', accessToken, {
-        httpOnly: true,
-        secure: isProduc,
-        sameSite: isProduc ? 'none' : 'lax',
-        path: '/',
-        maxAge: 3600 * 1000,
-        ...(isProduc && { domain: process.env.FRONTEND_URL }),
-      });
-
       let responsePayload: any;
 
       if (userType === 'veterinarian') {
@@ -495,15 +486,6 @@ export class AuthService {
         sameSite: isProduc ? 'none' : 'lax',
         path: '/',
         maxAge: 3600 * 1000, // 1 hora
-        ...(isProduc && { domain: process.env.FRONTEND_URL }),
-      });
-
-      res.cookie('_vercel_jwt', accessToken, {
-        httpOnly: true,
-        secure: isProduc,
-        sameSite: isProduc ? 'none' : 'lax',
-        path: '/',
-        maxAge: 3600 * 1000,
         ...(isProduc && { domain: process.env.FRONTEND_URL }),
       });
 
