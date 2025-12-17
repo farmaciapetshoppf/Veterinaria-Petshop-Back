@@ -5,12 +5,17 @@ import {
   Headers,
   Req,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { StripeService } from './stripe.service';
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
 import { SaleOrdersService } from 'src/sale-orders/sale-orders.service';
 import { MailerService } from 'src/mailer/mailer.service';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Stripe')
 @Controller('stripe')
@@ -21,6 +26,8 @@ export class StripeController {
     private readonly mailerService: MailerService,
   ) {}
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Crear sesión de checkout',
     description: 'Crea una sesión de checkout para procesar un pago con Stripe',
@@ -91,6 +98,8 @@ export class StripeController {
     }
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Crear intent de pago',
     description: 'Crea un intent de pago para procesamiento directo',
@@ -131,6 +140,8 @@ export class StripeController {
     }
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Webhook de Stripe',
     description: 'Endpoint para recibir notificaciones de Stripe',
