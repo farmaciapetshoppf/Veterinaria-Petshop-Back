@@ -427,7 +427,9 @@ export class SaleOrdersService {
 
     try {
       // Configuración del backend
-      const apiUrl = this.configService.get<string>('API_URL');
+      const apiUrl =
+        this.configService.get<string>('API_URL') ||
+        'https://veterinaria-petshop-back.onrender.com';
       const accessToken = this.configService.get<string>(
         'MERCADOPAGO_ACCESS_TOKEN',
       );
@@ -436,7 +438,7 @@ export class SaleOrdersService {
         throw new BadRequestException('Token de MercadoPago no configurado');
       }
 
-      this.logToFile('?? Backend configurado:', {
+      this.logToFile('🌐 Backend configurado:', {
         apiUrl,
         notificationUrl: `${apiUrl}/sale-orders/webhook`,
       });

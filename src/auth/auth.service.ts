@@ -170,7 +170,7 @@ export class AuthService {
       if (error) {
         console.error('❌ Error de Supabase en signIn:', error.message);
         console.error('❌ Código de error:', error.status);
-        throw new UnauthorizedException(error.message);
+        throw new UnauthorizedException('Invalid login credentials');
       }
 
       if (!data.session) {
@@ -185,8 +185,8 @@ export class AuthService {
         throw new UnauthorizedException('El email no está disponible.');
       }
 
-      let user;
-      let userType;
+      let user: any;
+      let userType: 'regular' | 'veterinarian';
 
       // Intentar obtener el usuario de la tabla de usuarios comunes
       try {
@@ -203,6 +203,18 @@ export class AuthService {
           );
         }
       }
+
+      // ✅ Enviar email de bienvenida sin bloquear el login (después de obtener usuario)
+      this.mailerService
+        .sendWelcomeEmail({
+          to: email,
+          userName: user.name || email.split('@')[0],
+        })
+        .catch((e) => {
+          console.warn(
+            `⚠️  Fallo el envío de correo a ${email}. Causa: ${e.message}`,
+          );
+        });
 
       res.cookie('access_token', data.session.access_token, {
         httpOnly: true,
