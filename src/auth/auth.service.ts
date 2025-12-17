@@ -381,7 +381,7 @@ export class AuthService {
         .auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${process.env.FRONTEND_URL}auth-callback`,
+            redirectTo: `${process.env.FRONTEND_URL}/auth-callback`,
           },
         });
 
