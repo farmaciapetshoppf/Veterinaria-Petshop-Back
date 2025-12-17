@@ -14,14 +14,18 @@ import { google } from 'googleapis';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const CLIENT_ID = configService.get<string>('GOOGLE_MAIL_CLIENT_ID');
-        const CLIENT_SECRET = configService.get<string>('GOOGLE_MAIL_CLIENT_SECRET');
+        const CLIENT_SECRET = configService.get<string>(
+          'GOOGLE_MAIL_CLIENT_SECRET',
+        );
         const REFRESH_TOKEN = configService.get<string>('GOOGLE_REFRESH_TOKEN');
         const REDIRECT_URI = configService.get<string>('GOOGLE_REDIRECT_URI');
         const MAIL_USER = configService.get<string>('MAIL_USER');
 
         // Si no hay credenciales, usar modo básico
         if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN) {
-          console.warn('⚠️  Credenciales de Google OAuth incompletas. Mailer en modo básico (emails no se enviarán).');
+          console.warn(
+            '⚠️  Credenciales de Google OAuth incompletas. Mailer en modo básico (emails no se enviarán).',
+          );
           return {
             transport: {
               host: 'localhost',
@@ -79,9 +83,15 @@ import { google } from 'googleapis';
             },
           };
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-          console.error('❌ Error al configurar Google OAuth para mailer:', errorMessage);
-          console.warn('⚠️  Mailer funcionará en modo básico (emails no se enviarán).');
+          const errorMessage =
+            error instanceof Error ? error.message : 'Error desconocido';
+          console.error(
+            '❌ Error al configurar Google OAuth para mailer:',
+            errorMessage,
+          );
+          console.warn(
+            '⚠️  Mailer funcionará en modo básico (emails no se enviarán).',
+          );
           return {
             transport: {
               host: 'localhost',
