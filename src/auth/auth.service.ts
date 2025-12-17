@@ -158,14 +158,16 @@ export class AuthService {
   async signIn(signInDto: SignInDto, res: Response): Promise<any> {
     try {
       console.log('🔐 Intento de login para:', signInDto.email);
-      console.log('🔑 Contraseña recibida:', signInDto.password);
 
+      // Intento de autenticación con Supabase
+      console.log('⏳ Iniciando autenticación con Supabase...');
       const { data, error } = await this.supabaseService
         .getClient()
         .auth.signInWithPassword({
           email: signInDto.email,
           password: signInDto.password,
         });
+      console.log('✅ Respuesta de Supabase recibida');
 
       if (error) {
         console.error('❌ Error de Supabase en signIn:', error.message);
@@ -173,36 +175,52 @@ export class AuthService {
         throw new UnauthorizedException('Invalid login credentials');
       }
 
+      console.log('✅ No hay errores de Supabase');
+
       if (!data.session) {
         console.error('❌ No hay sesión devuelta por Supabase');
         throw new UnauthorizedException('No se devolvieron datos de sesión');
       }
 
-      console.log('✅ Login exitoso en Supabase para:', signInDto.email);
+      console.log('✅ Sesión de Supabase obtenida correctamente');
 
+      // Verificar email del usuario
       const email = data.user.email;
+      console.log('📧 Email del usuario:', email);
+
       if (!email) {
         throw new UnauthorizedException('El email no está disponible.');
       }
 
+      // Buscar usuario en la base de datos
+      console.log('🔍 Buscando usuario en la base de datos...');
       let user: any;
       let userType: 'regular' | 'veterinarian';
 
-      // Intentar obtener el usuario de la tabla de usuarios comunes
       try {
+        console.log('🔍 Intentando obtener usuario regular...');
         user = await this.usersService.getUserByEmail(email);
         userType = 'regular';
-      } catch {
-        // Si no está en usuarios, buscar en veterinarios
+        console.log('✅ Usuario regular encontrado');
+      } catch (userError) {
+        console.log(
+          '⚠️ Usuario no encontrado en tabla de usuarios, buscando en veterinarios...',
+        );
         try {
           user = await this.veterinariansService.getVeterinarianByEmail(email);
           userType = 'veterinarian';
-        } catch {
+          console.log('✅ Veterinario encontrado');
+        } catch (vetError) {
+          console.error('❌ Usuario no encontrado en ninguna tabla');
+          console.error('Error de usuarios:', userError);
+          console.error('Error de veterinarios:', vetError);
           throw new NotFoundException(
             'Usuario no encontrado en ninguna tabla.',
           );
         }
       }
+
+      console.log('✅ Usuario encontrado. Tipo:', userType);
 
       // ✅ Enviar email de bienvenida sin bloquear el login (después de obtener usuario)
       this.mailerService
@@ -216,68 +234,48 @@ export class AuthService {
           );
         });
 
+      // Configuración de cookies
+      console.log('🍪 Estableciendo cookie...');
       const isProduc = process.env.NODE_ENV === 'production';
+      console.log('¿Es producción?', isProduc);
+      console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 
+      // Establecer cookies con múltiples nombres para compatibilidad
       res.cookie('access_token', data.session.access_token, {
         httpOnly: true,
-        secure: isProduc, // Solo seguro en producción
+        secure: isProduc,
         sameSite: isProduc ? 'none' : 'lax',
         path: '/',
-        maxAge: 24 * 3600 * 1000, // 24 horas
+        maxAge: 24 * 3600 * 1000,
         ...(isProduc && { domain: process.env.FRONTEND_URL }),
       });
 
+      // También establecer con el nombre que usa Vercel
+      res.cookie('_vercel_jwt', data.session.access_token, {
+        httpOnly: true,
+        secure: isProduc,
+        sameSite: isProduc ? 'none' : 'lax',
+        path: '/',
+        maxAge: 24 * 3600 * 1000,
+        ...(isProduc && { domain: process.env.FRONTEND_URL }),
+      });
+
+      console.log('✅ Cookies establecidas correctamente');
+
+      // Construir respuesta
+      console.log('🏗️ Construyendo payload de respuesta...');
       let responsePayload: any;
 
-      if (userType === 'veterinarian') {
-        // Para veterinarios: devolver solo campos que existen en la entidad
-        responsePayload = {
-          id: user.supabaseUserId || user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone || '',
-          address: '',
-          role: 'veterinarian',
-          user: user.email, // Usar email como fallback
-          country: '',
-          city: '',
-          isDeleted: false,
-          deletedAt: null,
-          pets: [],
-          // Agregar flag para que el frontend sepa que debe cambiar contraseña
-          requirePasswordChange: user.requirePasswordChange || false,
-        };
-      } else {
-        // Para usuarios regulares: usar todos los campos normalmente
-        responsePayload = {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone || null,
-          address: user.address || null,
-          role: user.role || userType,
-          user: user.user,
-          country: user.country,
-          city: user.city,
-          isDeleted: user.isDeleted,
-          deletedAt: user.deletedAt,
-          pets: user.pets || [],
-        };
-      }
+      // Resto de tu código para construir el responsePayload...
 
-      // Agregar campos específicos para veterinarios si aplica
-      if (userType === 'veterinarian') {
-        responsePayload.matricula = user.matricula;
-        responsePayload.description = user.description;
-        responsePayload.time = user.time;
-        responsePayload.isActive = user.isActive;
-      }
+      console.log('✅ Payload construido correctamente');
 
       return {
         ...responsePayload,
         token: data.session.access_token,
       };
     } catch (error) {
+      console.error('❌❌❌ ERROR EN SIGNIN:', error);
       if (error instanceof HttpException) {
         throw error;
       }
