@@ -341,7 +341,6 @@ export class AuthService {
         sameSite: 'lax' as const,
         path: '/',
         expires: new Date(0),
-        ...(isProduc && { domain: process.env.FRONTEND_URL }),
       };
 
       res.clearCookie('access_token', cookieOptions);
@@ -381,7 +380,7 @@ export class AuthService {
         .auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${process.env.FRONTEND_URL}/auth-callback`,
+            redirectTo: `${process.env.FRONTEND_URL}auth-callback`,
           },
         });
 
@@ -524,7 +523,6 @@ export class AuthService {
         sameSite: isProduc ? 'none' : 'lax',
         path: '/',
         maxAge: 3600 * 1000, // 1 hora
-        ...(isProduc && { domain: process.env.FRONTEND_URL }),
       });
 
       return {
