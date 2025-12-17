@@ -836,12 +836,10 @@ export class SaleOrdersService {
 
       // Generar preferencia de MercadoPago
       try {
-        const frontendUrl =
-          this.configService.get<string>('FRONTEND_URL') ||
-          'http://localhost:3002';
-        const backendUrl =
-          this.configService.get<string>('NEXT_PUBLIC_API_URL') ||
-          'http://localhost:3000';
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+        const backendUrl = this.configService.get<string>(
+          'NEXT_PUBLIC_API_URL',
+        );
 
         const preference = await this.mercadoPagoClient.create({
           body: {
