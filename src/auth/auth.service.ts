@@ -244,7 +244,7 @@ export class AuthService {
       res.cookie('access_token', data.session.access_token, {
         httpOnly: true,
         secure: isProduc,
-        sameSite: isProduc ? 'none' : 'lax',
+        sameSite: isProduc ? ('none' as const) : ('lax' as const), // 'none' en producción, 'lax' en desarrollo
         path: '/',
         maxAge: 24 * 3600 * 1000,
       });
@@ -253,7 +253,7 @@ export class AuthService {
       res.cookie('_vercel_jwt', data.session.access_token, {
         httpOnly: true,
         secure: isProduc,
-        sameSite: isProduc ? 'none' : 'lax',
+        sameSite: isProduc ? ('none' as const) : ('lax' as const), // 'none' en producción, 'lax' en desarrollo
         path: '/',
         maxAge: 24 * 3600 * 1000,
       });
@@ -338,13 +338,15 @@ export class AuthService {
       const cookieOptions = {
         httpOnly: true,
         secure: isProduc, // Solo seguro en producción
-        sameSite: 'lax' as const,
+        sameSite: isProduc ? ('none' as const) : ('lax' as const), // 'none' en producción, 'lax' en desarrollo
         path: '/',
         expires: new Date(0),
-        ...(isProduc && { domain: process.env.FRONTEND_URL }),
       };
 
       res.clearCookie('access_token', cookieOptions);
+      res.clearCookie('_vercel_jwt', cookieOptions);
+      res.clearCookie('_vcid', cookieOptions);
+      res.clearCookie('vercel-feature-flags', cookieOptions);
 
       return {
         success: true,
@@ -524,7 +526,6 @@ export class AuthService {
         sameSite: isProduc ? 'none' : 'lax',
         path: '/',
         maxAge: 3600 * 1000, // 1 hora
-        ...(isProduc && { domain: process.env.FRONTEND_URL }),
       });
 
       return {

@@ -14,6 +14,7 @@ import { UsersSeeder } from './seed/users.seeder';
 import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
 import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
 import { MailerModule } from 'src/mailer/mailer.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MailerModule } from 'src/mailer/mailer.module';
       Veterinarian,
     ]),
     forwardRef(() => VeterinariansModule),
+    forwardRef(() => AuthModule),
     MailerModule,
     MulterModule.register({
       limits: {

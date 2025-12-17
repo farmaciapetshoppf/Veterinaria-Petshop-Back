@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { AppointmentsController } from './appointments.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -15,6 +15,7 @@ import { GeneralMedicationsModule } from 'src/general-medications/general-medica
 import { GeneralMedication } from 'src/general-medications/entities/general-medication.entity';
 import { MedicationUsageHistory } from 'src/general-medications/entities/medication-usage-history.entity';
 import { AdminNotification } from 'src/general-medications/entities/admin-notification.entity';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AdminNotification } from 'src/general-medications/entities/admin-notifi
     PetsModule,
     MailerModule,
     GeneralMedicationsModule,
+    forwardRef(() => AuthModule),
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService, AppointmentsAnalyticsSeeder],

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MedicalRecordsPetService } from './medical-records-pet.service';
 import { MedicalRecordsPetController } from './medical-records-pet.controller';
@@ -8,6 +8,7 @@ import { Veterinarian } from 'src/veterinarians/entities/veterinarian.entity';
 import { GeneralMedication } from 'src/general-medications/entities/general-medication.entity';
 import { MedicationUsageHistory } from 'src/general-medications/entities/medication-usage-history.entity';
 import { AdminNotification } from 'src/general-medications/entities/admin-notification.entity';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AdminNotification } from 'src/general-medications/entities/admin-notifi
       MedicationUsageHistory,
       AdminNotification,
     ]),
+    forwardRef(() => AuthModule),
   ],
   controllers: [MedicalRecordsPetController],
   providers: [MedicalRecordsPetService],

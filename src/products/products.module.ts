@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,6 +11,7 @@ import { StorageService } from 'src/supabase/storage.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { ProductImage } from './entities/product-image.entity';
 import { ProductImageService } from './products-image.service';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ProductImageService } from './products-image.service';
       SaleOrderProduct,
     ]),
     CategoriesModule,
+    forwardRef(() => AuthModule),
     SupabaseModule,
     MulterModule.register({
       limits: {
