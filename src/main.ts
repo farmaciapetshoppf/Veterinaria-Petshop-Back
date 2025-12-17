@@ -32,7 +32,7 @@ async function bootstrap() {
     ]
       .filter(Boolean)
       .map((url) => (url?.endsWith('/') ? url.slice(0, -1) : url)),
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true, // ✅ Crucial para que las cookies funcionen
     allowedHeaders: [
       'Content-Type',
