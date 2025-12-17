@@ -266,7 +266,49 @@ export class AuthService {
       console.log('🏗️ Construyendo payload de respuesta...');
       let responsePayload: any;
 
-      // Resto de tu código para construir el responsePayload...
+      if (userType === 'veterinarian') {
+        // Para veterinarios: devolver solo campos que existen en la entidad
+        responsePayload = {
+          id: user.supabaseUserId || user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+          address: '',
+          role: 'veterinarian',
+          user: user.email, // Usar email como fallback
+          country: '',
+          city: '',
+          isDeleted: false,
+          deletedAt: null,
+          pets: [],
+          // Agregar flag para que el frontend sepa que debe cambiar contraseña
+          requirePasswordChange: user.requirePasswordChange || false,
+        };
+      } else {
+        // Para usuarios regulares: usar todos los campos normalmente
+        responsePayload = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || null,
+          address: user.address || null,
+          role: user.role || userType,
+          user: user.user,
+          country: user.country,
+          city: user.city,
+          isDeleted: user.isDeleted,
+          deletedAt: user.deletedAt,
+          pets: user.pets || [],
+        };
+      }
+
+      // Agregar campos específicos para veterinarios si aplica
+      if (userType === 'veterinarian') {
+        responsePayload.matricula = user.matricula;
+        responsePayload.description = user.description;
+        responsePayload.time = user.time;
+        responsePayload.isActive = user.isActive;
+      }
 
       console.log('✅ Payload construido correctamente');
 
