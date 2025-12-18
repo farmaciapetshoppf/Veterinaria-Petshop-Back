@@ -38,15 +38,11 @@ import { UpdateMedRequestStatusDto } from './dto/update-med-request-status.dto';
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @Get('seeder')
   seeder() {
     return this.veterinariansService.seeder();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({
     summary: 'Reset all veterinarians (delete and recreate from seeder)',
   })
@@ -55,8 +51,6 @@ export class VeterinariansController {
     return this.veterinariansService.resetAllVeterinarians();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({
     summary: 'Reset passwords for all existing veterinarians and send emails',
   })
@@ -65,8 +59,6 @@ export class VeterinariansController {
     return this.veterinariansService.resetPasswordsAndSendEmails();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({
     summary: 'Resend welcome emails with new passwords to all veterinarians',
   })
@@ -75,8 +67,6 @@ export class VeterinariansController {
     return this.veterinariansService.resendWelcomeEmails();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({
     summary: 'Recreate user in Supabase for a specific veterinarian by email',
   })
@@ -85,8 +75,6 @@ export class VeterinariansController {
     return this.veterinariansService.recreateSupabaseUser(email);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   @ApiOperation({ summary: 'Get all active veterinarians' })
   @Get()
   async fillAllVeterinarians() {
@@ -94,8 +82,6 @@ export class VeterinariansController {
     return { message: 'Veterinarians retrieved', data };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   @ApiOperation({ summary: 'Get veterinarian by ID' })
   @Get(':id')
   fillByIdVeterinarians(@Param('id', ParseUUIDPipe) id: string) {
@@ -105,16 +91,12 @@ export class VeterinariansController {
       .then((data) => ({ message: `Veterinarian ${id} retrieved`, data }));
   }
 
-  @UseGuards(AuthGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Create new veterinarian' })
   @Post()
   createVeterinarian(@Body() createVeterinarian: CreateVeterinarianDto) {
     return this.veterinariansService.createVeterinarian(createVeterinarian);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian)
   @ApiOperation({ summary: 'Update veterinarian profile' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({

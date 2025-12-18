@@ -4,12 +4,16 @@ import { StripeController } from './stripe.controller';
 import { SaleOrdersModule } from 'src/sale-orders/sale-orders.module';
 import { MailerModule } from 'src/mailer/mailer.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { UsersModule } from 'src/users/users.module';
+import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
 
 @Module({
   imports: [
     forwardRef(() => SaleOrdersModule),
     MailerModule,
     forwardRef(() => AuthModule),
+    forwardRef(() => UsersModule),
+    forwardRef(() => VeterinariansModule),
   ],
   providers: [StripeService],
   controllers: [StripeController],

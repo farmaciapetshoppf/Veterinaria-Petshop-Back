@@ -14,6 +14,7 @@ import { MailerModule } from 'src/mailer/mailer.module';
 import { StripeModule } from 'src/stripe/stripe.module';
 import { SaleOrdersAnalyticsSeeder } from './seed/sale-orders-analytics.seeder';
 import { AuthModule } from 'src/auth/auth.module';
+import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { AuthModule } from 'src/auth/auth.module';
       Branch,
     ]),
     ProductsModule,
-    UsersModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => VeterinariansModule),
     MercadoPagoModule,
     forwardRef(() => AuthModule),
     MailerModule,

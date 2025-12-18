@@ -13,7 +13,6 @@ import {
   Put,
   UploadedFiles,
   Delete,
-  UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -32,10 +31,6 @@ import {
 import { StorageService } from '../supabase/storage.service';
 import { ProductImageService } from './products-image.service';
 import { ProductImage } from './entities/product-image.entity';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Products')
 @Controller('products')
@@ -46,16 +41,12 @@ export class ProductsController {
     private readonly productImageService: ProductImageService,
   ) {}
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Load product seeder' })
   @Get('seeder/load')
   seed() {
     return this.productsService.seeder();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Create new product with multiple images' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -164,8 +155,6 @@ export class ProductsController {
     return product;
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Actualizar un producto existente' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -290,32 +279,24 @@ export class ProductsController {
     return product;
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({ summary: 'Get all products' })
   @Get()
   findAll() {
     return this.productsService.findAll();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({ summary: 'Get product by ID' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Soft delete product by ID' })
   @Put(':id')
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Add image to product' })
   @ApiConsumes('multipart/form-data')
   @Post(':id/images')
@@ -354,8 +335,6 @@ export class ProductsController {
     };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Delete product image' })
   @Delete('images/:imageId')
   async deleteProductImage(@Param('imageId') imageId: string) {
@@ -365,8 +344,6 @@ export class ProductsController {
     };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get product images' })
   @Get(':id/images')
   async getProductImages(@Param('id') id: string) {

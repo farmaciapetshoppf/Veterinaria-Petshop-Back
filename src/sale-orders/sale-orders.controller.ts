@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { SaleOrdersService } from './sale-orders.service';
 import { CreateSaleOrderDto } from './dto/create-sale-order.dto';
@@ -21,10 +20,6 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Sale Orders')
 @Controller('sale-orders')
@@ -33,8 +28,6 @@ export class SaleOrdersController {
 
   // ==================== ENDPOINTS DE CARRITO ====================
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Agregar producto al carrito activo',
     description:
@@ -110,8 +103,6 @@ export class SaleOrdersController {
     return this.saleOrdersService.getActiveCart(userId);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Actualizar cantidad de producto en carrito',
     description:
@@ -158,8 +149,6 @@ export class SaleOrdersController {
     );
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Eliminar producto del carrito',
     description: 'Elimina un producto del carrito y restaura su stock.',
@@ -190,8 +179,6 @@ export class SaleOrdersController {
     return this.saleOrdersService.removeFromCart(body.userId, body.productId);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Vaciar carrito completo',
     description: 'Elimina todos los productos del carrito y restaura el stock.',
@@ -212,8 +199,6 @@ export class SaleOrdersController {
     return this.saleOrdersService.clearCart(userId);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Obtener historial de compras',
     description: 'Retorna todas las órdenes pagadas (PAID) del usuario.',
@@ -230,8 +215,6 @@ export class SaleOrdersController {
     return this.saleOrdersService.getOrderHistory(userId);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Procesar checkout y crear preferencia de MercadoPago',
     description:
@@ -282,8 +265,6 @@ export class SaleOrdersController {
     return this.saleOrdersService.checkout(userId, checkoutDto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Webhook de MercadoPago',
     description:
@@ -302,8 +283,6 @@ export class SaleOrdersController {
     return this.saleOrdersService.handleWebhook(webhookData);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Cancelar carritos vencidos (CRON JOB)',
     description:
@@ -320,8 +299,6 @@ export class SaleOrdersController {
 
   // ==================== CHECKOUT Y MERCADO PAGO ====================
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Iniciar checkout con Mercado Pago',
     description:
@@ -347,8 +324,6 @@ export class SaleOrdersController {
   @ApiResponse({ status: 404, description: 'No hay carrito activo' })
 
   // ==================== ENDPOINTS ORIGINALES ====================
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({
     summary: 'Create new sale order (DEPRECADO - usar cart/add)',
   })
@@ -357,24 +332,18 @@ export class SaleOrdersController {
     return this.saleOrdersService.create(createSaleOrderDto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get all sale orders' })
   @Get()
   findAll() {
     return this.saleOrdersService.findAll();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get sale order by ID' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.saleOrdersService.findOne(+id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Update sale order' })
   @Patch(':id')
   update(
@@ -384,8 +353,6 @@ export class SaleOrdersController {
     return this.saleOrdersService.update(+id, updateSaleOrderDto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Delete sale order' })
   @Delete(':id')
   remove(@Param('id') id: string) {
@@ -394,8 +361,6 @@ export class SaleOrdersController {
 
   // ==================== CÁLCULO DE ENVÍO ====================
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Calcular costo de envío',
     description: `Calcula el costo de envío por dos métodos:
@@ -482,8 +447,6 @@ export class SaleOrdersController {
 
   // ==================== ENDPOINT DE PRUEBA ====================
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({
     summary: 'TEST: Completar orden manualmente',
     description:
@@ -497,8 +460,6 @@ export class SaleOrdersController {
 
   //==================== ENDPOINT DE STRIPE ====================
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Procesar checkout con Stripe',
     description:

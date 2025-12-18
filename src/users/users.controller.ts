@@ -8,7 +8,6 @@ import {
   UploadedFile,
   UseInterceptors,
   Put,
-  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Role } from 'src/auth/enum/roles.enum';
@@ -23,9 +22,6 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from './entities/user.entity';
 import { SupabaseService } from 'src/supabase/supabase.service';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -35,8 +31,6 @@ export class UsersController {
     private readonly supabaseService: SupabaseService,
   ) {}
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @HttpCode(200)
   @ApiOperation({ summary: 'Get all users' })
   @Get()
@@ -45,8 +39,6 @@ export class UsersController {
     return { message: 'Users retrieved', data };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @HttpCode(200)
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiParam({
@@ -60,8 +52,6 @@ export class UsersController {
     return { message: `User ${id} retrieved`, data };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @Patch(':id')
   @ApiOperation({
     summary: 'Update user by ID',
@@ -105,8 +95,6 @@ export class UsersController {
     );
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Change user role' })
   @ApiParam({
     name: 'id',
@@ -131,8 +119,6 @@ export class UsersController {
     return this.usersService.updateRole(id, updateRoleDto.role);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Delete user' })
   @HttpCode(200)
   @Put(':id/delete')
@@ -140,8 +126,6 @@ export class UsersController {
     return this.usersService.deleteUser(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({ summary: 'Get pets of a user' })
   @Get(':id/pets')
   getUserPets(@Param('id') id: string) {

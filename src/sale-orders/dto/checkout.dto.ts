@@ -4,7 +4,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class CheckoutDto {
   @ApiProperty({
     description: 'URL de retorno cuando el pago es exitoso',
-    example: 'https://tu-ngrok-frontend.ngrok-free.app/payment-result?status=success'
+    example: 'https://vetpetshop1-git-v6-farmacia-petshops-projects.vercel.app/payment-result?status=success'
   })
   @IsNotEmpty()
   @IsString()
@@ -12,7 +12,7 @@ export class CheckoutDto {
 
   @ApiProperty({
     description: 'URL de retorno cuando el pago falla',
-    example: 'https://tu-ngrok-frontend.ngrok-free.app/payment-result?status=failure'
+    example: 'https://vetpetshop1-git-v6-farmacia-petshops-projects.vercel.app/payment-result?status=failure'
   })
   @IsNotEmpty()
   @IsString()
@@ -20,7 +20,7 @@ export class CheckoutDto {
 
   @ApiProperty({
     description: 'URL de retorno cuando el pago queda pendiente',
-    example: 'https://tu-ngrok-frontend.ngrok-free.app/payment-result?status=pending'
+    example: 'https://vetpetshop1-git-v6-farmacia-petshops-projects.vercel.app/payment-result?status=pending'
   })
   @IsNotEmpty()
   @IsString()

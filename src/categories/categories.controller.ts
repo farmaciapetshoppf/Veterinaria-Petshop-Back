@@ -16,17 +16,15 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
 
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Create new category' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -56,8 +54,6 @@ export class CategoriesController {
     return this.categoriesService.create(createCategoryDto, file);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Update category by ID' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -87,32 +83,24 @@ export class CategoriesController {
     return this.categoriesService.update(id, updateCategoryDto, file);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({ summary: 'Get all categories' })
   @Get()
   findAll() {
     return this.categoriesService.findAll();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({ summary: 'Get all categories (basic info)' })
   @Get('basic')
   findAllBasic() {
     return this.categoriesService.findAllBasic();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({ summary: 'Get category by ID' })
   @Get(':id')
   findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.findOne(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Soft delete category by ID' })
   @Put(':id')
   remove(@Param('id', new ParseUUIDPipe()) id: string) {
