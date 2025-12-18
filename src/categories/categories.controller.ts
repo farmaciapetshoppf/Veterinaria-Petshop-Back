@@ -22,8 +22,6 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
 
 @Controller('categories')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.User)
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
