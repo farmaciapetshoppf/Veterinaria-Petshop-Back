@@ -27,6 +27,7 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
+import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -40,8 +41,7 @@ export class UsersController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Get all users' })
   @Get()
-  @ApiBearerAuth()
-  @Roles(Role.Admin, Role.Veterinarian, Role.User)
+  @Public()
   async getUsers() {
     const data = await this.usersService.getUsers();
     return { message: 'Users retrieved', data };

@@ -14,8 +14,8 @@ import {
   Req,
   BadRequestException,
   Query,
-  UseGuards,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/singup.dto';
@@ -23,13 +23,17 @@ import { SignInDto } from './dto/signin.dto';
 import { ApiBody, ApiOperation } from '@nestjs/swagger';
 import type { Response, Request } from 'express';
 import { AuthGuard } from './guards/auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Public } from 'src/decorators/public.decorator';
 
 @Controller('auth')
+@UseGuards(AuthGuard, RolesGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @ApiOperation({ summary: 'Register user' })
   @Post('signup')
+  @Public()
   signUp(@Body() signUpDto: SignUpDto) {
     return this.authService.signUp(signUpDto);
   }
@@ -37,6 +41,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Login user' })
   @Post('signin')
   @HttpCode(200)
+  @Public()
   async signIn(
     @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) res: Response,
@@ -67,12 +72,14 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Google OAuth URL' })
   @Get('google/url')
+  @Public()
   getGoogleAuthURL() {
     return this.authService.getGoogleAuthURL();
   }
 
   @ApiOperation({ summary: 'Handle OAuth callback' })
   @Get('callback')
+  @Public()
   async handleCallback(
     @Query('code') code: string,
     @Query('hash') hash: string,
@@ -110,6 +117,7 @@ export class AuthController {
     },
   })
   @Post('session')
+  @Public()
   async handleSession(
     @Body() sessionData: { access_token: string },
     @Res({ passthrough: true }) res: Response,
