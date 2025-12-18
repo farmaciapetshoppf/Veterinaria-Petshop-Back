@@ -95,8 +95,6 @@ export class CategoriesController {
     return this.categoriesService.findAll();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({ summary: 'Get all categories (basic info)' })
   @Get('basic')
   findAllBasic() {
