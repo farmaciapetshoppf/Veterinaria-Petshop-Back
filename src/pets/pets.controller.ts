@@ -30,7 +30,6 @@ import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Pets')
 @Controller('pets')
-@UseGuards(AuthGuard, RolesGuard)
 export class PetsController {
   constructor(private readonly petsService: PetsService) {}
 
@@ -78,6 +77,7 @@ export class PetsController {
   @Post('NewPet')
   @UseInterceptors(FileInterceptor('image'))
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User)
   async create(
     @Body() createPetDto: CreatePetDto,
@@ -97,6 +97,7 @@ export class PetsController {
   @ApiOperation({ summary: 'Get all pets' })
   @Get('AllPets')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async findAll() {
     const data = await this.petsService.findAll();
@@ -106,6 +107,7 @@ export class PetsController {
   @ApiOperation({ summary: 'Get pet by ID' })
   @Get(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async findOne(@Param('id') id: string) {
     if (!id || id === 'undefined' || id === 'null') {
@@ -158,6 +160,7 @@ export class PetsController {
   @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User)
   async update(
     @Param('id') id: string,
@@ -184,6 +187,7 @@ export class PetsController {
   @ApiOperation({ summary: 'Soft delete by ID' })
   @Put(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User)
   remove(@Param('id') id: string) {
     return this.petsService.remove(id);

@@ -30,7 +30,6 @@ import { Public } from '../decorators/public.decorator';
 
 @ApiTags('reviews')
 @Controller('reviews')
-@UseGuards(AuthGuard, RolesGuard)
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
@@ -48,6 +47,7 @@ export class ReviewsController {
     description: 'Veterinarian or user not found',
   })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User)
   create(@Body() dto: CreateReviewDto) {
     return this.reviewsService.create(dto);
@@ -101,6 +101,7 @@ export class ReviewsController {
   @ApiResponse({ status: 400, description: 'Invalid petition' })
   @ApiResponse({ status: 404, description: 'Review not found' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User)
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateReviewDto) {
     return this.reviewsService.update(id, dto);
@@ -118,6 +119,7 @@ export class ReviewsController {
   @ApiResponse({ status: 400, description: 'Invalid ID' })
   @ApiResponse({ status: 404, description: 'Review not found' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.reviewsService.remove(id);

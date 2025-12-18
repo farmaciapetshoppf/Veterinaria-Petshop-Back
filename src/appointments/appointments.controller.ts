@@ -31,7 +31,6 @@ import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Appointments')
 @Controller('appointments')
-@UseGuards(AuthGuard, RolesGuard)
 export class AppointmentsController {
   constructor(
     private readonly appointmentsService: AppointmentsService,
@@ -107,6 +106,7 @@ export class AppointmentsController {
   })
   @Post('NewAppointment')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Admin)
   create(@Body() dto: CreateAppointmentDto) {
     return this.appointmentsService.create(dto);
@@ -115,6 +115,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Get all appointments' })
   @Get('AllAppointments')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async findAll() {
     const data = await this.appointmentsService.findAll();
@@ -124,6 +125,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Get appointment by ID' })
   @Get(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async findOne(@Param('id') id: string) {
     const data = await this.appointmentsService.findOne(id);
@@ -137,6 +139,7 @@ export class AppointmentsController {
   @ApiResponse({ status: 404, description: 'Appointment not found' })
   @Patch(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   update(
     @Param('id') id: string,
@@ -180,6 +183,7 @@ export class AppointmentsController {
   })
   @Put(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   remove(@Param('id') id: string) {
     return this.appointmentsService.remove(id);
@@ -261,6 +265,7 @@ export class AppointmentsController {
   })
   @Post(':id/complete')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Veterinarian)
   completeAppointment(
     @Param('id', ParseUUIDPipe) id: string,
@@ -287,6 +292,7 @@ export class AppointmentsController {
   })
   @Get('seeder/analytics')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   async seedAnalytics() {
     return await this.analyticsSeeder.seed();
