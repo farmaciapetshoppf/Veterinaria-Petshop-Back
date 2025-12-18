@@ -290,16 +290,14 @@ export class ProductsController {
     return product;
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
+  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Get all products' })
   @Get()
   findAll() {
     return this.productsService.findAll();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
+  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Get product by ID' })
   @Get(':id')
   findOne(@Param('id') id: string) {
