@@ -35,8 +35,6 @@ import { UpdateMedRequestStatusDto } from './dto/update-med-request-status.dto';
 
 @ApiTags('Veterinarians')
 @Controller('veterinarians')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.User, Role.Veterinarian)
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 

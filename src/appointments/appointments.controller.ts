@@ -8,13 +8,11 @@ import {
   ParseUUIDPipe,
   Query,
   Put,
-  UseGuards,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import {
-  ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiParam,
@@ -23,15 +21,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AppointmentsAnalyticsSeeder } from './seed/appointments-analytics.seeder';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Role } from 'src/auth/enum/roles.enum';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @ApiTags('Appointments')
 @Controller('appointments')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.User, Role.Veterinarian, Role.Admin)
 export class AppointmentsController {
   constructor(
     private readonly appointmentsService: AppointmentsService,

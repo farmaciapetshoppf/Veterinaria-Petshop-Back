@@ -10,23 +10,16 @@ import {
   UseInterceptors,
   UploadedFile,
   Put,
-  UseGuards,
 } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
-import { Pet } from './entities/pet.entity';
+
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Roles } from 'src/decorators/roles.decorator';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Pets')
 @Controller('pets')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.User, Role.Veterinarian)
 export class PetsController {
   constructor(private readonly petsService: PetsService) {}
 

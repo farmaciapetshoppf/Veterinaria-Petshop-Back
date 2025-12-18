@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { SaleOrdersService } from './sale-orders.service';
 import { CreateSaleOrderDto } from './dto/create-sale-order.dto';
@@ -21,15 +20,9 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Sale Orders')
 @Controller('sale-orders')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.User)
 export class SaleOrdersController {
   constructor(private readonly saleOrdersService: SaleOrdersService) {}
 
@@ -331,8 +324,6 @@ export class SaleOrdersController {
   @ApiResponse({ status: 404, description: 'No hay carrito activo' })
 
   // ==================== ENDPOINTS ORIGINALES ====================
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({
     summary: 'Create new sale order (DEPRECADO - usar cart/add)',
   })
@@ -341,24 +332,18 @@ export class SaleOrdersController {
     return this.saleOrdersService.create(createSaleOrderDto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get all sale orders' })
   @Get()
   findAll() {
     return this.saleOrdersService.findAll();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get sale order by ID' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.saleOrdersService.findOne(+id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Update sale order' })
   @Patch(':id')
   update(
@@ -368,8 +353,6 @@ export class SaleOrdersController {
     return this.saleOrdersService.update(+id, updateSaleOrderDto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Delete sale order' })
   @Delete(':id')
   remove(@Param('id') id: string) {
@@ -464,8 +447,6 @@ export class SaleOrdersController {
 
   // ==================== ENDPOINT DE PRUEBA ====================
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({
     summary: 'TEST: Completar orden manualmente',
     description:
