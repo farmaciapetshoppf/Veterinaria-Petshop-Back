@@ -41,7 +41,6 @@ import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Products')
 @Controller('products')
-@UseGuards(AuthGuard, RolesGuard)
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
@@ -52,6 +51,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Load product seeder' })
   @Get('seeder/load')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   seed() {
     return this.productsService.seeder();
@@ -100,6 +100,7 @@ export class ProductsController {
     ]),
   )
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   async create(
     @Body() createProductDtoRaw: any,
@@ -211,6 +212,7 @@ export class ProductsController {
     ]),
   )
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   async update(
     @Param('id') id: string,
@@ -310,6 +312,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Soft delete product by ID' })
   @Put(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
@@ -320,6 +323,7 @@ export class ProductsController {
   @Post(':id/images')
   @UseInterceptors(FileInterceptor('image'))
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   async addProductImage(
     @Param('id') id: string,
@@ -358,6 +362,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Delete product image' })
   @Delete('images/:imageId')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   async deleteProductImage(@Param('imageId') imageId: string) {
     await this.productImageService.deleteProductImage(imageId);

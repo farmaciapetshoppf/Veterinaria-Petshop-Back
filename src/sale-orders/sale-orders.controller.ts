@@ -224,6 +224,7 @@ export class SaleOrdersController {
   @ApiResponse({ status: 200, description: 'Historial de compras obtenido' })
   @Get('history/:userId')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Admin)
   getOrderHistory(@Param('userId') userId: string) {
     return this.saleOrdersService.getOrderHistory(userId);
@@ -276,6 +277,7 @@ export class SaleOrdersController {
   @ApiResponse({ status: 404, description: 'No hay carrito activo' })
   @Post('checkout/:userId')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User)
   checkout(@Param('userId') userId: string, @Body() checkoutDto: CheckoutDto) {
     return this.saleOrdersService.checkout(userId, checkoutDto);
@@ -311,6 +313,7 @@ export class SaleOrdersController {
   })
   @Post('cron/cancel-expired')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   cancelExpiredCarts() {
     return this.saleOrdersService.cancelExpiredCarts();
@@ -348,6 +351,7 @@ export class SaleOrdersController {
   })
   @Post()
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User)
   create(@Body() createSaleOrderDto: CreateSaleOrderDto) {
     return this.saleOrdersService.create(createSaleOrderDto);
@@ -356,6 +360,7 @@ export class SaleOrdersController {
   @ApiOperation({ summary: 'Get all sale orders' })
   @Get()
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User)
   findAll() {
     return this.saleOrdersService.findAll();
@@ -364,6 +369,7 @@ export class SaleOrdersController {
   @ApiOperation({ summary: 'Get sale order by ID' })
   @Get(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User)
   findOne(@Param('id') id: string) {
     return this.saleOrdersService.findOne(+id);
@@ -372,6 +378,7 @@ export class SaleOrdersController {
   @ApiOperation({ summary: 'Update sale order' })
   @Patch(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   update(
     @Param('id') id: string,
@@ -383,6 +390,7 @@ export class SaleOrdersController {
   @ApiOperation({ summary: 'Delete sale order' })
   @Delete(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   remove(@Param('id') id: string) {
     return this.saleOrdersService.remove(+id);
@@ -484,6 +492,7 @@ export class SaleOrdersController {
   })
   @Get('test/complete-order/:orderId')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   async testCompleteOrder(@Param('orderId') orderId: string) {
     await this.saleOrdersService.updateOrderStatus(orderId, 'PAID');

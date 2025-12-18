@@ -31,7 +31,6 @@ import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Users')
 @Controller('users')
-@UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
@@ -56,6 +55,7 @@ export class UsersController {
   })
   @Get(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async getUserById(@Param('id') id: string) {
     const data = await this.usersService.getUserById(id);
@@ -93,6 +93,9 @@ export class UsersController {
     },
   })
   @UseInterceptors(FileInterceptor('profileImage'))
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User)
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -126,6 +129,7 @@ export class UsersController {
   })
   @Patch(':id/role')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   updateRole(@Param('id') id: string, @Body() updateRoleDto: { role: Role }) {
     return this.usersService.updateRole(id, updateRoleDto.role);
@@ -135,6 +139,7 @@ export class UsersController {
   @HttpCode(200)
   @Put(':id/delete')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
   deleteUser(@Param('id') id: string) {
     return this.usersService.deleteUser(id);

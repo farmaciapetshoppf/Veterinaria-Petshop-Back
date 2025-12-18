@@ -44,7 +44,6 @@ interface MulterFile {
 
 @ApiTags('uploads')
 @Controller('upload')
-@UseGuards(AuthGuard, RolesGuard)
 export class UploadController {
   constructor(private storageService: StorageService) {}
 
@@ -78,6 +77,7 @@ export class UploadController {
   })
   @UseInterceptors(FileInterceptor('file'))
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User, Role.Veterinarian)
   async uploadImage(@UploadedFile() file: MulterFile) {
     if (!file) {
@@ -113,6 +113,7 @@ export class UploadController {
   })
   @ApiResponse({ status: 500, description: 'Error en el servidor al borrar' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User, Role.Veterinarian)
   async deleteImage(@Param('path') path: string) {
     const success = await this.storageService.deleteFile('images', path);
@@ -136,6 +137,7 @@ export class UploadController {
     description: 'Error en el servidor al listar imagenes',
   })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User, Role.Veterinarian)
   async listImages() {
     const files = await this.storageService.listFiles('images');
@@ -162,6 +164,7 @@ export class UploadController {
   })
   @ApiResponse({ status: 500, description: 'Error en el servidor' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.User, Role.Veterinarian)
   async listImagesInFolder(@Param('folder') folder: string) {
     const files = await this.storageService.listFiles('images', folder);

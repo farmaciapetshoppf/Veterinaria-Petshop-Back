@@ -20,7 +20,6 @@ import { Public } from '../decorators/public.decorator';
 
 @ApiTags('Stripe')
 @Controller('stripe')
-@UseGuards(AuthGuard, RolesGuard)
 export class StripeController {
   constructor(
     private readonly stripeService: StripeService,
@@ -59,6 +58,7 @@ export class StripeController {
   })
   @Post('create-checkout-session')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User)
   async createCheckoutSession(
     @Body()
@@ -119,6 +119,7 @@ export class StripeController {
   })
   @Post('create-payment-intent')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User)
   async createPaymentIntent(
     @Body() body: { amount: number; orderId: string; customerEmail?: string },

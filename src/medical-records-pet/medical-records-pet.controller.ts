@@ -26,7 +26,6 @@ import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Medical Records Pet')
 @Controller('medical-records-pet')
-@UseGuards(AuthGuard, RolesGuard)
 export class MedicalRecordsPetController {
   constructor(
     private readonly medicalRecordsPetService: MedicalRecordsPetService,
@@ -39,6 +38,7 @@ export class MedicalRecordsPetController {
   })
   @Post()
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Veterinarian)
   create(@Body() createMedicalRecordsPetDto: CreateMedicalRecordsPetDto) {
     return this.medicalRecordsPetService.create(createMedicalRecordsPetDto);
@@ -62,6 +62,7 @@ export class MedicalRecordsPetController {
   })
   @Get()
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
     return this.medicalRecordsPetService.findAll(page, limit);
@@ -80,6 +81,7 @@ export class MedicalRecordsPetController {
   })
   @Get('search/pets')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   searchPets(@Query('search') searchTerm: string) {
     return this.medicalRecordsPetService.searchPets(searchTerm);
@@ -97,6 +99,7 @@ export class MedicalRecordsPetController {
   })
   @Get('pet/:petId')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   findByPet(@Param('petId') petId: string) {
     return this.medicalRecordsPetService.findByPet(petId);
@@ -113,6 +116,7 @@ export class MedicalRecordsPetController {
   })
   @Get(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   findOne(@Param('id') id: string) {
     return this.medicalRecordsPetService.findOne(id);
@@ -129,6 +133,7 @@ export class MedicalRecordsPetController {
   })
   @Patch(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian)
   update(
     @Param('id') id: string,
@@ -148,6 +153,7 @@ export class MedicalRecordsPetController {
   })
   @Delete(':id')
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian)
   remove(@Param('id') id: string) {
     return this.medicalRecordsPetService.remove(id);

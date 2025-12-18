@@ -27,7 +27,6 @@ import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Chat')
 @Controller('chat')
-@UseGuards(AuthGuard, RolesGuard)
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
@@ -35,6 +34,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Obtener todas las conversaciones del usuario' })
   @ApiResponse({ status: 200, description: 'Lista de conversaciones' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async getConversations(@Request() req) {
     const userId = req.user.id;
@@ -45,6 +45,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Obtener contador de mensajes no leídos' })
   @ApiResponse({ status: 200, description: 'Contador de mensajes no leídos' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async getUnreadCount(@Request() req) {
     const userId = req.user.id;
@@ -56,6 +57,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Crear o encontrar conversación con otro usuario' })
   @ApiResponse({ status: 201, description: 'Conversación creada o encontrada' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async createConversation(@Request() req, @Body() dto: CreateConversationDto) {
     const userId = req.user.id;
@@ -66,6 +68,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Obtener una conversación específica' })
   @ApiResponse({ status: 200, description: 'Conversación encontrada' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async getConversation(@Request() req, @Param('id') conversationId: string) {
     const userId = req.user.id;
@@ -105,6 +108,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Obtener mensajes de una conversación' })
   @ApiResponse({ status: 200, description: 'Lista de mensajes' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async getMessages(
     @Request() req,
@@ -127,6 +131,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Enviar mensaje en una conversación' })
   @ApiResponse({ status: 201, description: 'Mensaje enviado' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async sendMessage(
     @Request() req,
@@ -148,6 +153,7 @@ export class ChatController {
   })
   @ApiResponse({ status: 200, description: 'Mensajes marcados como leídos' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async markConversationAsRead(
     @Request() req,
@@ -168,6 +174,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Salir de una conversación' })
   @ApiResponse({ status: 200, description: 'Conversación abandonada' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async leaveConversation(@Request() req, @Param('id') conversationId: string) {
     const userId = req.user.id;
