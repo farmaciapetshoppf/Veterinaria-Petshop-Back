@@ -14,7 +14,12 @@ import {
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiConsumes,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -48,6 +53,7 @@ export class CategoriesController {
     },
   })
   @Post()
+  @ApiBearerAuth()
   @Roles(Role.Admin)
   @UseInterceptors(FileInterceptor('image'))
   create(
@@ -78,6 +84,7 @@ export class CategoriesController {
   })
   @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
+  @ApiBearerAuth()
   @Roles(Role.Admin)
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -110,6 +117,7 @@ export class CategoriesController {
 
   @ApiOperation({ summary: 'Soft delete category by ID' })
   @Put(':id')
+  @ApiBearerAuth()
   @Roles(Role.Admin)
   remove(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.remove(id);
