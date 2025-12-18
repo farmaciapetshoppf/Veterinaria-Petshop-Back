@@ -31,7 +31,6 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
-import { Public } from '../decorators/public.decorator';
 
 // Definir la interfaz del archivo para evitar errores de tipos
 interface MulterFile {
