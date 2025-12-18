@@ -14,6 +14,7 @@ import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiParam,
@@ -28,7 +29,7 @@ import { Role } from 'src/auth/enum/roles.enum';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.User)
+@Roles(Role.User, Role.Veterinarian, Role.Admin)
 @ApiTags('Appointments')
 @Controller('appointments')
 export class AppointmentsController {
@@ -107,8 +108,6 @@ export class AppointmentsController {
     return this.appointmentsService.create(dto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Get all appointments' })
   @Get('AllAppointments')
   async findAll() {
@@ -116,8 +115,6 @@ export class AppointmentsController {
     return { message: 'Appointments retrieved', data };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Get appointment by ID' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -125,8 +122,6 @@ export class AppointmentsController {
     return { message: `Appointment ${id} retrieved`, data };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Update appointment' })
   @ApiParam({ name: 'id', description: 'Appointment ID' })
   @ApiBody({ type: UpdateAppointmentDto })
@@ -140,8 +135,6 @@ export class AppointmentsController {
     return this.appointmentsService.update(id, updateAppointmentDto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.User, Role.Veterinarian, Role.Admin)
   @ApiOperation({ summary: 'Delete appointment (soft delete)' })
   @ApiParam({
     name: 'id',
@@ -180,8 +173,6 @@ export class AppointmentsController {
     return this.appointmentsService.remove(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Complete appointment with medications',
     description:
@@ -264,8 +255,6 @@ export class AppointmentsController {
     return this.appointmentsService.completeAppointment(id, dto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Seeder para datos de analytics',
     description:

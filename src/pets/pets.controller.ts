@@ -23,13 +23,13 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/enum/roles.enum';
 
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Admin, Role.User, Role.Veterinarian)
 @ApiTags('Pets')
 @Controller('pets')
 export class PetsController {
   constructor(private readonly petsService: PetsService) {}
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({ summary: 'Create new pet' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -88,8 +88,6 @@ export class PetsController {
     }
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   @ApiOperation({ summary: 'Get all pets' })
   @Get('AllPets')
   async findAll() {
@@ -97,8 +95,6 @@ export class PetsController {
     return { message: 'Pets retrieved', data };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   @ApiOperation({ summary: 'Get pet by ID' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -112,8 +108,6 @@ export class PetsController {
     return { message: `Pet ${id} retrieved`, data };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({ summary: 'Update pet' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -175,8 +169,6 @@ export class PetsController {
     }
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({ summary: 'Soft delete by ID' })
   @Put(':id')
   remove(@Param('id') id: string) {
