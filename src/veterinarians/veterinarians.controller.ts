@@ -8,9 +8,9 @@ import {
   Patch,
   UseInterceptors,
   UploadedFile,
-  UseGuards,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
@@ -20,25 +20,29 @@ import {
   ApiConsumes,
   ApiOperation,
   ApiTags,
-  ApiBearerAuth,
   ApiParam,
   ApiResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
+import { CreateControlledMedRequestDto } from './dto/create-controlled-med-request.dto';
+import { UpdateMedRequestStatusDto } from './dto/update-med-request-status.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { CreateControlledMedRequestDto } from './dto/create-controlled-med-request.dto';
-import { UpdateMedRequestStatusDto } from './dto/update-med-request-status.dto';
+import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Veterinarians')
 @Controller('veterinarians')
+@UseGuards(AuthGuard, RolesGuard)
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 
   @Get('seeder')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   seeder() {
     return this.veterinariansService.seeder();
   }
@@ -47,6 +51,8 @@ export class VeterinariansController {
     summary: 'Reset all veterinarians (delete and recreate from seeder)',
   })
   @Post('reset')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   resetAllVeterinarians() {
     return this.veterinariansService.resetAllVeterinarians();
   }
@@ -55,6 +61,8 @@ export class VeterinariansController {
     summary: 'Reset passwords for all existing veterinarians and send emails',
   })
   @Post('reset-passwords')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   resetPasswordsAndSendEmails() {
     return this.veterinariansService.resetPasswordsAndSendEmails();
   }
@@ -63,6 +71,8 @@ export class VeterinariansController {
     summary: 'Resend welcome emails with new passwords to all veterinarians',
   })
   @Post('resend-emails')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   resendWelcomeEmails() {
     return this.veterinariansService.resendWelcomeEmails();
   }
@@ -71,12 +81,15 @@ export class VeterinariansController {
     summary: 'Recreate user in Supabase for a specific veterinarian by email',
   })
   @Post('recreate-supabase/:email')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   recreateSupabaseUser(@Param('email') email: string) {
     return this.veterinariansService.recreateSupabaseUser(email);
   }
 
   @ApiOperation({ summary: 'Get all active veterinarians' })
   @Get()
+  @Public()
   async fillAllVeterinarians() {
     const data = await this.veterinariansService.fillAllVeterinarians();
     return { message: 'Veterinarians retrieved', data };
@@ -93,6 +106,8 @@ export class VeterinariansController {
 
   @ApiOperation({ summary: 'Create new veterinarian' })
   @Post()
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   createVeterinarian(@Body() createVeterinarian: CreateVeterinarianDto) {
     return this.veterinariansService.createVeterinarian(createVeterinarian);
   }
@@ -118,6 +133,8 @@ export class VeterinariansController {
   })
   @Patch(':id/profile')
   @UseInterceptors(FileInterceptor('profileImage'))
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian)
   updateVeterinarianProfile(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateVeterinarianDto: UpdateVeterinarianDto,
@@ -132,12 +149,16 @@ export class VeterinariansController {
 
   @ApiOperation({ summary: 'Deactivate veterinarian' })
   @Patch(':id/deactivate')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   deleteVeterinarian(@Param('id', ParseUUIDPipe) id: string) {
     return this.veterinariansService.deleteVeterinarian(id);
   }
 
   @ApiOperation({ summary: 'Change veterinarian password' })
   @Patch('change-password')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian)
   changePassword(@Body() body: ChangePasswordVeterinarianDto) {
     return this.veterinariansService.changePassword(body);
   }
@@ -170,9 +191,8 @@ export class VeterinariansController {
       },
     },
   })
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin)
   @ApiBearerAuth()
+  @Roles(Role.Veterinarian, Role.Admin)
   @Get('controlled-medications/catalog')
   getControlledMedicationsCatalog() {
     return this.veterinariansService.getControlledMedicationsCatalog();
@@ -201,9 +221,8 @@ export class VeterinariansController {
       },
     },
   })
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian)
   @ApiBearerAuth()
+  @Roles(Role.Veterinarian)
   @Post(':id/controlled-medications/request')
   requestControlledMedications(
     @Param('id', ParseUUIDPipe) veterinarianId: string,
@@ -244,9 +263,8 @@ export class VeterinariansController {
       },
     },
   })
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian)
   @ApiBearerAuth()
+  @Roles(Role.Veterinarian)
   @Get(':id/controlled-medications/my-requests')
   getMyControlledMedRequests(
     @Param('id', ParseUUIDPipe) veterinarianId: string,
@@ -264,9 +282,8 @@ export class VeterinariansController {
     name: 'requestIndex',
     description: 'Índice de la solicitud en el array',
   })
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian)
   @ApiBearerAuth()
+  @Roles(Role.Veterinarian)
   @Delete(':id/controlled-medications/my-requests/:requestIndex')
   cancelMyControlledMedRequest(
     @Param('id', ParseUUIDPipe) veterinarianId: string,
@@ -308,9 +325,8 @@ export class VeterinariansController {
       },
     },
   })
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiBearerAuth()
+  @Roles(Role.Admin)
   @Get('controlled-medications/all-requests')
   getAllControlledMedRequests() {
     return this.veterinariansService.getAllControlledMedRequests();
@@ -337,9 +353,8 @@ export class VeterinariansController {
       },
     },
   })
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiBearerAuth()
+  @Roles(Role.Admin)
   @Patch('controlled-medications/update-status')
   updateControlledMedRequestStatus(@Body() dto: UpdateMedRequestStatusDto) {
     return this.veterinariansService.updateControlledMedRequestStatus(dto);
