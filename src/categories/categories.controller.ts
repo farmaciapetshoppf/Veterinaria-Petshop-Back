@@ -20,8 +20,10 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
+import { Public } from '../decorators/public.decorator';
 
 @Controller('categories')
+@UseGuards(AuthGuard, RolesGuard)
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
@@ -46,6 +48,7 @@ export class CategoriesController {
     },
   })
   @Post()
+  @Roles(Role.Admin)
   @UseInterceptors(FileInterceptor('image'))
   create(
     @Body() createCategoryDto: CreateCategoryDto,
@@ -75,6 +78,7 @@ export class CategoriesController {
   })
   @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
+  @Roles(Role.Admin)
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -85,24 +89,28 @@ export class CategoriesController {
 
   @ApiOperation({ summary: 'Get all categories' })
   @Get()
+  @Public()
   findAll() {
     return this.categoriesService.findAll();
   }
 
   @ApiOperation({ summary: 'Get all categories (basic info)' })
   @Get('basic')
+  @Public()
   findAllBasic() {
     return this.categoriesService.findAllBasic();
   }
 
   @ApiOperation({ summary: 'Get category by ID' })
   @Get(':id')
+  @Public()
   findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.findOne(id);
   }
 
   @ApiOperation({ summary: 'Soft delete category by ID' })
   @Put(':id')
+  @Roles(Role.Admin)
   remove(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.remove(id);
   }

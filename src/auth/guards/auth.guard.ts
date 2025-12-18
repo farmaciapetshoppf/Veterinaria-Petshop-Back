@@ -10,6 +10,8 @@ import { Request } from 'express';
 import { UsersService } from '../../users/users.service';
 import { VeterinariansService } from '../../veterinarians/veterinarians.service';
 import { Role } from '../enum/roles.enum';
+import { IS_PUBLIC_KEY } from '../../decorators/public.decorator';
+import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -17,9 +19,19 @@ export class AuthGuard implements CanActivate {
     private authService: AuthService,
     private usersService: UsersService,
     private veterinariansService: VeterinariansService,
+    private reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest<Request>();
 
     // Intentar obtener el token de múltiples fuentes
