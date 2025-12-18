@@ -10,16 +10,27 @@ import {
   UseInterceptors,
   UploadedFile,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
-
-import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Pets')
 @Controller('pets')
+@UseGuards(AuthGuard, RolesGuard)
 export class PetsController {
   constructor(private readonly petsService: PetsService) {}
 
@@ -66,6 +77,8 @@ export class PetsController {
   })
   @Post('NewPet')
   @UseInterceptors(FileInterceptor('image'))
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User)
   async create(
     @Body() createPetDto: CreatePetDto,
     @UploadedFile() image: Express.Multer.File,
@@ -83,6 +96,8 @@ export class PetsController {
 
   @ApiOperation({ summary: 'Get all pets' })
   @Get('AllPets')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async findAll() {
     const data = await this.petsService.findAll();
     return { message: 'Pets retrieved', data };
@@ -90,6 +105,8 @@ export class PetsController {
 
   @ApiOperation({ summary: 'Get pet by ID' })
   @Get(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async findOne(@Param('id') id: string) {
     if (!id || id === 'undefined' || id === 'null') {
       throw new HttpException(
@@ -140,6 +157,8 @@ export class PetsController {
   })
   @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User)
   async update(
     @Param('id') id: string,
     @Body() updatePetDto: UpdatePetDto,
@@ -164,6 +183,8 @@ export class PetsController {
 
   @ApiOperation({ summary: 'Soft delete by ID' })
   @Put(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User)
   remove(@Param('id') id: string) {
     return this.petsService.remove(id);
   }
