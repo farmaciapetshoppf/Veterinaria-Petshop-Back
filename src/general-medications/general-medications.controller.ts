@@ -33,9 +33,9 @@ export class GeneralMedicationsController {
   constructor(private readonly medicationsService: GeneralMedicationsService) {}
 
   @Get()
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener todos los medicamentos generales' })
   @ApiResponse({ status: 200, description: 'Lista de medicamentos' })
-  @ApiBearerAuth()
   @Roles(Role.Veterinarian, Role.Admin)
   async findAll() {
     return this.medicationsService.findAll();
