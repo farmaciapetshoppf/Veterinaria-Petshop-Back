@@ -8,11 +8,13 @@ import {
   ParseUUIDPipe,
   Query,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiParam,
@@ -21,9 +23,15 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AppointmentsAnalyticsSeeder } from './seed/appointments-analytics.seeder';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Public } from 'src/decorators/public.decorator';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Appointments')
 @Controller('appointments')
+@UseGuards(AuthGuard, RolesGuard)
 export class AppointmentsController {
   constructor(
     private readonly appointmentsService: AppointmentsService,
@@ -61,6 +69,7 @@ export class AppointmentsController {
     },
   })
   @Get('availability/:veterinarianId')
+  @Public()
   getAvailability(
     @Param('veterinarianId', ParseUUIDPipe) vetId: string,
     @Query('date') date: string,
@@ -68,6 +77,7 @@ export class AppointmentsController {
     return this.appointmentsService.getAvailability(vetId, date);
   }
 
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create new appointment',
     description:
@@ -96,12 +106,16 @@ export class AppointmentsController {
     description: 'Datos inválidos o horario no disponible',
   })
   @Post('NewAppointment')
+  @ApiBearerAuth()
+  @Roles(Role.User, Role.Admin)
   create(@Body() dto: CreateAppointmentDto) {
     return this.appointmentsService.create(dto);
   }
 
   @ApiOperation({ summary: 'Get all appointments' })
   @Get('AllAppointments')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async findAll() {
     const data = await this.appointmentsService.findAll();
     return { message: 'Appointments retrieved', data };
@@ -109,6 +123,8 @@ export class AppointmentsController {
 
   @ApiOperation({ summary: 'Get appointment by ID' })
   @Get(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async findOne(@Param('id') id: string) {
     const data = await this.appointmentsService.findOne(id);
     return { message: `Appointment ${id} retrieved`, data };
@@ -120,6 +136,8 @@ export class AppointmentsController {
   @ApiResponse({ status: 200, description: 'Appointment updated successfully' })
   @ApiResponse({ status: 404, description: 'Appointment not found' })
   @Patch(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   update(
     @Param('id') id: string,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
@@ -161,6 +179,8 @@ export class AppointmentsController {
     },
   })
   @Put(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   remove(@Param('id') id: string) {
     return this.appointmentsService.remove(id);
   }
@@ -240,6 +260,8 @@ export class AppointmentsController {
     description: 'Turno o medicamento no encontrado',
   })
   @Post(':id/complete')
+  @ApiBearerAuth()
+  @Roles(Role.Veterinarian)
   completeAppointment(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: any,
@@ -264,6 +286,8 @@ export class AppointmentsController {
     },
   })
   @Get('seeder/analytics')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   async seedAnalytics() {
     return await this.analyticsSeeder.seed();
   }
