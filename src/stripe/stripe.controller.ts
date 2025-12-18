@@ -17,6 +17,8 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
 
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Admin, Role.User)
 @ApiTags('Stripe')
 @Controller('stripe')
 export class StripeController {
@@ -26,8 +28,6 @@ export class StripeController {
     private readonly mailerService: MailerService,
   ) {}
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Crear sesión de checkout',
     description: 'Crea una sesión de checkout para procesar un pago con Stripe',
@@ -98,8 +98,6 @@ export class StripeController {
     }
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Crear intent de pago',
     description: 'Crea un intent de pago para procesamiento directo',
@@ -140,8 +138,6 @@ export class StripeController {
     }
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Webhook de Stripe',
     description: 'Endpoint para recibir notificaciones de Stripe',

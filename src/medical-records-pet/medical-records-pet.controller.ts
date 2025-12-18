@@ -18,6 +18,8 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
 
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Veterinarian, Role.Admin, Role.User)
 @ApiTags('Medical Records Pet')
 @Controller('medical-records-pet')
 export class MedicalRecordsPetController {
@@ -25,8 +27,6 @@ export class MedicalRecordsPetController {
     private readonly medicalRecordsPetService: MedicalRecordsPetService,
   ) {}
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Crear registro médico',
     description:
@@ -37,8 +37,6 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.create(createMedicalRecordsPetDto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Obtener todos los registros médicos',
     description: 'Lista paginada de todos los registros médicos',
@@ -60,8 +58,6 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.findAll(page, limit);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Buscar mascotas',
     description:
@@ -78,8 +74,6 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.searchPets(searchTerm);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Obtener historial médico de una mascota',
     description:
@@ -95,8 +89,6 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.findByPet(petId);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
   @ApiOperation({
     summary: 'Obtener un registro médico específico',
     description: 'Retorna los detalles de un registro médico por su ID',
@@ -111,8 +103,6 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.findOne(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Actualizar registro médico',
     description: 'Modifica los datos de un registro médico existente',
@@ -130,8 +120,6 @@ export class MedicalRecordsPetController {
     return this.medicalRecordsPetService.update(id, updateMedicalRecordsPetDto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin)
   @ApiOperation({
     summary: 'Eliminar registro médico',
     description: 'Elimina un registro médico del sistema',

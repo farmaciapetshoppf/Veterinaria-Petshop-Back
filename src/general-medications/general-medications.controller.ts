@@ -30,9 +30,7 @@ import { RestockRequestStatus } from './entities/medication-restock-request.enti
 @ApiTags('General Medications')
 @Controller('general-medications')
 export class GeneralMedicationsController {
-  constructor(
-    private readonly medicationsService: GeneralMedicationsService,
-  ) {}
+  constructor(private readonly medicationsService: GeneralMedicationsService) {}
 
   @Get()
   @ApiBearerAuth()
@@ -48,7 +46,10 @@ export class GeneralMedicationsController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Obtener solo medicamentos controlados' })
-  @ApiResponse({ status: 200, description: 'Lista de medicamentos controlados' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de medicamentos controlados',
+  })
   @Roles(Role.Veterinarian, Role.Admin)
   async findControlled() {
     return this.medicationsService.findControlled();
@@ -58,7 +59,10 @@ export class GeneralMedicationsController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Obtener medicamentos con stock bajo' })
-  @ApiResponse({ status: 200, description: 'Lista de medicamentos con stock bajo' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de medicamentos con stock bajo',
+  })
   @Roles(Role.Veterinarian, Role.Admin)
   async findLowStock() {
     return this.medicationsService.findLowStock();
@@ -68,7 +72,10 @@ export class GeneralMedicationsController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Obtener medicamentos controlados con stock bajo' })
-  @ApiResponse({ status: 200, description: 'Lista de medicamentos controlados con stock bajo' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de medicamentos controlados con stock bajo',
+  })
   @Roles(Role.Veterinarian, Role.Admin)
   async findControlledLowStock() {
     return this.medicationsService.findControlledLowStock();
@@ -80,7 +87,10 @@ export class GeneralMedicationsController {
   @ApiOperation({ summary: 'Registrar uso de medicamento (solo veterinarios)' })
   @ApiResponse({ status: 200, description: 'Uso registrado exitosamente' })
   @ApiResponse({ status: 400, description: 'Stock insuficiente' })
-  @ApiResponse({ status: 403, description: 'Solo veterinarios pueden usar medicamentos' })
+  @ApiResponse({
+    status: 403,
+    description: 'Solo veterinarios pueden usar medicamentos',
+  })
   @Roles(Role.Veterinarian)
   async useMedication(@Request() req, @Body() dto: UseMedicationDto) {
     const userId = req.user.id;
@@ -111,9 +121,7 @@ export class GeneralMedicationsController {
   })
   @ApiResponse({ status: 200, description: 'Lista de solicitudes' })
   @Roles(Role.Veterinarian, Role.Admin)
-  async getRestockRequests(
-    @Query('status') status?: RestockRequestStatus,
-  ) {
+  async getRestockRequests(@Query('status') status?: RestockRequestStatus) {
     return this.medicationsService.getRestockRequests(status);
   }
 
@@ -155,9 +163,18 @@ export class GeneralMedicationsController {
   @Patch('requests/:id/complete')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Completar solicitud de reposición y actualizar stock (solo admin)' })
-  @ApiResponse({ status: 200, description: 'Solicitud completada y stock actualizado' })
-  @ApiResponse({ status: 400, description: 'La solicitud debe estar aprobada primero' })
+  @ApiOperation({
+    summary:
+      'Completar solicitud de reposición y actualizar stock (solo admin)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Solicitud completada y stock actualizado',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'La solicitud debe estar aprobada primero',
+  })
   @Roles(Role.Admin)
   async completeRestockRequest(@Request() req, @Param('id') requestId: string) {
     const adminId = req.user.id;
@@ -181,7 +198,9 @@ export class GeneralMedicationsController {
   @Get('usage')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Obtener historial de uso de todos los medicamentos' })
+  @ApiOperation({
+    summary: 'Obtener historial de uso de todos los medicamentos',
+  })
   @ApiResponse({ status: 200, description: 'Historial de uso' })
   @Roles(Role.Veterinarian, Role.Admin)
   async getUsageHistory() {
@@ -191,10 +210,14 @@ export class GeneralMedicationsController {
   @Get('usage/:medicationId')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Obtener historial de uso de un medicamento específico' })
+  @ApiOperation({
+    summary: 'Obtener historial de uso de un medicamento específico',
+  })
   @ApiResponse({ status: 200, description: 'Historial de uso' })
   @Roles(Role.Veterinarian, Role.Admin)
-  async getUsageHistoryByMedication(@Param('medicationId') medicationId: string) {
+  async getUsageHistoryByMedication(
+    @Param('medicationId') medicationId: string,
+  ) {
     return this.medicationsService.getUsageHistory(medicationId);
   }
 
@@ -210,8 +233,16 @@ export class GeneralMedicationsController {
   @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Obtener logs de auditoría de stock (Admin only)' })
   @ApiResponse({ status: 200, description: 'Logs de stock' })
-  @ApiQuery({ name: 'medicationId', required: false, description: 'Filtrar por ID de medicamento' })
-  @ApiQuery({ name: 'limit', required: false, description: 'Límite de resultados (default: 50)' })
+  @ApiQuery({
+    name: 'medicationId',
+    required: false,
+    description: 'Filtrar por ID de medicamento',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Límite de resultados (default: 50)',
+  })
   @Roles(Role.Admin)
   async getStockLogs(
     @Query('medicationId') medicationId?: string,
@@ -223,10 +254,14 @@ export class GeneralMedicationsController {
   @Get('stock-logs/:medicationName')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Obtener logs de stock por nombre de medicamento (Admin only)' })
+  @ApiOperation({
+    summary: 'Obtener logs de stock por nombre de medicamento (Admin only)',
+  })
   @ApiResponse({ status: 200, description: 'Logs de stock del medicamento' })
   @Roles(Role.Admin)
-  async getStockLogsByMedication(@Param('medicationName') medicationName: string) {
+  async getStockLogsByMedication(
+    @Param('medicationName') medicationName: string,
+  ) {
     return this.medicationsService.getStockLogsByMedication(medicationName);
   }
 }
