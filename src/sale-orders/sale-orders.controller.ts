@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { SaleOrdersService } from './sale-orders.service';
 import { CreateSaleOrderDto } from './dto/create-sale-order.dto';
@@ -19,7 +20,13 @@ import {
   ApiBody,
   ApiParam,
   ApiResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
+import { Public } from '../decorators/public.decorator';
 
 @ApiTags('Sale Orders')
 @Controller('sale-orders')
@@ -67,6 +74,7 @@ export class SaleOrdersController {
   })
   @ApiResponse({ status: 404, description: 'Usuario o producto no encontrado' })
   @Post('cart/add')
+  @Public()
   addToCart(
     @Body() body: { userId: string; productId: string; quantity: number },
   ) {
@@ -99,6 +107,7 @@ export class SaleOrdersController {
     description: 'No hay carrito activo (data: null)',
   })
   @Get('cart/:userId')
+  @Public()
   getActiveCart(@Param('userId') userId: string) {
     return this.saleOrdersService.getActiveCart(userId);
   }
@@ -139,6 +148,7 @@ export class SaleOrdersController {
   @ApiResponse({ status: 400, description: 'Stock insuficiente' })
   @ApiResponse({ status: 404, description: 'Carrito o producto no encontrado' })
   @Patch('cart/update')
+  @Public()
   updateCartItem(
     @Body() body: { userId: string; productId: string; quantity: number },
   ) {
@@ -175,6 +185,7 @@ export class SaleOrdersController {
   @ApiResponse({ status: 200, description: 'Producto eliminado del carrito' })
   @ApiResponse({ status: 404, description: 'Carrito o producto no encontrado' })
   @Delete('cart/remove')
+  @Public()
   removeFromCart(@Body() body: { userId: string; productId: string }) {
     return this.saleOrdersService.removeFromCart(body.userId, body.productId);
   }
@@ -195,6 +206,7 @@ export class SaleOrdersController {
     description: 'No hay carrito activo para vaciar',
   })
   @Delete('cart/clear/:userId')
+  @Public()
   clearCart(@Param('userId') userId: string) {
     return this.saleOrdersService.clearCart(userId);
   }
@@ -211,6 +223,8 @@ export class SaleOrdersController {
   })
   @ApiResponse({ status: 200, description: 'Historial de compras obtenido' })
   @Get('history/:userId')
+  @ApiBearerAuth()
+  @Roles(Role.User, Role.Admin)
   getOrderHistory(@Param('userId') userId: string) {
     return this.saleOrdersService.getOrderHistory(userId);
   }
@@ -261,6 +275,8 @@ export class SaleOrdersController {
   @ApiResponse({ status: 400, description: 'Carrito vacío o vencido' })
   @ApiResponse({ status: 404, description: 'No hay carrito activo' })
   @Post('checkout/:userId')
+  @ApiBearerAuth()
+  @Roles(Role.User)
   checkout(@Param('userId') userId: string, @Body() checkoutDto: CheckoutDto) {
     return this.saleOrdersService.checkout(userId, checkoutDto);
   }
@@ -272,6 +288,7 @@ export class SaleOrdersController {
   })
   @ApiResponse({ status: 200, description: 'Webhook procesado correctamente' })
   @Post('webhook')
+  @Public()
   handleWebhook(@Body() body: any, @Query() query: any) {
     // MercadoPago envía datos tanto en body como en query params
     const webhookData = {
@@ -293,6 +310,8 @@ export class SaleOrdersController {
     description: 'Carritos vencidos cancelados exitosamente',
   })
   @Post('cron/cancel-expired')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   cancelExpiredCarts() {
     return this.saleOrdersService.cancelExpiredCarts();
   }
@@ -328,24 +347,32 @@ export class SaleOrdersController {
     summary: 'Create new sale order (DEPRECADO - usar cart/add)',
   })
   @Post()
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User)
   create(@Body() createSaleOrderDto: CreateSaleOrderDto) {
     return this.saleOrdersService.create(createSaleOrderDto);
   }
 
   @ApiOperation({ summary: 'Get all sale orders' })
   @Get()
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User)
   findAll() {
     return this.saleOrdersService.findAll();
   }
 
   @ApiOperation({ summary: 'Get sale order by ID' })
   @Get(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User)
   findOne(@Param('id') id: string) {
     return this.saleOrdersService.findOne(+id);
   }
 
   @ApiOperation({ summary: 'Update sale order' })
   @Patch(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   update(
     @Param('id') id: string,
     @Body() updateSaleOrderDto: UpdateSaleOrderDto,
@@ -355,6 +382,8 @@ export class SaleOrdersController {
 
   @ApiOperation({ summary: 'Delete sale order' })
   @Delete(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   remove(@Param('id') id: string) {
     return this.saleOrdersService.remove(+id);
   }
@@ -441,6 +470,7 @@ export class SaleOrdersController {
     description: 'Código postal inválido o coordenadas incorrectas',
   })
   @Post('calculate-shipping')
+  @Public()
   calculateShipping(@Body() dto: CalculateShippingDto) {
     return this.saleOrdersService.calculateShipping(dto);
   }
@@ -453,6 +483,8 @@ export class SaleOrdersController {
       'Endpoint de prueba para marcar una orden como PAID sin pasar por MercadoPago',
   })
   @Get('test/complete-order/:orderId')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   async testCompleteOrder(@Param('orderId') orderId: string) {
     await this.saleOrdersService.updateOrderStatus(orderId, 'PAID');
     return { message: 'Orden actualizada a PAID' };
@@ -478,6 +510,7 @@ export class SaleOrdersController {
   @ApiResponse({ status: 400, description: 'Carrito vacío o vencido' })
   @ApiResponse({ status: 404, description: 'No hay carrito activo' })
   @Post('checkout-stripe/:userId')
+  @Public()
   checkoutWithStripe(
     @Param('userId') userId: string,
     @Body()
