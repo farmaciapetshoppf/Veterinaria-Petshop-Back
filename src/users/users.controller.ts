@@ -8,9 +8,9 @@ import {
   UploadedFile,
   UseInterceptors,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { Role } from 'src/auth/enum/roles.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBody,
@@ -18,13 +18,19 @@ import {
   ApiOperation,
   ApiParam,
   ApiTags,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from './entities/user.entity';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Users')
 @Controller('users')
+@UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
@@ -34,6 +40,8 @@ export class UsersController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Get all users' })
   @Get()
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async getUsers() {
     const data = await this.usersService.getUsers();
     return { message: 'Users retrieved', data };
@@ -47,6 +55,8 @@ export class UsersController {
     description: 'ID del usuario',
   })
   @Get(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   async getUserById(@Param('id') id: string) {
     const data = await this.usersService.getUserById(id);
     return { message: `User ${id} retrieved`, data };
@@ -82,6 +92,8 @@ export class UsersController {
       },
     },
   })
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User)
   @UseInterceptors(FileInterceptor('profileImage'))
   async updateUser(
     @Param('id') id: string,
@@ -115,6 +127,8 @@ export class UsersController {
     },
   })
   @Patch(':id/role')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   updateRole(@Param('id') id: string, @Body() updateRoleDto: { role: Role }) {
     return this.usersService.updateRole(id, updateRoleDto.role);
   }
@@ -122,12 +136,16 @@ export class UsersController {
   @ApiOperation({ summary: 'Delete user' })
   @HttpCode(200)
   @Put(':id/delete')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   deleteUser(@Param('id') id: string) {
     return this.usersService.deleteUser(id);
   }
 
   @ApiOperation({ summary: 'Get pets of a user' })
   @Get(':id/pets')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   getUserPets(@Param('id') id: string) {
     return this.usersService.getUserPets(id);
   }

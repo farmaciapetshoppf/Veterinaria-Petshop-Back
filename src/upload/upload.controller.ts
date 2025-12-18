@@ -9,6 +9,7 @@ import {
   Param,
   Delete,
   Get,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from '../supabase/storage.service';
@@ -19,12 +20,17 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import {
   UploadResponseDto,
   DeleteResponseDto,
   FileInfoDto,
 } from './dto/upload-response.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
 
 // Definir la interfaz del archivo para evitar errores de tipos
 interface MulterFile {
@@ -38,6 +44,7 @@ interface MulterFile {
 
 @ApiTags('uploads')
 @Controller('upload')
+@UseGuards(AuthGuard, RolesGuard)
 export class UploadController {
   constructor(private storageService: StorageService) {}
 
@@ -70,6 +77,8 @@ export class UploadController {
     description: 'Error en el servidor al subir archivo',
   })
   @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   async uploadImage(@UploadedFile() file: MulterFile) {
     if (!file) {
       throw new BadRequestException('No se subio un archivo');
@@ -103,6 +112,8 @@ export class UploadController {
     type: DeleteResponseDto,
   })
   @ApiResponse({ status: 500, description: 'Error en el servidor al borrar' })
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   async deleteImage(@Param('path') path: string) {
     const success = await this.storageService.deleteFile('images', path);
 
@@ -124,6 +135,8 @@ export class UploadController {
     status: 500,
     description: 'Error en el servidor al listar imagenes',
   })
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   async listImages() {
     const files = await this.storageService.listFiles('images');
 
@@ -148,6 +161,8 @@ export class UploadController {
     type: [FileInfoDto],
   })
   @ApiResponse({ status: 500, description: 'Error en el servidor' })
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User, Role.Veterinarian)
   async listImagesInFolder(@Param('folder') folder: string) {
     const files = await this.storageService.listFiles('images', folder);
 

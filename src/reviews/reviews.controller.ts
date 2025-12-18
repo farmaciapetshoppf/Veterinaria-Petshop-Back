@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -18,11 +19,18 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Review } from './entities/reviews.entities';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
+import { Public } from '../decorators/public.decorator';
 
 @ApiTags('reviews')
 @Controller('reviews')
+@UseGuards(AuthGuard, RolesGuard)
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
@@ -39,6 +47,8 @@ export class ReviewsController {
     status: 404,
     description: 'Veterinarian or user not found',
   })
+  @ApiBearerAuth()
+  @Roles(Role.User)
   create(@Body() dto: CreateReviewDto) {
     return this.reviewsService.create(dto);
   }
@@ -50,6 +60,7 @@ export class ReviewsController {
     description: 'Review list retrieved successfully',
     type: [Review],
   })
+  @Public()
   findAll() {
     return this.reviewsService.findAll();
   }
@@ -68,6 +79,7 @@ export class ReviewsController {
     type: [Review],
   })
   @ApiResponse({ status: 400, description: 'Invalid ID' })
+  @Public()
   findByVeterinarian(@Param('id', ParseUUIDPipe) id: string) {
     return this.reviewsService.findByVeterinarian(id);
   }
@@ -88,6 +100,8 @@ export class ReviewsController {
   })
   @ApiResponse({ status: 400, description: 'Invalid petition' })
   @ApiResponse({ status: 404, description: 'Review not found' })
+  @ApiBearerAuth()
+  @Roles(Role.User)
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateReviewDto) {
     return this.reviewsService.update(id, dto);
   }
@@ -103,6 +117,8 @@ export class ReviewsController {
   @ApiResponse({ status: 200, description: 'Review deleted successfully' })
   @ApiResponse({ status: 400, description: 'Invalid ID' })
   @ApiResponse({ status: 404, description: 'Review not found' })
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.reviewsService.remove(id);
   }

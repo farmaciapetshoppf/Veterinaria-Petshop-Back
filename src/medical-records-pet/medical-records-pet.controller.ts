@@ -7,14 +7,26 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { MedicalRecordsPetService } from './medical-records-pet.service';
 import { CreateMedicalRecordsPetDto } from './dto/create-medical-records-pet.dto';
 import { UpdateMedicalRecordsPetDto } from './dto/update-medical-records-pet.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Medical Records Pet')
 @Controller('medical-records-pet')
+@UseGuards(AuthGuard, RolesGuard)
 export class MedicalRecordsPetController {
   constructor(
     private readonly medicalRecordsPetService: MedicalRecordsPetService,
@@ -26,6 +38,8 @@ export class MedicalRecordsPetController {
       'El veterinario registra los detalles de la consulta en el historial médico de la mascota',
   })
   @Post()
+  @ApiBearerAuth()
+  @Roles(Role.Veterinarian)
   create(@Body() createMedicalRecordsPetDto: CreateMedicalRecordsPetDto) {
     return this.medicalRecordsPetService.create(createMedicalRecordsPetDto);
   }
@@ -47,6 +61,8 @@ export class MedicalRecordsPetController {
     example: 20,
   })
   @Get()
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
     return this.medicalRecordsPetService.findAll(page, limit);
   }
@@ -63,6 +79,8 @@ export class MedicalRecordsPetController {
     example: 'Max',
   })
   @Get('search/pets')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   searchPets(@Query('search') searchTerm: string) {
     return this.medicalRecordsPetService.searchPets(searchTerm);
   }
@@ -78,6 +96,8 @@ export class MedicalRecordsPetController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @Get('pet/:petId')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   findByPet(@Param('petId') petId: string) {
     return this.medicalRecordsPetService.findByPet(petId);
   }
@@ -92,6 +112,8 @@ export class MedicalRecordsPetController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @Get(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   findOne(@Param('id') id: string) {
     return this.medicalRecordsPetService.findOne(id);
   }
@@ -106,6 +128,8 @@ export class MedicalRecordsPetController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @Patch(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian)
   update(
     @Param('id') id: string,
     @Body() updateMedicalRecordsPetDto: UpdateMedicalRecordsPetDto,
@@ -123,6 +147,8 @@ export class MedicalRecordsPetController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @Delete(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Veterinarian)
   remove(@Param('id') id: string) {
     return this.medicalRecordsPetService.remove(id);
   }
