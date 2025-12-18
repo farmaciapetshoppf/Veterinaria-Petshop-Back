@@ -29,26 +29,26 @@ import { RestockRequestStatus } from './entities/medication-restock-request.enti
 
 @ApiTags('General Medications')
 @Controller('general-medications')
-@UseGuards(AuthGuard, RolesGuard)
 export class GeneralMedicationsController {
   constructor(private readonly medicationsService: GeneralMedicationsService) {}
 
   @Get()
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener todos los medicamentos generales' })
   @ApiResponse({ status: 200, description: 'Lista de medicamentos' })
-  @ApiBearerAuth()
   @Roles(Role.Veterinarian, Role.Admin)
   async findAll() {
     return this.medicationsService.findAll();
   }
 
   @Get('controlled')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Obtener solo medicamentos controlados' })
   @ApiResponse({
     status: 200,
     description: 'Lista de medicamentos controlados',
   })
-  @ApiBearerAuth()
   @Roles(Role.Veterinarian, Role.Admin)
   async findControlled() {
     return this.medicationsService.findControlled();
