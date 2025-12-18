@@ -37,7 +37,6 @@ export class GeneralMedicationsController {
   @ApiOperation({ summary: 'Obtener todos los medicamentos generales' })
   @ApiResponse({ status: 200, description: 'Lista de medicamentos' })
   @ApiBearerAuth()
-  @Roles(Role.Veterinarian, Role.Admin)
   async findAll() {
     return this.medicationsService.findAll();
   }
@@ -49,7 +48,6 @@ export class GeneralMedicationsController {
     description: 'Lista de medicamentos controlados',
   })
   @ApiBearerAuth()
-  @Roles(Role.Veterinarian, Role.Admin)
   async findControlled() {
     return this.medicationsService.findControlled();
   }
@@ -61,7 +59,6 @@ export class GeneralMedicationsController {
     description: 'Lista de medicamentos con stock bajo',
   })
   @ApiBearerAuth()
-  @Roles(Role.Veterinarian, Role.Admin)
   async findLowStock() {
     return this.medicationsService.findLowStock();
   }
@@ -73,7 +70,6 @@ export class GeneralMedicationsController {
     description: 'Lista de medicamentos controlados con stock bajo',
   })
   @ApiBearerAuth()
-  @Roles(Role.Veterinarian, Role.Admin)
   async findControlledLowStock() {
     return this.medicationsService.findControlledLowStock();
   }
@@ -87,7 +83,6 @@ export class GeneralMedicationsController {
     description: 'Solo veterinarios pueden usar medicamentos',
   })
   @ApiBearerAuth()
-  @Roles(Role.Veterinarian)
   async useMedication(@Request() req, @Body() dto: UseMedicationDto) {
     const userId = req.user.id;
     return this.medicationsService.useMedication(userId, dto);
@@ -98,7 +93,6 @@ export class GeneralMedicationsController {
   @ApiResponse({ status: 201, description: 'Solicitud creada exitosamente' })
   @ApiResponse({ status: 404, description: 'Medicamento no encontrado' })
   @ApiBearerAuth()
-  @Roles(Role.Veterinarian, Role.Admin)
   async requestRestock(@Request() req, @Body() dto: RequestRestockDto) {
     const userId = req.user.id;
     return this.medicationsService.requestRestock(userId, dto);
