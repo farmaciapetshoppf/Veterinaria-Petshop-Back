@@ -92,8 +92,6 @@ export class UsersController {
       },
     },
   })
-  @ApiBearerAuth()
-  @Roles(Role.Admin, Role.User)
   @UseInterceptors(FileInterceptor('profileImage'))
   async updateUser(
     @Param('id') id: string,
@@ -145,7 +143,6 @@ export class UsersController {
   @ApiOperation({ summary: 'Get pets of a user' })
   @Get(':id/pets')
   @ApiBearerAuth()
-  @Roles(Role.Admin, Role.Veterinarian, Role.User)
   getUserPets(@Param('id') id: string) {
     return this.usersService.getUserPets(id);
   }

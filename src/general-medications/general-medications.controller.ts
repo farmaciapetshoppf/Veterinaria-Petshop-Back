@@ -29,61 +29,56 @@ import { RestockRequestStatus } from './entities/medication-restock-request.enti
 
 @ApiTags('General Medications')
 @Controller('general-medications')
+@UseGuards(AuthGuard, RolesGuard)
 export class GeneralMedicationsController {
   constructor(private readonly medicationsService: GeneralMedicationsService) {}
 
   @Get()
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Obtener todos los medicamentos generales' })
   @ApiResponse({ status: 200, description: 'Lista de medicamentos' })
+  @ApiBearerAuth()
   @Roles(Role.Veterinarian, Role.Admin)
   async findAll() {
     return this.medicationsService.findAll();
   }
 
   @Get('controlled')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Obtener solo medicamentos controlados' })
   @ApiResponse({
     status: 200,
     description: 'Lista de medicamentos controlados',
   })
+  @ApiBearerAuth()
   @Roles(Role.Veterinarian, Role.Admin)
   async findControlled() {
     return this.medicationsService.findControlled();
   }
 
   @Get('low-stock')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Obtener medicamentos con stock bajo' })
   @ApiResponse({
     status: 200,
     description: 'Lista de medicamentos con stock bajo',
   })
+  @ApiBearerAuth()
   @Roles(Role.Veterinarian, Role.Admin)
   async findLowStock() {
     return this.medicationsService.findLowStock();
   }
 
   @Get('controlled/low-stock')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Obtener medicamentos controlados con stock bajo' })
   @ApiResponse({
     status: 200,
     description: 'Lista de medicamentos controlados con stock bajo',
   })
+  @ApiBearerAuth()
   @Roles(Role.Veterinarian, Role.Admin)
   async findControlledLowStock() {
     return this.medicationsService.findControlledLowStock();
   }
 
   @Post('use')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Registrar uso de medicamento (solo veterinarios)' })
   @ApiResponse({ status: 200, description: 'Uso registrado exitosamente' })
   @ApiResponse({ status: 400, description: 'Stock insuficiente' })
@@ -91,6 +86,7 @@ export class GeneralMedicationsController {
     status: 403,
     description: 'Solo veterinarios pueden usar medicamentos',
   })
+  @ApiBearerAuth()
   @Roles(Role.Veterinarian)
   async useMedication(@Request() req, @Body() dto: UseMedicationDto) {
     const userId = req.user.id;
@@ -98,11 +94,10 @@ export class GeneralMedicationsController {
   }
 
   @Post('request-restock')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Solicitar reposición de medicamento' })
   @ApiResponse({ status: 201, description: 'Solicitud creada exitosamente' })
   @ApiResponse({ status: 404, description: 'Medicamento no encontrado' })
+  @ApiBearerAuth()
   @Roles(Role.Veterinarian, Role.Admin)
   async requestRestock(@Request() req, @Body() dto: RequestRestockDto) {
     const userId = req.user.id;
