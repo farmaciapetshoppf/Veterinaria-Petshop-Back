@@ -5,12 +5,18 @@ import {
   Headers,
   Req,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { StripeService } from './stripe.service';
-import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { SaleOrdersService } from 'src/sale-orders/sale-orders.service';
 import { MailerService } from 'src/mailer/mailer.service';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
+import { Public } from '../decorators/public.decorator';
 
 @ApiTags('Stripe')
 @Controller('stripe')
@@ -51,6 +57,8 @@ export class StripeController {
     },
   })
   @Post('create-checkout-session')
+  @ApiBearerAuth()
+  @Roles(Role.User)
   async createCheckoutSession(
     @Body()
     body: {
@@ -109,6 +117,8 @@ export class StripeController {
     },
   })
   @Post('create-payment-intent')
+  @ApiBearerAuth()
+  @Roles(Role.User)
   async createPaymentIntent(
     @Body() body: { amount: number; orderId: string; customerEmail?: string },
   ) {
@@ -136,6 +146,7 @@ export class StripeController {
     description: 'Endpoint para recibir notificaciones de Stripe',
   })
   @Post('webhook')
+  @Public()
   async handleWebhook(
     @Headers('stripe-signature') signature: string,
     @Req() req: Request,
