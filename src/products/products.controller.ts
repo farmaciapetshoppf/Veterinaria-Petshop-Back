@@ -364,7 +364,6 @@ export class ProductsController {
   }
 
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get product images' })
   @Get(':id/images')
   async getProductImages(@Param('id') id: string) {
