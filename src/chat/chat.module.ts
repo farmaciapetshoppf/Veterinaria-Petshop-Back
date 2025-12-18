@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
@@ -17,10 +17,10 @@ import { VeterinariansModule } from 'src/veterinarians/veterinarians.module';
   imports: [
     TypeOrmModule.forFeature([Conversation, Message, Users, Veterinarian]),
     SupabaseModule,
-    AuthModule,
     MailerModule,
-    UsersModule,
-    VeterinariansModule,
+    forwardRef(() => AuthModule),
+    forwardRef(() => UsersModule),
+    forwardRef(() => VeterinariansModule),
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway],
