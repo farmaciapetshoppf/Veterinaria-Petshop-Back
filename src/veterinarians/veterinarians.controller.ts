@@ -33,10 +33,10 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CreateControlledMedRequestDto } from './dto/create-controlled-med-request.dto';
 import { UpdateMedRequestStatusDto } from './dto/update-med-request-status.dto';
 
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.User, Role.Veterinarian)
 @ApiTags('Veterinarians')
 @Controller('veterinarians')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Admin, Role.User, Role.Veterinarian)
 export class VeterinariansController {
   constructor(private readonly veterinariansService: VeterinariansService) {}
 

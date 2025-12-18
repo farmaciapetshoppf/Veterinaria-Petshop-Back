@@ -26,10 +26,10 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
 
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.User)
 @ApiTags('Sale Orders')
 @Controller('sale-orders')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Admin, Role.User)
 export class SaleOrdersController {
   constructor(private readonly saleOrdersService: SaleOrdersService) {}
 
