@@ -13,6 +13,7 @@ import {
   Put,
   UploadedFiles,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -23,6 +24,7 @@ import {
   ApiConsumes,
   ApiBody,
   ApiResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import {
   FileFieldsInterceptor,
@@ -31,9 +33,15 @@ import {
 import { StorageService } from '../supabase/storage.service';
 import { ProductImageService } from './products-image.service';
 import { ProductImage } from './entities/product-image.entity';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
+import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Products')
 @Controller('products')
+@UseGuards(AuthGuard, RolesGuard)
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
@@ -43,6 +51,8 @@ export class ProductsController {
 
   @ApiOperation({ summary: 'Load product seeder' })
   @Get('seeder/load')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   seed() {
     return this.productsService.seeder();
   }
@@ -89,6 +99,8 @@ export class ProductsController {
       { name: 'additionalImages', maxCount: 3 },
     ]),
   )
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   async create(
     @Body() createProductDtoRaw: any,
     @UploadedFiles()
@@ -198,6 +210,8 @@ export class ProductsController {
       { name: 'additionalImages', maxCount: 3 },
     ]),
   )
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   async update(
     @Param('id') id: string,
     @Body() updateProductDtoRaw: any,
@@ -281,18 +295,22 @@ export class ProductsController {
 
   @ApiOperation({ summary: 'Get all products' })
   @Get()
+  @Public()
   findAll() {
     return this.productsService.findAll();
   }
 
   @ApiOperation({ summary: 'Get product by ID' })
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
 
   @ApiOperation({ summary: 'Soft delete product by ID' })
   @Put(':id')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
@@ -301,6 +319,8 @@ export class ProductsController {
   @ApiConsumes('multipart/form-data')
   @Post(':id/images')
   @UseInterceptors(FileInterceptor('image'))
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   async addProductImage(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
@@ -337,6 +357,8 @@ export class ProductsController {
 
   @ApiOperation({ summary: 'Delete product image' })
   @Delete('images/:imageId')
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   async deleteProductImage(@Param('imageId') imageId: string) {
     await this.productImageService.deleteProductImage(imageId);
     return {
@@ -346,6 +368,7 @@ export class ProductsController {
 
   @ApiOperation({ summary: 'Get product images' })
   @Get(':id/images')
+  @Public()
   async getProductImages(@Param('id') id: string) {
     const images = await this.productImageService.getProductImages(id);
     return {
