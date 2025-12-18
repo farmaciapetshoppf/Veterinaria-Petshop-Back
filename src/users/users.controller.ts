@@ -26,10 +26,11 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Veterinarian, Role.Admin, Role.User)
+
 @ApiTags('Users')
 @Controller('users')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Veterinarian, Role.Admin, Role.User)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,

@@ -26,10 +26,10 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/enum/roles.enum';
 
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Veterinarian, Role.Admin, Role.User)
 @ApiTags('reviews')
 @Controller('reviews')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Veterinarian, Role.Admin, Role.User)
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 

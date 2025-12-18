@@ -18,10 +18,10 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
 
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Veterinarian, Role.Admin, Role.User)
 @ApiTags('Medical Records Pet')
 @Controller('medical-records-pet')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Veterinarian, Role.Admin, Role.User)
 export class MedicalRecordsPetController {
   constructor(
     private readonly medicalRecordsPetService: MedicalRecordsPetService,

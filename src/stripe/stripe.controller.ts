@@ -17,10 +17,10 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
 
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.User)
 @ApiTags('Stripe')
 @Controller('stripe')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Admin, Role.User)
 export class StripeController {
   constructor(
     private readonly stripeService: StripeService,

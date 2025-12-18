@@ -28,10 +28,10 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/auth/enum/roles.enum';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.User, Role.Veterinarian, Role.Admin)
 @ApiTags('Appointments')
 @Controller('appointments')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.User, Role.Veterinarian, Role.Admin)
 export class AppointmentsController {
   constructor(
     private readonly appointmentsService: AppointmentsService,
