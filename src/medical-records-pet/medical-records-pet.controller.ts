@@ -7,21 +7,14 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { MedicalRecordsPetService } from './medical-records-pet.service';
 import { CreateMedicalRecordsPetDto } from './dto/create-medical-records-pet.dto';
 import { UpdateMedicalRecordsPetDto } from './dto/update-medical-records-pet.dto';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Medical Records Pet')
 @Controller('medical-records-pet')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Veterinarian, Role.Admin, Role.User)
 export class MedicalRecordsPetController {
   constructor(
     private readonly medicalRecordsPetService: MedicalRecordsPetService,

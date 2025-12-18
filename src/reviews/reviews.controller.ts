@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Put,
-  UseGuards,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -21,15 +20,9 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { Review } from './entities/reviews.entities';
-import { Roles } from 'src/decorators/roles.decorator';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('reviews')
 @Controller('reviews')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Veterinarian, Role.Admin, Role.User)
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 

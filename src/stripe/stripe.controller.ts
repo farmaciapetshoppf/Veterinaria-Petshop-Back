@@ -5,22 +5,15 @@ import {
   Headers,
   Req,
   BadRequestException,
-  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { StripeService } from './stripe.service';
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
 import { SaleOrdersService } from 'src/sale-orders/sale-orders.service';
 import { MailerService } from 'src/mailer/mailer.service';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Stripe')
 @Controller('stripe')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.User)
 export class StripeController {
   constructor(
     private readonly stripeService: StripeService,

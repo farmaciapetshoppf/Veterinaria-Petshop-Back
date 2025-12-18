@@ -13,7 +13,6 @@ import {
   Put,
   UploadedFiles,
   Delete,
-  UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -32,15 +31,9 @@ import {
 import { StorageService } from '../supabase/storage.service';
 import { ProductImageService } from './products-image.service';
 import { ProductImage } from './entities/product-image.entity';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Role } from 'src/auth/enum/roles.enum';
 
 @ApiTags('Products')
 @Controller('products')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.User)
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,

@@ -16,14 +16,8 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Roles } from 'src/decorators/roles.decorator';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Role } from 'src/auth/enum/roles.enum';
 
 @Controller('categories')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Admin, Role.User)
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 

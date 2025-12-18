@@ -8,7 +8,6 @@ import {
   UploadedFile,
   UseInterceptors,
   Put,
-  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Role } from 'src/auth/enum/roles.enum';
@@ -23,14 +22,9 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from './entities/user.entity';
 import { SupabaseService } from 'src/supabase/supabase.service';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { Roles } from 'src/decorators/roles.decorator';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @ApiTags('Users')
 @Controller('users')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(Role.Veterinarian, Role.Admin, Role.User)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
