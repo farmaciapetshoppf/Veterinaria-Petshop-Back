@@ -20,6 +20,7 @@ import { Public } from '../decorators/public.decorator';
 
 @ApiTags('Stripe')
 @Controller('stripe')
+@UseGuards(AuthGuard, RolesGuard)
 export class StripeController {
   constructor(
     private readonly stripeService: StripeService,
