@@ -64,6 +64,7 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .addBearerAuth()
+    .addCookieAuth('access_token')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
