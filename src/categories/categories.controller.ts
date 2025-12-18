@@ -87,8 +87,7 @@ export class CategoriesController {
     return this.categoriesService.update(id, updateCategoryDto, file);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
+  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Get all categories' })
   @Get()
   findAll() {
@@ -101,8 +100,7 @@ export class CategoriesController {
     return this.categoriesService.findAllBasic();
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Veterinarian, Role.Admin, Role.User)
+  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Get category by ID' })
   @Get(':id')
   findOne(@Param('id', new ParseUUIDPipe()) id: string) {
