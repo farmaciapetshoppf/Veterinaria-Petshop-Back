@@ -93,9 +93,6 @@ export class UsersController {
     },
   })
   @UseInterceptors(FileInterceptor('profileImage'))
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.User)
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
